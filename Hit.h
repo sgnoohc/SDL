@@ -57,6 +57,7 @@ namespace SDL
 
             // cout printing
             friend std::ostream& operator<<(std::ostream& out, const Hit& hit);
+            friend std::ostream& operator<<(std::ostream& out, const Hit* hit);
 
     };
 

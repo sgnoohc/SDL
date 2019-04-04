@@ -151,4 +151,10 @@ namespace SDL
         out << "Hit(x=" << hit.x() << ", y=" << hit.y() << ", z=" << hit.z() << ", r3=" << hit.r3() << ", rt=" << hit.rt() << ", phi=" << hit.phi() << ")";
         return out;
     }
+
+    std::ostream& operator<<(std::ostream& out, const Hit* hit)
+    {
+        out << *hit;
+        return out;
+    }
 }

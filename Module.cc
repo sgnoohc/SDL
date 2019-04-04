@@ -64,7 +64,7 @@ const bool& SDL::Module::isInverted() const
     return isInverted_;
 }
 
-const std::vector<SDL::Hit*>& SDL::Module::hits() const
+const std::vector<SDL::Hit*>& SDL::Module::getHitPtrs() const
 {
     return hits_;
 }
@@ -186,10 +186,18 @@ namespace SDL
         out << ", isLower=" << module.isLower_;
         out << ")" << std::endl;
         out << "==============================" << std::endl;
-        for (auto& hit : module.hits())
-            out << *hit << std::endl;
+        for (auto& hitPtr : module.hits_)
+            out << hitPtr << std::endl;
         out << "" << std::endl;
 
         return out;
     }
+
+    std::ostream& operator<<(std::ostream& out, const Module* module)
+    {
+        out << *module;
+        return out;
+    }
+
+
 }

@@ -2,6 +2,7 @@
 #define Event_h
 
 #include <vector>
+#include <list>
 #include <map>
 #include <stdlib.h>
 #include <stdexcept>
@@ -9,6 +10,7 @@
 
 #include "Module.h"
 #include "Hit.h"
+#include "PrintUtil.h"
 
 namespace SDL
 {
@@ -20,7 +22,7 @@ namespace SDL
             std::map<unsigned int, Module> modulesMapByDetId_;
 
             // list of hits (this holds the actual instances)
-            std::vector<Hit> hits_;
+            std::list<Hit> hits_;
 
             // list of module pointers (hold only the pointers to the actual instances)
             std::vector<Module*> modules_;
@@ -41,6 +43,7 @@ namespace SDL
 
             // cout printing
             friend std::ostream& operator<<(std::ostream& out, const Event& event);
+            friend std::ostream& operator<<(std::ostream& out, const Event* event);
 
     };
 }

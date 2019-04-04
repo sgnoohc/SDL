@@ -22,10 +22,18 @@ bool SDL::Event::hasModule(unsigned int detId)
 
 SDL::Module& SDL::Event::getModule(unsigned int detId)
 {
-    // If not exists, create and add and return
-    // If exists, just return;
-    auto& inserted_or_existing = (*(modulesMapByDetId_.emplace(detId, detId).first)).second;
-    modules_.push_back(&inserted_or_existing);
+    // using std::map::emplace
+    std::pair<std::map<unsigned int, Module>::iterator, bool> emplace_result = modulesMapByDetId_.emplace(detId, detId);
+
+    // Retreive the module
+    auto& inserted_or_existing = (*(emplace_result.first)).second;
+
+    // If new was inserted, then insert to modules_ pointer list
+    if (emplace_result.second) // if true, new was inserted
+    {
+        modules_.push_back(&((*(emplace_result.first)).second));
+    }
+
     return inserted_or_existing;
 }
 
@@ -56,9 +64,16 @@ namespace SDL
 
         for (auto& modulePtr : event.modules_)
         {
-            out << *modulePtr;
+            out << modulePtr;
         }
 
         return out;
     }
+
+    std::ostream& operator<<(std::ostream& out, const Event* event)
+    {
+        out << *event;
+        return out;
+    }
+
 }

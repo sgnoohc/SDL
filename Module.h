@@ -200,7 +200,7 @@ namespace SDL
             const unsigned short& module() const;
             const unsigned short& isLower() const;
             const bool& isInverted() const;
-            const std::vector<Hit*>& hits() const;
+            const std::vector<Hit*>& getHitPtrs() const;
 
             // modifying the class content
             void setDetId(unsigned int);
@@ -217,6 +217,7 @@ namespace SDL
 
             // printing
             friend std::ostream& operator<<(std::ostream& os, const Module& module);
+            friend std::ostream& operator<<(std::ostream& os, const Module* module);
 
     };
 
