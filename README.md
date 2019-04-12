@@ -32,7 +32,7 @@ The ```Module.h``` explains them.
 
 ### MiniDoublet
 
-Holds two hits. Doesn't have much implemented. (TODO)
+Holds two hits.
 
 ### Math
 
