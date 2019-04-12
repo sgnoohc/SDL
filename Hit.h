@@ -44,8 +44,8 @@ namespace SDL
             const float& phi() const;
 
             // variable computation between two hits
-            float deltaPhi(Hit);
-            float deltaPhiChange(Hit);
+            float deltaPhi(const Hit&) const;
+            float deltaPhiChange(const Hit&) const;
 
             // operator overloading
             bool operator !=(const Hit&) const;

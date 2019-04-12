@@ -6,6 +6,7 @@
 
 #include "Hit.h"
 #include "MiniDoublet.h"
+#include "PrintUtil.h"
 
 namespace SDL
 {
@@ -29,16 +30,19 @@ namespace SDL
             //
             //  x  x  x  x  x  x  x  x  x  x  x  x  x  x  x  x  x  x  x  x  x  x  x  x  x  x  x  x  x
             //
-            //    -subdet-       -layer--          --------rod---------    -------module-------
-            //             -side       --layer-       ----ring---          -------module-------
+            //    -subdet-       -layer-- -side    --------rod---------    -------module-------        # if subdet == 5
+            //    -subdet- -side       --layer-       ----ring---          -------module-------        # if subdet == 4
             //
             //
 
             //----------
             // * detId *
             //----------
-            // The unique detector ID for the lower layer
+            // The unique detector ID for this module layer
             unsigned int detId_;
+
+            // The unique detector ID to its partner
+            unsigned int partnerDetId_;
 
             //-----------
             // * subdet *
@@ -48,6 +52,14 @@ namespace SDL
             // subdet can take either 4 or 5
             // 4: endcap
             // 5: barrel
+        public:
+            enum SubDet
+            {
+                Barrel = 5,
+                Endcap = 4
+            };
+
+        private:
             unsigned short subdet_;
 
             //---------
@@ -60,12 +72,22 @@ namespace SDL
             // }
             // else if (subdet_ == 5)
             // {
-            //     side_ = 3;
+            //     side_ = (detId_ & (3 << 18)) >> 18;
             // }
             // 1 = -z side of the endcap modules
             // 2 = +z side of the endcap modules
             // 3 = barrel modules (determined via checking subdet)
+        public:
+            enum Side
+            {
+                NegZ = 1,
+                PosZ = 2,
+                Center = 3
+            };
+
+        private:
             unsigned short side_;
+
 
             //----------
             // * Layer *
@@ -174,11 +196,27 @@ namespace SDL
             unsigned short isLower_;
 
             // The modules are put in alternating order where the modules are inverted every other one
-            // TODO: Add description on even/odd module ID # and its relation to PS inversions
             bool isInverted_;
+
+            // To hold information whether it is a 2S or PS
+            // PS = true
+            // 2S = false
+        public:
+            enum ModuleType
+            {
+                PS,
+                TwoS
+            };
+
+        private:
+
+            ModuleType moduleType_;
 
             // vector of hit pointers
             std::vector<Hit*> hits_;
+
+            // vector of mini doublet pointers
+            std::vector<MiniDoublet*> miniDoublets_;
 
             void setDerivedQuantities();
 
@@ -192,6 +230,7 @@ namespace SDL
 
             // accessor functions
             const unsigned int& detId() const;
+            const unsigned int& partnerDetId() const;
             const unsigned short& subdet() const;
             const unsigned short& side() const;
             const unsigned short& layer() const;
@@ -200,11 +239,13 @@ namespace SDL
             const unsigned short& module() const;
             const unsigned short& isLower() const;
             const bool& isInverted() const;
+            const ModuleType& moduleType() const;
             const std::vector<Hit*>& getHitPtrs() const;
 
             // modifying the class content
             void setDetId(unsigned int);
             void addHit(Hit* hit);
+            void addMiniDoublet(MiniDoublet* md);
 
             // static functions to parse detId
             static unsigned short parseSubdet(unsigned int);
@@ -214,6 +255,9 @@ namespace SDL
             static unsigned short parseRing(unsigned int);
             static unsigned short parseModule(unsigned int);
             static unsigned short parseIsLower(unsigned int);
+            static bool parseIsInverted(unsigned int);
+            static unsigned int parsePartnerDetId(unsigned int);
+            static ModuleType parseModuleType(unsigned int);
 
             // printing
             friend std::ostream& operator<<(std::ostream& os, const Module& module);

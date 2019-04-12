@@ -31,7 +31,16 @@ SDL::Module& SDL::Event::getModule(unsigned int detId)
     // If new was inserted, then insert to modules_ pointer list
     if (emplace_result.second) // if true, new was inserted
     {
-        modules_.push_back(&((*(emplace_result.first)).second));
+
+        // The pointer to be added
+        Module* module_ptr = &((*(emplace_result.first)).second);
+
+        // Add the module pointer to the list of modules
+        modules_.push_back(module_ptr);
+
+        // If the module is lower module then add to list of lower modules
+        if (module_ptr->isLower())
+            lower_modules_.push_back(module_ptr);
     }
 
     return inserted_or_existing;
@@ -42,6 +51,11 @@ const std::vector<SDL::Module*> SDL::Event::getModulePtrs() const
     return modules_;
 }
 
+const std::vector<SDL::Module*> SDL::Event::getLowerModulePtrs() const
+{
+    return lower_modules_;
+}
+
 void SDL::Event::addHitToModule(SDL::Hit hit, unsigned int detId)
 {
     // Add to global list of hits, where it will hold the object's instance
@@ -49,6 +63,15 @@ void SDL::Event::addHitToModule(SDL::Hit hit, unsigned int detId)
 
     // And get the module (if not exists, then create), and add the address to Module.hits_
     getModule(detId).addHit(&(hits_.back()));
+}
+
+void SDL::Event::addMiniDoubletToLowerModule(SDL::MiniDoublet md, unsigned int detId)
+{
+    // Add to global list of mini doublets, where it will hold the object's instance
+    miniDoublets_.push_back(md);
+
+    // And get the module (if not exists, then create), and add the address to Module.hits_
+    getModule(detId).addMiniDoublet(&(miniDoublets_.back()));
 }
 
 namespace SDL

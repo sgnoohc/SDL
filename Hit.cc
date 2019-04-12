@@ -44,7 +44,7 @@ void SDL::Hit::setDerivedQuantities()
     rt_ = sqrt(x_ * x_ + y_ * y_);
 
     // Setting phi
-    phi_ = M_PI + SDL::Math::ATan2(-y_, -x_);
+    phi_ = SDL::Math::Phi_mpi_pi(M_PI + SDL::Math::ATan2(-y_, -x_));
 
 }
 
@@ -78,12 +78,12 @@ const float& SDL::Hit::phi() const
     return phi_;
 }
 
-float SDL::Hit::deltaPhi(SDL::Hit hit)
+float SDL::Hit::deltaPhi(const SDL::Hit& hit) const
 {
     return SDL::Math::Phi_mpi_pi(hit.phi() - phi_);
 }
 
-float SDL::Hit::deltaPhiChange(SDL::Hit hit)
+float SDL::Hit::deltaPhiChange(const SDL::Hit& hit) const
 {
     /*
     Compute the change in phi going from point *this -> *hit

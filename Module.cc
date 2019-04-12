@@ -59,9 +59,19 @@ const unsigned int& SDL::Module::detId() const
     return detId_;
 }
 
+const unsigned int& SDL::Module::partnerDetId() const
+{
+    return partnerDetId_;
+}
+
 const bool& SDL::Module::isInverted() const
 {
     return isInverted_;
+}
+
+const SDL::Module::ModuleType& SDL::Module::moduleType() const
+{
+    return moduleType_;
 }
 
 const std::vector<SDL::Hit*>& SDL::Module::getHitPtrs() const
@@ -84,11 +94,19 @@ void SDL::Module::setDerivedQuantities()
     ring_ = parseRing(detId_);
     module_ = parseModule(detId_);
     isLower_ = parseIsLower(detId_);
+    isInverted_ = parseIsInverted(detId_);
+    partnerDetId_ = parsePartnerDetId(detId_);
+    moduleType_ = parseModuleType(detId_);
 }
 
 void SDL::Module::addHit(SDL::Hit* hit)
 {
     hits_.push_back(hit);
+}
+
+void SDL::Module::addMiniDoublet(SDL::MiniDoublet* md)
+{
+    miniDoublets_.push_back(md);
 }
 
 unsigned short SDL::Module::parseSubdet(unsigned int detId)
@@ -98,13 +116,13 @@ unsigned short SDL::Module::parseSubdet(unsigned int detId)
 
 unsigned short SDL::Module::parseSide(unsigned int detId)
 {
-    if (parseSubdet(detId) == 4)
+    if (parseSubdet(detId) == SDL::Module::Endcap)
     {
         return (detId & (3 << 23)) >> 23;
     }
-    else if (parseSubdet(detId) == 5)
+    else if (parseSubdet(detId) == SDL::Module::Barrel)
     {
-        return 3;
+        return (detId & (3 << 18)) >> 18;
     }
     else
     {
@@ -114,11 +132,11 @@ unsigned short SDL::Module::parseSide(unsigned int detId)
 
 unsigned short SDL::Module::parseLayer(unsigned int detId)
 {
-    if (parseSubdet(detId) == 4)
+    if (parseSubdet(detId) == SDL::Module::Endcap)
     {
         return (detId & (7 << 18)) >> 18;
     }
-    else if (parseSubdet(detId) == 5)
+    else if (parseSubdet(detId) == SDL::Module::Barrel)
     {
         return (detId & (7 << 20)) >> 20;
     }
@@ -130,11 +148,11 @@ unsigned short SDL::Module::parseLayer(unsigned int detId)
 
 unsigned short SDL::Module::parseRod(unsigned int detId)
 {
-    if (parseSubdet(detId) == 4)
+    if (parseSubdet(detId) == SDL::Module::Endcap)
     {
         return 0;
     }
-    else if (parseSubdet(detId) == 5)
+    else if (parseSubdet(detId) == SDL::Module::Barrel)
     {
         return (detId & (127 << 10)) >> 10;
     }
@@ -146,11 +164,11 @@ unsigned short SDL::Module::parseRod(unsigned int detId)
 
 unsigned short SDL::Module::parseRing(unsigned int detId)
 {
-    if (parseSubdet(detId) == 4)
+    if (parseSubdet(detId) == SDL::Module::Endcap)
     {
         return (detId & (15 << 12)) >> 12;
     }
-    else if (parseSubdet(detId) == 5)
+    else if (parseSubdet(detId) == SDL::Module::Barrel)
     {
         return 0;
     }
@@ -168,7 +186,105 @@ unsigned short SDL::Module::parseModule(unsigned int detId)
 
 unsigned short SDL::Module::parseIsLower(unsigned int detId)
 {
-    return (detId & 1);
+    return parseIsInverted(detId) ? !(detId & 1) : (detId & 1);
+}
+
+bool SDL::Module::parseIsInverted(unsigned int detId)
+{
+    if (parseSubdet(detId) == SDL::Module::Endcap)
+    {
+        if (parseSide(detId) == SDL::Module::NegZ)
+        {
+            return parseModule(detId) % 2 == 1;
+        }
+        else if (parseSide(detId) == SDL::Module::PosZ)
+        {
+            return parseModule(detId) % 2 == 0;
+        }
+        else
+        {
+            SDL::cout << "Error: parseIsInverted() categorization failed" << std::endl;
+            return 0;
+        }
+    }
+    else if (parseSubdet(detId) == SDL::Module::Barrel)
+    {
+        if (parseSide(detId) == SDL::Module::Center)
+        {
+            if (parseLayer(detId) <= 3)
+            {
+                return parseModule(detId) % 2 == 1;
+            }
+            else if (parseLayer(detId) >= 4)
+            {
+                return parseModule(detId) % 2 == 0;
+            }
+            else
+            {
+                SDL::cout << "Error: parseIsInverted() categorization failed" << std::endl;
+                return 0;
+            }
+        }
+        else if (parseSide(detId) == SDL::Module::NegZ or parseSide(detId) == SDL::Module::PosZ)
+        {
+            if (parseLayer(detId) <= 2)
+            {
+                return parseModule(detId) % 2 == 1;
+            }
+            else if (parseLayer(detId) == 3)
+            {
+                return parseModule(detId) % 2 == 0;
+            }
+            else
+            {
+                SDL::cout << "Error: parseIsInverted() categorization failed" << std::endl;
+                return 0;
+            }
+        }
+        else
+        {
+            SDL::cout << "Error: parseIsInverted() categorization failed" << std::endl;
+            return 0;
+        }
+    }
+    else
+    {
+        SDL::cout << "Error: parseIsInverted() categorization failed" << std::endl;
+        return 0;
+    }
+}
+
+unsigned int SDL::Module::parsePartnerDetId(unsigned int detId)
+{
+    return parseIsInverted(detId) ? detId - 1 : detId + 1;
+}
+
+SDL::Module::ModuleType SDL::Module::parseModuleType(unsigned int detId)
+{
+    if (parseSubdet(detId) == SDL::Module::Barrel)
+    { 
+        if (parseLayer(detId) <= 3)
+            return SDL::Module::PS;
+        else
+            return SDL::Module::TwoS;
+    }
+    else
+    {
+        if (parseLayer(detId) <= 2)
+        {
+            if (parseRing(detId) <= 10)
+                return SDL::Module::PS;
+            else
+                return SDL::Module::TwoS;
+        }
+        else
+        {
+            if (parseRing(detId) <= 7)
+                return SDL::Module::PS;
+            else
+                return SDL::Module::TwoS;
+        }
+    }
 }
 
 namespace SDL
@@ -184,10 +300,13 @@ namespace SDL
         out << ", ring=" << module.ring_;
         out << ", module=" << module.module_;
         out << ", isLower=" << module.isLower_;
+        out << ", isInverted=" << module.isInverted_;
         out << ")" << std::endl;
         out << "==============================" << std::endl;
         for (auto& hitPtr : module.hits_)
             out << hitPtr << std::endl;
+        for (auto& mdPtr : module.miniDoublets_)
+            out << mdPtr << std::endl;
         out << "" << std::endl;
 
         return out;
