@@ -74,6 +74,11 @@ const SDL::Module::ModuleType& SDL::Module::moduleType() const
     return moduleType_;
 }
 
+const SDL::Module::ModuleLayerType& SDL::Module::moduleLayerType() const
+{
+    return moduleLayerType_;
+}
+
 const std::vector<SDL::Hit*>& SDL::Module::getHitPtrs() const
 {
     return hits_;
@@ -97,6 +102,7 @@ void SDL::Module::setDerivedQuantities()
     isInverted_ = parseIsInverted(detId_);
     partnerDetId_ = parsePartnerDetId(detId_);
     moduleType_ = parseModuleType(detId_);
+    moduleLayerType_ = parseModuleLayerType(detId_);
 }
 
 void SDL::Module::addHit(SDL::Hit* hit)
@@ -284,6 +290,26 @@ SDL::Module::ModuleType SDL::Module::parseModuleType(unsigned int detId)
             else
                 return SDL::Module::TwoS;
         }
+    }
+}
+
+SDL::Module::ModuleLayerType SDL::Module::parseModuleLayerType(unsigned int detId)
+{
+    if (parseModuleType(detId) == SDL::Module::TwoS)
+        return SDL::Module::Strip;
+    if (parseIsInverted(detId))
+    {
+        if (parseIsLower(detId))
+            return SDL::Module::Strip;
+        else
+            return SDL::Module::Pixel;
+    }
+    else
+    {
+        if (parseIsLower(detId))
+            return SDL::Module::Pixel;
+        else
+            return SDL::Module::Strip;
     }
 }
 

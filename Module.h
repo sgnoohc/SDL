@@ -199,8 +199,6 @@ namespace SDL
             bool isInverted_;
 
             // To hold information whether it is a 2S or PS
-            // PS = true
-            // 2S = false
         public:
             enum ModuleType
             {
@@ -211,6 +209,20 @@ namespace SDL
         private:
 
             ModuleType moduleType_;
+
+            // To hold information whether it is a Pixel or Strip
+            // Pixel
+            // Strip
+        public:
+            enum ModuleLayerType
+            {
+                Pixel,
+                Strip
+            };
+
+        private:
+
+            ModuleLayerType moduleLayerType_;
 
             // vector of hit pointers
             std::vector<Hit*> hits_;
@@ -240,6 +252,7 @@ namespace SDL
             const unsigned short& isLower() const;
             const bool& isInverted() const;
             const ModuleType& moduleType() const;
+            const ModuleLayerType& moduleLayerType() const;
             const std::vector<Hit*>& getHitPtrs() const;
 
             // modifying the class content
@@ -258,6 +271,7 @@ namespace SDL
             static bool parseIsInverted(unsigned int);
             static unsigned int parsePartnerDetId(unsigned int);
             static ModuleType parseModuleType(unsigned int);
+            static ModuleLayerType parseModuleLayerType(unsigned int);
 
             // printing
             friend std::ostream& operator<<(std::ostream& os, const Module& module);
