@@ -53,6 +53,12 @@ namespace SDL
             // MiniDoublet related functions
             void addMiniDoubletToLowerModule(MiniDoublet md, unsigned int detId);
 
+            // Create mini doublets
+            void createMiniDoublets();
+
+            // Create mini doublet for a module
+            void createMiniDoubletsFromLowerModule(unsigned int detId);
+
             // cout printing
             friend std::ostream& operator<<(std::ostream& out, const Event& event);
             friend std::ostream& operator<<(std::ostream& out, const Event* event);
