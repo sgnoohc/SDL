@@ -124,6 +124,14 @@ float SDL::Hit::deltaPhiChange(const SDL::Hit& hit) const
 
 }
 
+bool SDL::Hit::isMatched(const SDL::Hit& hit) const
+{
+    for (auto& _idx : hit.idxMatch())
+        if (_idx == idx())
+            return true;
+    return false;
+}
+
 // operators
 bool SDL::Hit::operator !=(const Hit& hit) const
 {

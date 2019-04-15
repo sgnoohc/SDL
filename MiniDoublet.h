@@ -24,6 +24,8 @@ namespace SDL
             Hit* lowerHit() const;
             Hit* upperHit() const;
 
+            bool isMatched(const MiniDoublet&) const;
+
             // cout printing
             friend std::ostream& operator<<(std::ostream& out, const MiniDoublet& md);
             friend std::ostream& operator<<(std::ostream& out, const MiniDoublet* md);

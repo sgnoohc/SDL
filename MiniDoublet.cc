@@ -26,6 +26,15 @@ SDL::Hit* SDL::MiniDoublet::upperHit() const
     return upperHit_;
 }
 
+bool SDL::MiniDoublet::isMatched(const MiniDoublet& md) const
+{
+    if (not lowerHit_->isMatched(*(md.lowerHit())))
+        return false;
+    if (not upperHit_->isMatched(*(md.upperHit())))
+        return false;
+    return true;
+}
+
 namespace SDL
 {
     std::ostream& operator<<(std::ostream& out, const MiniDoublet& md)

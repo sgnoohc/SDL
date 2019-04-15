@@ -84,6 +84,11 @@ const std::vector<SDL::Hit*>& SDL::Module::getHitPtrs() const
     return hits_;
 }
 
+const std::vector<SDL::MiniDoublet*>& SDL::Module::getMiniDoubletPtrs() const
+{
+    return miniDoublets_;
+}
+
 void SDL::Module::setDetId(unsigned int detId)
 {
     detId_ = detId;

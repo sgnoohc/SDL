@@ -254,6 +254,7 @@ namespace SDL
             const ModuleType& moduleType() const;
             const ModuleLayerType& moduleLayerType() const;
             const std::vector<Hit*>& getHitPtrs() const;
+            const std::vector<MiniDoublet*>& getMiniDoubletPtrs() const;
 
             // modifying the class content
             void setDetId(unsigned int);

@@ -53,6 +53,7 @@ namespace SDL
             // variable computation between two hits
             float deltaPhi(const Hit&) const;
             float deltaPhiChange(const Hit&) const;
+            bool isMatched(const Hit&) const;
 
             // operator overloading
             bool operator !=(const Hit&) const;
