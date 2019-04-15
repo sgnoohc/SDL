@@ -5,12 +5,12 @@ SDL::Hit::Hit(): x_(0), y_(0), z_(0)
     setDerivedQuantities();
 }
 
-SDL::Hit::Hit(float x, float y, float z): x_(x), y_(y), z_(z)
+SDL::Hit::Hit(float x, float y, float z, int idx, std::vector<int> idxMatch): x_(x), y_(y), z_(z), idx_(idx), idxMatch_(idxMatch)
 {
     setDerivedQuantities();
 }
 
-SDL::Hit::Hit(const Hit& hit): x_(hit.x()), y_(hit.y()), z_(hit.z())
+SDL::Hit::Hit(const Hit& hit): x_(hit.x()), y_(hit.y()), z_(hit.z()), idx_(hit.idx()), idxMatch_(hit.idxMatch())
 {
     setDerivedQuantities();
 }
@@ -32,6 +32,16 @@ void SDL::Hit::setY(float y)
 void SDL::Hit::setZ(float z)
 {
     z_ = z;
+}
+
+void SDL::Hit::setIdx(int idx)
+{
+    idx_ = idx;
+}
+
+void SDL::Hit::setIdxMatch(std::vector<int> idxMatch)
+{
+    idxMatch_ = idxMatch;
 }
 
 void SDL::Hit::setDerivedQuantities()
@@ -76,6 +86,16 @@ const float& SDL::Hit::rt() const
 const float& SDL::Hit::phi() const
 {
     return phi_;
+}
+
+const int& SDL::Hit::idx() const
+{
+    return idx_;
+}
+
+const std::vector<int>& SDL::Hit::idxMatch() const
+{
+    return idxMatch_;
 }
 
 float SDL::Hit::deltaPhi(const SDL::Hit& hit) const
