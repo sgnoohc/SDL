@@ -12,6 +12,7 @@
 #include "Hit.h"
 #include "MiniDoublet.h"
 #include "PrintUtil.h"
+#include "Algo.h"
 
 namespace SDL
 {
@@ -54,10 +55,10 @@ namespace SDL
             void addMiniDoubletToLowerModule(MiniDoublet md, unsigned int detId);
 
             // Create mini doublets
-            void createMiniDoublets();
+            void createMiniDoublets(MDAlgo algo=Default_MDAlgo);
 
             // Create mini doublet for a module
-            void createMiniDoubletsFromLowerModule(unsigned int detId);
+            void createMiniDoubletsFromLowerModule(unsigned int detId, MDAlgo algo=Default_MDAlgo);
 
             // cout printing
             friend std::ostream& operator<<(std::ostream& out, const Event& event);
