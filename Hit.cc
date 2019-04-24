@@ -5,12 +5,12 @@ SDL::Hit::Hit(): x_(0), y_(0), z_(0)
     setDerivedQuantities();
 }
 
-SDL::Hit::Hit(float x, float y, float z, int idx, std::vector<int> idxMatch): x_(x), y_(y), z_(z), idx_(idx), idxMatch_(idxMatch)
+SDL::Hit::Hit(float x, float y, float z, int idx): x_(x), y_(y), z_(z), idx_(idx)
 {
     setDerivedQuantities();
 }
 
-SDL::Hit::Hit(const Hit& hit): x_(hit.x()), y_(hit.y()), z_(hit.z()), idx_(hit.idx()), idxMatch_(hit.idxMatch())
+SDL::Hit::Hit(const Hit& hit): x_(hit.x()), y_(hit.y()), z_(hit.z()), idx_(hit.idx())
 {
     setDerivedQuantities();
 }
@@ -37,11 +37,6 @@ void SDL::Hit::setZ(float z)
 void SDL::Hit::setIdx(int idx)
 {
     idx_ = idx;
-}
-
-void SDL::Hit::setIdxMatch(std::vector<int> idxMatch)
-{
-    idxMatch_ = idxMatch;
 }
 
 void SDL::Hit::setDerivedQuantities()
@@ -93,11 +88,6 @@ const int& SDL::Hit::idx() const
     return idx_;
 }
 
-const std::vector<int>& SDL::Hit::idxMatch() const
-{
-    return idxMatch_;
-}
-
 float SDL::Hit::deltaPhi(const SDL::Hit& hit) const
 {
     return SDL::Math::Phi_mpi_pi(hit.phi() - phi_);
@@ -124,11 +114,12 @@ float SDL::Hit::deltaPhiChange(const SDL::Hit& hit) const
 
 }
 
-bool SDL::Hit::isMatched(const SDL::Hit& hit) const
+bool SDL::Hit::isIdxMatched(const SDL::Hit& hit) const
 {
-    for (auto& _idx : hit.idxMatch())
-        if (_idx == idx())
-            return true;
+    if (idx() == -1)
+        SDL::cout << "ERROR:: SDL::Hit::isIdxMatched() idx of this hit is not set. Cannot perform a match." << std::endl;
+    if (hit.idx() == idx())
+        return true;
     return false;
 }
 

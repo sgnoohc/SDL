@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "Math.h"
+#include "PrintUtil.h"
 
 namespace SDL
 {
@@ -21,7 +22,6 @@ namespace SDL
             float rt_; // transverse distance
             float phi_;
             int idx_; // unique index to the hit index in the ntuple
-            std::vector<int> idxMatch_; // unique index to the hit index in the ntuple
 
             void setDerivedQuantities();
 
@@ -29,7 +29,7 @@ namespace SDL
 
             // cnstr/destr
             Hit();
-            Hit(float x, float y, float z, int idx=-1, std::vector<int> idxMatch=std::vector<int>());
+            Hit(float x, float y, float z, int idx=-1);
             Hit(const Hit&);
             ~Hit();
 
@@ -38,7 +38,6 @@ namespace SDL
             void setY(float y);
             void setZ(float z);
             void setIdx(int idx);
-            void setIdxMatch(std::vector<int> idxMatch);
 
             // accessor functions
             const float& x() const;
@@ -48,12 +47,11 @@ namespace SDL
             const float& r3() const;
             const float& phi() const;
             const int& idx() const;
-            const std::vector<int>& idxMatch() const;
 
             // variable computation between two hits
             float deltaPhi(const Hit&) const;
             float deltaPhiChange(const Hit&) const;
-            bool isMatched(const Hit&) const;
+            bool isIdxMatched(const Hit&) const;
 
             // operator overloading
             bool operator !=(const Hit&) const;

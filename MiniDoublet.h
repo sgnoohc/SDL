@@ -2,6 +2,7 @@
 #define MiniDoublet_h
 
 #include "Hit.h"
+#include <array>
 
 namespace SDL
 {
@@ -10,10 +11,10 @@ namespace SDL
         private:
 
             // Lower is always the one closer to the beam position
-            Hit* lowerHit_;
+            Hit* lowerHitPtr_;
 
             // Upper is always the one further away from the beam position
-            Hit* upperHit_;
+            Hit* upperHitPtr_;
 
         public:
             MiniDoublet();
@@ -21,14 +22,16 @@ namespace SDL
             MiniDoublet(Hit* lowerHit, Hit* upperHit);
             ~MiniDoublet();
 
-            Hit* lowerHit() const;
-            Hit* upperHit() const;
+            Hit* lowerHitPtr() const;
+            Hit* upperHitPtr() const;
 
-            bool isMatched(const MiniDoublet&) const;
+            bool isIdxMatched(const MiniDoublet&) const;
 
             // cout printing
             friend std::ostream& operator<<(std::ostream& out, const MiniDoublet& md);
             friend std::ostream& operator<<(std::ostream& out, const MiniDoublet* md);
+
+            static float dPhiThresholdBarrel(float rt, unsigned int iL);
     };
 }
 
