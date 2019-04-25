@@ -8,6 +8,10 @@
 #include "MiniDoublet.h"
 #include "PrintUtil.h"
 
+namespace SDL{
+    class MiniDoublet;
+}
+
 namespace SDL
 {
 
@@ -74,8 +78,8 @@ namespace SDL
             // {
             //     side_ = (detId_ & (3 << 18)) >> 18;
             // }
-            // 1 = -z side of the endcap modules
-            // 2 = +z side of the endcap modules
+            // 1 = -z side of the endcap modules AND -z side of tilted modules
+            // 2 = +z side of the endcap modules AND +z side of tilted modules
             // 3 = barrel modules (determined via checking subdet)
         public:
             enum Side

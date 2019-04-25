@@ -1,6 +1,6 @@
 #include "Event.h"
 
-SDL::Event::Event()
+SDL::Event::Event() : debug_(false)
 {
 }
 
@@ -18,6 +18,11 @@ bool SDL::Event::hasModule(unsigned int detId)
     {
         return true;
     }
+}
+
+void SDL::Event::setDebug(bool debug)
+{
+    debug_ = debug;
 }
 
 SDL::Module& SDL::Event::getModule(unsigned int detId)
@@ -109,30 +114,8 @@ void SDL::Event::createMiniDoubletsFromLowerModule(unsigned int detId, SDL::MDAl
             // Get reference to upper Hit
             SDL::Hit& upperHit = *upperHitPtr;
 
-            if (lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() == SDL::Module::Center)
-            {
-                if (algo == SDL::AllComb_MDAlgo)
-                {
-                    addMiniDoubletToLowerModule(SDL::MiniDoublet(lowerHitPtr, upperHitPtr), lowerModule.detId());
-                    continue;
-                }
-                else if (algo == SDL::Default_MDAlgo)
-                {
-
-                    // The dphi change going from lower Hit to upper Hit
-                    float fabsdphi = fabs(lowerHit.deltaPhiChange(upperHit));
-
-                    float rt = lowerHit.rt();
-                    unsigned int iL = lowerModule.layer() - 1;
-                    float miniCut = MiniDoublet::dPhiThresholdBarrel(rt, iL);
-
-                    if (fabsdphi < miniCut)
-                    {
-                        addMiniDoubletToLowerModule(SDL::MiniDoublet(lowerHitPtr, upperHitPtr), lowerModule.detId());
-                    }
-                }
-
-            }
+            if (SDL::MiniDoublet::isMiniDoubletPair(lowerHit, upperHit, lowerModule, algo, debug_))
+                addMiniDoubletToLowerModule(SDL::MiniDoublet(lowerHitPtr, upperHitPtr), lowerModule.detId());
 
         }
 

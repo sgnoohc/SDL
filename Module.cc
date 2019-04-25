@@ -214,7 +214,7 @@ bool SDL::Module::parseIsInverted(unsigned int detId)
         }
         else
         {
-            SDL::cout << "Error: parseIsInverted() categorization failed" << std::endl;
+            SDL::cout << "Warning: parseIsInverted() categorization failed" << std::endl;
             return 0;
         }
     }
@@ -232,7 +232,7 @@ bool SDL::Module::parseIsInverted(unsigned int detId)
             }
             else
             {
-                SDL::cout << "Error: parseIsInverted() categorization failed" << std::endl;
+                SDL::cout << "Warning: parseIsInverted() categorization failed" << std::endl;
                 return 0;
             }
         }
@@ -248,19 +248,19 @@ bool SDL::Module::parseIsInverted(unsigned int detId)
             }
             else
             {
-                SDL::cout << "Error: parseIsInverted() categorization failed" << std::endl;
+                SDL::cout << "Warning: parseIsInverted() categorization failed" << std::endl;
                 return 0;
             }
         }
         else
         {
-            SDL::cout << "Error: parseIsInverted() categorization failed" << std::endl;
+            SDL::cout << "Warning: parseIsInverted() categorization failed" << std::endl;
             return 0;
         }
     }
     else
     {
-        SDL::cout << "Error: parseIsInverted() categorization failed" << std::endl;
+        SDL::cout << "Warning: parseIsInverted() categorization failed" << std::endl;
         return 0;
     }
 }

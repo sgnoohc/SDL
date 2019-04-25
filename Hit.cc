@@ -117,7 +117,7 @@ float SDL::Hit::deltaPhiChange(const SDL::Hit& hit) const
 bool SDL::Hit::isIdxMatched(const SDL::Hit& hit) const
 {
     if (idx() == -1)
-        SDL::cout << "ERROR:: SDL::Hit::isIdxMatched() idx of this hit is not set. Cannot perform a match." << std::endl;
+        SDL::cout << "Warning:: SDL::Hit::isIdxMatched() idx of this hit is not set. Cannot perform a match." << std::endl;
     if (hit.idx() == idx())
         return true;
     return false;

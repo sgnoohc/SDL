@@ -51,7 +51,7 @@ namespace SDL
     }
 }
 
-float SDL::MiniDoublet::dPhiThresholdBarrel(float rt, unsigned int iL)
+float SDL::MiniDoublet::dPhiThreshold(const SDL::Hit& lowerHit, const SDL::Module& module)
 {
     // =================================================================
     // Various constants
@@ -65,23 +65,213 @@ float SDL::MiniDoublet::dPhiThresholdBarrel(float rt, unsigned int iL)
     std::array<float, 6> miniMulsPtScaleBarrel {0.0052, 0.0038, 0.0034, 0.0034, 0.0032, 0.0034};
     std::array<float, 5> miniMulsPtScaleEndcap {0.006, 0.006, 0.006, 0.006, 0.006}; //inter/extra-polated from L11 and L13 both roughly 0.006 [larger R have smaller value by ~50%]
     //mean of the horizontal layer position in y; treat this as R below
-    std::array<float, 6> miniRminMeanBarrel {21.8, 34.6, 49.6, 67.4, 87.6, 106.8};
-    std::array<float, 5> miniRminMeanEndcap {131.4, 156.2, 185.6, 220.3, 261.5};// use z for endcaps
+    std::array<float, 6> miniRminMeanBarrel {21.8, 34.6, 49.6, 67.4, 87.6, 106.8}; // TODO: Update this with newest geometry
+    std::array<float, 5> miniRminMeanEndcap {131.4, 156.2, 185.6, 220.3, 261.5};// use z for endcaps // TODO: Update this with newest geometry
 
     // =================================================================
-    // Computing cut threshold
+    // Computing some components that make up the cut threshold
     // =================================================================
-    // float rt = lowerHit.rt();
-    // unsigned int iL = lowerModule.layer() - 1;
+    float rt = lowerHit.rt();
+    unsigned int iL = module.layer() - 1;
     const float miniSlope = std::asin(std::min(rt * k2Rinv1GeVf / ptCut, sinAlphaMax));
-    const float rLayNominal = miniRminMeanBarrel[iL];
+    const float rLayNominal = module.subdet() == SDL::Module::Barrel ? miniRminMeanBarrel[iL] : miniRminMeanEndcap[iL];
     const float miniPVoff = 0.1 / rLayNominal;
-    const float miniMuls = miniMulsPtScaleBarrel[iL] * 3.f / ptCut;
+    const float miniMuls = module.subdet() == SDL::Module::Barrel ? miniMulsPtScaleBarrel[iL] * 3.f / ptCut : miniMulsPtScaleEndcap[iL] * 3.f / ptCut;
     const bool isTilted = false;
     const bool tiltedOT123 = false;
-    const float pixelPSZpitch = 0.15;
-    const float miniTilt = isTilted && tiltedOT123 ? /*0.5f * pixelPSZpitch * drdz / sqrt(1.f + drdz * drdz) / miniDelta[iL]*/ : 0;
-    const float miniCut = miniSlope + sqrt(pow(miniMuls, 2) + pow(miniPVoff, 2) + pow(miniTilt * miniSlope, 2));
+    // const float pixelPSZpitch = 0.15;
+    const float miniTilt = isTilted && tiltedOT123 ? /*0.5f * pixelPSZpitch * drdz / sqrt(1.f + drdz * drdz) / miniDelta[iL]*/ 0 : 0; // TODO: Tilt is properly not accounted for
+    // Compute luminous region requirement for endcap
+    const float deltaZLum = 15.f;
+    const float miniLum = deltaZLum / std::abs(lowerHit.z());
 
-    return miniCut;
+    // =================================================================
+    // Return the threshold value
+    // =================================================================
+    // Following condition is met if the module is central and flatly lying
+    if (module.subdet() == SDL::Module::Barrel and module.side() == SDL::Module::Center)
+    {
+        return miniSlope + sqrt(pow(miniMuls, 2) + pow(miniPVoff, 2));
+    }
+    // Following condition is met if the module is central and tilted
+    else if (module.subdet() == SDL::Module::Barrel and module.side() != SDL::Module::Center)
+    {
+        return miniSlope + sqrt(pow(miniMuls, 2) + pow(miniPVoff, 2) + pow(miniTilt * miniSlope, 2));
+    }
+    // If not barrel, it is Endcap
+    else 
+    {
+        return miniSlope + sqrt(pow(miniMuls, 2) + pow(miniPVoff, 2) + pow(miniLum, 2));
+    }
+
+}
+
+bool SDL::MiniDoublet::isMiniDoubletPair(const SDL::Hit& lowerHit, const SDL::Hit& upperHit, const SDL::Module& lowerModule, SDL::MDAlgo algo, bool debug)
+{
+    // If the algorithm is "do all combination" (e.g. used for efficiency calculation)
+    if (algo == SDL::AllComb_MDAlgo)
+    {
+        return true;
+    }
+    // If the algorithm is default
+    else if (algo == SDL::Default_MDAlgo)
+    {
+
+        // There are several cuts applied to possible hit pairs, and if the hit pairs passes the cut, it is considered as mini-doublet.
+        // The logic is split into two parts, when it's for barrel and endcap.
+        // Internally, if it is in barrel, there is some subtle difference depending on whether it was tilted or not tilted.
+        // The difference is encoded in the "SDL::MiniDoublet::dPhiThreshold()" function
+
+        // If barrel, apply cuts for barrel mini-doublets
+        if (lowerModule.subdet() == SDL::Module::Barrel)
+        {
+
+            // Cut #1: The dz difference
+            // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3067
+            const float dzCut = 10.f; // Could be tighter for PS modules
+            float dz = std::abs(lowerHit.z() - upperHit.z());
+            if (not (dz < dzCut)) // If cut fails continue
+            {
+                if (debug)
+                {
+                    SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
+                    SDL::cout << "upperHit: " << upperHit << std::endl;
+                    SDL::cout << "lowerHit: " << lowerHit << std::endl;
+                    SDL::cout << lowerModule << std::endl;
+                    SDL::cout << "dz : " << dz << std::endl;
+                    SDL::cout << "dzCut : " << dzCut << std::endl;
+                }
+                return false;
+            }
+
+            // Calculate the cut thresholds for the selection
+            float miniCut = MiniDoublet::dPhiThreshold(lowerHit, lowerModule);
+
+            // Cut #2: dphi difference
+            // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3085
+            float fabsdPhi = std::abs(lowerHit.deltaPhi(upperHit));
+            if (not (fabsdPhi < miniCut)) // If cut fails continue
+            {
+                if (debug)
+                {
+                    SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
+                    SDL::cout << "upperHit: " << upperHit << std::endl;
+                    SDL::cout << "lowerHit: " << lowerHit << std::endl;
+                    SDL::cout << lowerModule << std::endl;
+                    SDL::cout << "fabsdPhi : " << fabsdPhi << std::endl;
+                    SDL::cout << "miniCut : " << miniCut << std::endl;
+                }
+                return false;
+            }
+
+            // Cut #3: The dphi change going from lower Hit to upper Hit
+            // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3076
+            float fabsdPhiChange = std::abs(lowerHit.deltaPhiChange(upperHit));
+            if (not (fabsdPhiChange < miniCut)) // If cut fails continue
+            {
+                if (debug)
+                {
+                    SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
+                    SDL::cout << "upperHit: " << upperHit << std::endl;
+                    SDL::cout << "lowerHit: " << lowerHit << std::endl;
+                    SDL::cout << lowerModule << std::endl;
+                    SDL::cout << "fabsdPhiChange : " << fabsdPhiChange << std::endl;
+                    SDL::cout << "miniCut : " << miniCut << std::endl;
+                }
+                return false;
+            }
+
+            // If all cut passed this pair is good, and make and add the mini-doublet
+            return true;
+
+        }
+        // If endcap, apply cuts for endcap mini-doublets
+        else // If not barrel it is endcap
+        {
+            // Cut #1 : dz cut. The dz difference can't be larger than 1cm. (max separation is 4mm for modules in the endcap)
+            // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3093
+            const float dzCut = 1.f;
+            float dz = std::abs(lowerHit.z() - upperHit.z());
+            if (not (dz < dzCut)) // If cut fails continue
+            {
+                if (debug)
+                {
+                    SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
+                    SDL::cout << "upperHit: " << upperHit << std::endl;
+                    SDL::cout << "lowerHit: " << lowerHit << std::endl;
+                    SDL::cout << lowerModule << std::endl;
+                    SDL::cout << "dz : " << dz << std::endl;
+                    SDL::cout << "dzCut : " << dzCut << std::endl;
+                }
+                return false;
+            }
+
+            // Cut #2 : drt cut. The dz difference can't be larger than 1cm. (max separation is 4mm for modules in the endcap)
+            // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3100
+            const float drtCut = 10.f; // i.e. should be smaller than the module length. Could be tighter if PS modules
+            float drt = std::abs(lowerHit.rt() - upperHit.rt());
+            if (not (drt < drtCut)) // If cut fails continue
+            {
+                if (debug)
+                {
+                    SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
+                    SDL::cout << "upperHit: " << upperHit << std::endl;
+                    SDL::cout << "lowerHit: " << lowerHit << std::endl;
+                    SDL::cout << lowerModule << std::endl;
+                    SDL::cout << "drt : " << drt << std::endl;
+                    SDL::cout << "drtCut : " << drtCut << std::endl;
+                }
+                return false;
+            }
+
+            // Calculate the cut thresholds for the selection
+            float miniCut = MiniDoublet::dPhiThreshold(lowerHit, lowerModule);
+
+            // Cut #3: dphi difference
+            // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3111
+            float fabsdPhi = std::abs(lowerHit.deltaPhi(upperHit));
+            if (not (fabsdPhi < miniCut)) // If cut fails continue
+            {
+                if (debug)
+                {
+                    SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
+                    SDL::cout << "upperHit: " << upperHit << std::endl;
+                    SDL::cout << "lowerHit: " << lowerHit << std::endl;
+                    SDL::cout << lowerModule << std::endl;
+                    SDL::cout << "fabsdPhi : " << fabsdPhi << std::endl;
+                    SDL::cout << "miniCut : " << miniCut << std::endl;
+                }
+                return false;
+            }
+
+            // Cut #3: Another cut on the dphi after some modification
+            // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3119-L3124
+            float dzFrac = dz / lowerHit.z();
+            float fabsdPhiMod = fabsdPhi / dzFrac * (1.f + dzFrac);
+            if (not (fabsdPhiMod < miniCut)) // If cut fails continue
+            {
+                if (debug)
+                {
+                    SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
+                    SDL::cout << "upperHit: " << upperHit << std::endl;
+                    SDL::cout << "lowerHit: " << lowerHit << std::endl;
+                    SDL::cout << lowerModule << std::endl;
+                    SDL::cout << "dz : " << dz << std::endl;
+                    SDL::cout << "dzFrac : " << dzFrac << std::endl;
+                    SDL::cout << "fabsdPhi : " << fabsdPhi << std::endl;
+                    SDL::cout << "fabsdPhiMod : " << fabsdPhiMod << std::endl;
+                    SDL::cout << "miniCut : " << miniCut << std::endl;
+                }
+                return false;
+            }
+
+            // If all cut passed this pair is good, and make and add the mini-doublet
+            return true;
+        }
+    }
+    else
+    {
+        SDL::cout << "Warning: Unrecognized mini-doublet algorithm!" << algo << std::endl;
+        return false;
+    }
 }

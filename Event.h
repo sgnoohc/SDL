@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdexcept>
 #include <iostream>
+#include <cmath>
 
 #include "Module.h"
 #include "Hit.h"
@@ -36,6 +37,9 @@ namespace SDL
             // (lower means, the module that is closer to the luminous region)
             std::vector<Module*> lower_modules_;
 
+            // boolean to turn on debug mode
+            bool debug_;
+
         public:
 
             // cnstr/destr
@@ -47,6 +51,9 @@ namespace SDL
             Module& getModule(unsigned int detId);
             const std::vector<Module*> getModulePtrs() const;
             const std::vector<Module*> getLowerModulePtrs() const;
+
+            // Set debug
+            void setDebug(bool debug=true);
 
             // Hit related functions
             void addHitToModule(Hit hit, unsigned int detId);
