@@ -41,7 +41,7 @@ namespace SDL
             friend std::ostream& operator<<(std::ostream& out, const MiniDoublet* md);
 
             static float dPhiThreshold(const Hit&, const Module&);
-            static bool isMiniDoubletPair(const Hit& lowerHit, const Hit& upperHit, const Module& lowerModule, MDAlgo algo, bool debug=false);
+            static bool isMiniDoubletPair(const Hit& lowerHit, const Hit& upperHit, const Module& lowerModule, MDAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
     };
 }
 

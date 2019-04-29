@@ -1,6 +1,6 @@
 #include "Event.h"
 
-SDL::Event::Event() : debug_(false)
+SDL::Event::Event() : logLevel_(SDL::Log_Nothing)
 {
 }
 
@@ -20,9 +20,9 @@ bool SDL::Event::hasModule(unsigned int detId)
     }
 }
 
-void SDL::Event::setDebug(bool debug)
+void SDL::Event::setLogLevel(SDL::LogLevel logLevel)
 {
-    debug_ = debug;
+    logLevel_ = logLevel;
 }
 
 SDL::Module& SDL::Event::getModule(unsigned int detId)
@@ -33,7 +33,7 @@ SDL::Module& SDL::Event::getModule(unsigned int detId)
     // Retreive the module
     auto& inserted_or_existing = (*(emplace_result.first)).second;
 
-    // If new was inserted, then insert to modules_ pointer list
+    // If new was inserted, then insert to modulePtrs_ pointer list
     if (emplace_result.second) // if true, new was inserted
     {
 
@@ -41,11 +41,11 @@ SDL::Module& SDL::Event::getModule(unsigned int detId)
         Module* module_ptr = &((*(emplace_result.first)).second);
 
         // Add the module pointer to the list of modules
-        modules_.push_back(module_ptr);
+        modulePtrs_.push_back(module_ptr);
 
         // If the module is lower module then add to list of lower modules
         if (module_ptr->isLower())
-            lower_modules_.push_back(module_ptr);
+            lowerModulePtrs_.push_back(module_ptr);
     }
 
     return inserted_or_existing;
@@ -53,12 +53,12 @@ SDL::Module& SDL::Event::getModule(unsigned int detId)
 
 const std::vector<SDL::Module*> SDL::Event::getModulePtrs() const
 {
-    return modules_;
+    return modulePtrs_;
 }
 
 const std::vector<SDL::Module*> SDL::Event::getLowerModulePtrs() const
 {
-    return lower_modules_;
+    return lowerModulePtrs_;
 }
 
 void SDL::Event::addHitToModule(SDL::Hit hit, unsigned int detId)
@@ -114,7 +114,7 @@ void SDL::Event::createMiniDoubletsFromLowerModule(unsigned int detId, SDL::MDAl
             // Get reference to upper Hit
             SDL::Hit& upperHit = *upperHitPtr;
 
-            if (SDL::MiniDoublet::isMiniDoubletPair(lowerHit, upperHit, lowerModule, algo, debug_))
+            if (SDL::MiniDoublet::isMiniDoubletPair(lowerHit, upperHit, lowerModule, algo, logLevel_))
                 addMiniDoubletToLowerModule(SDL::MiniDoublet(lowerHitPtr, upperHitPtr), lowerModule.detId());
 
         }
@@ -134,7 +134,7 @@ namespace SDL
         out << "==============" << std::endl;
         out << "" << std::endl;
 
-        for (auto& modulePtr : event.modules_)
+        for (auto& modulePtr : event.modulePtrs_)
         {
             out << modulePtr;
         }

@@ -30,6 +30,18 @@ namespace SDL
     // The following modified ostream will prefix "SDL::  " for every line
     extern oprefixstream cout;
 
+    enum LogLevel
+    {
+        Log_Nothing,
+        Log_Info,
+        Log_Warning,
+        Log_Error,
+        Log_Critical,
+        Log_Debug,
+        Log_Debug2,
+        Log_Debug3,
+    };
+
 }
 
 #endif

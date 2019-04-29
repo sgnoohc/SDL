@@ -22,16 +22,27 @@ SDL::Hit::~Hit()
 void SDL::Hit::setX(float x)
 {
     x_ = x;
+    setDerivedQuantities();
 }
 
 void SDL::Hit::setY(float y)
 {
     y_ = y;
+    setDerivedQuantities();
 }
 
 void SDL::Hit::setZ(float z)
 {
     z_ = z;
+    setDerivedQuantities();
+}
+
+void SDL::Hit::setXYZ(float x, float y, float z)
+{
+    x_ = x;
+    y_ = y;
+    z_ = z;
+    setDerivedQuantities();
 }
 
 void SDL::Hit::setIdx(int idx)
@@ -50,6 +61,9 @@ void SDL::Hit::setDerivedQuantities()
 
     // Setting phi
     phi_ = SDL::Math::Phi_mpi_pi(M_PI + SDL::Math::ATan2(-y_, -x_));
+
+    // Setting eta
+    eta_ = ((z_ > 0) - ( z_ < 0)) * std::acosh(r3_ / rt_);
 
 }
 
@@ -81,6 +95,11 @@ const float& SDL::Hit::rt() const
 const float& SDL::Hit::phi() const
 {
     return phi_;
+}
+
+const float& SDL::Hit::eta() const
+{
+    return eta_;
 }
 
 const int& SDL::Hit::idx() const
@@ -167,7 +186,7 @@ namespace SDL
 {
     std::ostream& operator<<(std::ostream& out, const Hit& hit)
     {
-        out << "Hit(x=" << hit.x() << ", y=" << hit.y() << ", z=" << hit.z() << ", r3=" << hit.r3() << ", rt=" << hit.rt() << ", phi=" << hit.phi() << ")";
+        out << "Hit(x=" << hit.x() << ", y=" << hit.y() << ", z=" << hit.z() << ", r3=" << hit.r3() << ", rt=" << hit.rt() << ", phi=" << hit.phi() << ", eta=" << hit.eta() << ")";
         return out;
     }
 

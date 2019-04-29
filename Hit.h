@@ -21,6 +21,7 @@ namespace SDL
             float r3_; // 3d distance from origin
             float rt_; // transverse distance
             float phi_;
+            float eta_;
             int idx_; // unique index to the hit index in the ntuple
 
             void setDerivedQuantities();
@@ -37,6 +38,7 @@ namespace SDL
             void setX(float x);
             void setY(float y);
             void setZ(float z);
+            void setXYZ(float x, float y, float z);
             void setIdx(int idx);
 
             // accessor functions
@@ -46,6 +48,7 @@ namespace SDL
             const float& rt() const;
             const float& r3() const;
             const float& phi() const;
+            const float& eta() const;
             const int& idx() const;
 
             // variable computation between two hits

@@ -31,14 +31,14 @@ namespace SDL
             std::list<MiniDoublet> miniDoublets_;
 
             // list of module pointers (hold only the pointers to the actual instances)
-            std::vector<Module*> modules_;
+            std::vector<Module*> modulePtrs_;
 
             // list of lower module pointers (hold only the pointers to the actual instances)
             // (lower means, the module that is closer to the luminous region)
-            std::vector<Module*> lower_modules_;
+            std::vector<Module*> lowerModulePtrs_;
 
             // boolean to turn on debug mode
-            bool debug_;
+            SDL::LogLevel logLevel_;
 
         public:
 
@@ -53,7 +53,7 @@ namespace SDL
             const std::vector<Module*> getLowerModulePtrs() const;
 
             // Set debug
-            void setDebug(bool debug=true);
+            void setLogLevel(SDL::LogLevel logLevel=SDL::Log_Nothing);
 
             // Hit related functions
             void addHitToModule(Hit hit, unsigned int detId);

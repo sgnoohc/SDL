@@ -330,6 +330,7 @@ namespace SDL
         out << ", rod=" << module.rod_;
         out << ", ring=" << module.ring_;
         out << ", module=" << module.module_;
+        out << ", moduleType=" << module.moduleType_;
         out << ", isLower=" << module.isLower_;
         out << ", isInverted=" << module.isInverted_;
         out << ")" << std::endl;
