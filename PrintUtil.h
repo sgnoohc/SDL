@@ -32,14 +32,14 @@ namespace SDL
 
     enum LogLevel
     {
-        Log_Nothing,
-        Log_Info,
-        Log_Warning,
-        Log_Error,
-        Log_Critical,
-        Log_Debug,
-        Log_Debug2,
-        Log_Debug3,
+        Log_Nothing  = 0,
+        Log_Info     = 1,
+        Log_Warning  = 2,
+        Log_Error    = 3,
+        Log_Critical = 4,
+        Log_Debug    = 5,
+        Log_Debug2   = 6,
+        Log_Debug3   = 7,
     };
 
 }

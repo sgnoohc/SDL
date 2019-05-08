@@ -132,12 +132,12 @@ bool SDL::MiniDoublet::isMiniDoubletPair(const SDL::Hit& lowerHit, const SDL::Hi
             float dz = std::abs(lowerHit.z() - upperHit.z());
             if (not (dz < dzCut)) // If cut fails continue
             {
-                if (logLevel >= SDL::Log_Debug)
+                if (logLevel >= SDL::Log_Debug3)
                 {
+                    SDL::cout << lowerModule << std::endl;
                     SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
                     SDL::cout << "upperHit: " << upperHit << std::endl;
                     SDL::cout << "lowerHit: " << lowerHit << std::endl;
-                    SDL::cout << lowerModule << std::endl;
                     SDL::cout << "dz : " << dz << std::endl;
                     SDL::cout << "dzCut : " << dzCut << std::endl;
                 }
@@ -145,12 +145,12 @@ bool SDL::MiniDoublet::isMiniDoubletPair(const SDL::Hit& lowerHit, const SDL::Hi
             }
             else
             {
-                if (logLevel >= SDL::Log_Debug2)
+                if (logLevel >= SDL::Log_Debug3)
                 {
+                    SDL::cout << lowerModule << std::endl;
                     SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
                     SDL::cout << "upperHit: " << upperHit << std::endl;
                     SDL::cout << "lowerHit: " << lowerHit << std::endl;
-                    SDL::cout << lowerModule << std::endl;
                     SDL::cout << "dz : " << dz << std::endl;
                     SDL::cout << "dzCut : " << dzCut << std::endl;
                 }
@@ -164,12 +164,12 @@ bool SDL::MiniDoublet::isMiniDoubletPair(const SDL::Hit& lowerHit, const SDL::Hi
             float fabsdPhi = std::abs(lowerHit.deltaPhi(upperHit));
             if (not (fabsdPhi < miniCut)) // If cut fails continue
             {
-                if (logLevel >= SDL::Log_Debug)
+                if (logLevel >= SDL::Log_Debug3)
                 {
+                    SDL::cout << lowerModule << std::endl;
                     SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
                     SDL::cout << "upperHit: " << upperHit << std::endl;
                     SDL::cout << "lowerHit: " << lowerHit << std::endl;
-                    SDL::cout << lowerModule << std::endl;
                     SDL::cout << "fabsdPhi : " << fabsdPhi << std::endl;
                     SDL::cout << "miniCut : " << miniCut << std::endl;
                 }
@@ -177,12 +177,12 @@ bool SDL::MiniDoublet::isMiniDoubletPair(const SDL::Hit& lowerHit, const SDL::Hi
             }
             else
             {
-                if (logLevel >= SDL::Log_Debug2)
+                if (logLevel >= SDL::Log_Debug3)
                 {
+                    SDL::cout << lowerModule << std::endl;
                     SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
                     SDL::cout << "upperHit: " << upperHit << std::endl;
                     SDL::cout << "lowerHit: " << lowerHit << std::endl;
-                    SDL::cout << lowerModule << std::endl;
                     SDL::cout << "fabsdPhi : " << fabsdPhi << std::endl;
                     SDL::cout << "miniCut : " << miniCut << std::endl;
                 }
@@ -193,12 +193,12 @@ bool SDL::MiniDoublet::isMiniDoubletPair(const SDL::Hit& lowerHit, const SDL::Hi
             float fabsdPhiChange = std::abs(lowerHit.deltaPhiChange(upperHit));
             if (not (fabsdPhiChange < miniCut)) // If cut fails continue
             {
-                if (logLevel >= SDL::Log_Debug)
+                if (logLevel >= SDL::Log_Debug3)
                 {
+                    SDL::cout << lowerModule << std::endl;
                     SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
                     SDL::cout << "upperHit: " << upperHit << std::endl;
                     SDL::cout << "lowerHit: " << lowerHit << std::endl;
-                    SDL::cout << lowerModule << std::endl;
                     SDL::cout << "fabsdPhiChange : " << fabsdPhiChange << std::endl;
                     SDL::cout << "miniCut : " << miniCut << std::endl;
                 }
@@ -206,12 +206,12 @@ bool SDL::MiniDoublet::isMiniDoubletPair(const SDL::Hit& lowerHit, const SDL::Hi
             }
             else
             {
-                if (logLevel >= SDL::Log_Debug2)
+                if (logLevel >= SDL::Log_Debug3)
                 {
+                    SDL::cout << lowerModule << std::endl;
                     SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
                     SDL::cout << "upperHit: " << upperHit << std::endl;
                     SDL::cout << "lowerHit: " << lowerHit << std::endl;
-                    SDL::cout << lowerModule << std::endl;
                     SDL::cout << "fabsdPhiChange : " << fabsdPhiChange << std::endl;
                     SDL::cout << "miniCut : " << miniCut << std::endl;
                 }
@@ -230,12 +230,12 @@ bool SDL::MiniDoublet::isMiniDoubletPair(const SDL::Hit& lowerHit, const SDL::Hi
             float dz = std::abs(lowerHit.z() - upperHit.z());
             if (not (dz < dzCut)) // If cut fails continue
             {
-                if (logLevel >= SDL::Log_Debug)
+                if (logLevel >= SDL::Log_Debug3)
                 {
+                    SDL::cout << lowerModule << std::endl;
                     SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
                     SDL::cout << "upperHit: " << upperHit << std::endl;
                     SDL::cout << "lowerHit: " << lowerHit << std::endl;
-                    SDL::cout << lowerModule << std::endl;
                     SDL::cout << "dz : " << dz << std::endl;
                     SDL::cout << "dzCut : " << dzCut << std::endl;
                 }
@@ -243,12 +243,12 @@ bool SDL::MiniDoublet::isMiniDoubletPair(const SDL::Hit& lowerHit, const SDL::Hi
             }
             else
             {
-                if (logLevel >= SDL::Log_Debug2)
+                if (logLevel >= SDL::Log_Debug3)
                 {
+                    SDL::cout << lowerModule << std::endl;
                     SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
                     SDL::cout << "upperHit: " << upperHit << std::endl;
                     SDL::cout << "lowerHit: " << lowerHit << std::endl;
-                    SDL::cout << lowerModule << std::endl;
                     SDL::cout << "dz : " << dz << std::endl;
                     SDL::cout << "dzCut : " << dzCut << std::endl;
                 }
@@ -260,12 +260,12 @@ bool SDL::MiniDoublet::isMiniDoubletPair(const SDL::Hit& lowerHit, const SDL::Hi
             float drt = std::abs(lowerHit.rt() - upperHit.rt());
             if (not (drt < drtCut)) // If cut fails continue
             {
-                if (logLevel >= SDL::Log_Debug)
+                if (logLevel >= SDL::Log_Debug3)
                 {
+                    SDL::cout << lowerModule << std::endl;
                     SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
                     SDL::cout << "upperHit: " << upperHit << std::endl;
                     SDL::cout << "lowerHit: " << lowerHit << std::endl;
-                    SDL::cout << lowerModule << std::endl;
                     SDL::cout << "drt : " << drt << std::endl;
                     SDL::cout << "drtCut : " << drtCut << std::endl;
                 }
@@ -273,12 +273,12 @@ bool SDL::MiniDoublet::isMiniDoubletPair(const SDL::Hit& lowerHit, const SDL::Hi
             }
             else
             {
-                if (logLevel >= SDL::Log_Debug2)
+                if (logLevel >= SDL::Log_Debug3)
                 {
+                    SDL::cout << lowerModule << std::endl;
                     SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
                     SDL::cout << "upperHit: " << upperHit << std::endl;
                     SDL::cout << "lowerHit: " << lowerHit << std::endl;
-                    SDL::cout << lowerModule << std::endl;
                     SDL::cout << "drt : " << drt << std::endl;
                     SDL::cout << "drtCut : " << drtCut << std::endl;
                 }
@@ -298,19 +298,23 @@ bool SDL::MiniDoublet::isMiniDoubletPair(const SDL::Hit& lowerHit, const SDL::Hi
             // However, for PS modules, it is not the case.
             // So we'd have to move the hits to be in same position as the other.
             // We'll move the pixel along the radial direction (assuming the radial direction is more or less same as the strip direction)
-            // Create new hit (lowerHit is pixel hit always, as SDL::Module takes care of that)
-            SDL::Hit lowerHitMod(lowerHit);
-            // float d_rt = upperHit.rt() - lowerHit.rt();
-            // lowerHitMod.setXYZ(lowerHit.x() + d_rt * cos(lowerHit.phi()), lowerHit.y() + d_rt * sin(lowerHit.phi()), lowerHit.z());
-            float fabsdPhi = std::abs(lowerHitMod.deltaPhi(upperHit));
+            // TODO figure out which one is pixel hit (SDL::Module can answer this easily)
+            SDL::Hit upperHitMod(upperHit);
+            float xl = upperHitMod.x();
+            float yl = upperHitMod.y();
+            float d = 0; // TODO
+            float xn = xl - d;
+            float yn = yl - d;
+            upperHitMod.setXYZ(xn, yn, upperHit.z());
+            float fabsdPhi = std::abs(lowerHit.deltaPhi(upperHitMod));
             if (not (fabsdPhi < miniCut)) // If cut fails continue
             {
-                if (logLevel >= SDL::Log_Debug)
+                if (logLevel >= SDL::Log_Debug3)
                 {
+                    SDL::cout << lowerModule << std::endl;
                     SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
                     SDL::cout << "upperHit: " << upperHit << std::endl;
                     SDL::cout << "lowerHit: " << lowerHit << std::endl;
-                    SDL::cout << lowerModule << std::endl;
                     SDL::cout << "fabsdPhi : " << fabsdPhi << std::endl;
                     SDL::cout << "miniCut : " << miniCut << std::endl;
                 }
@@ -318,12 +322,12 @@ bool SDL::MiniDoublet::isMiniDoubletPair(const SDL::Hit& lowerHit, const SDL::Hi
             }
             else
             {
-                if (logLevel >= SDL::Log_Debug2)
+                if (logLevel >= SDL::Log_Debug3)
                 {
+                    SDL::cout << lowerModule << std::endl;
                     SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
                     SDL::cout << "upperHit: " << upperHit << std::endl;
                     SDL::cout << "lowerHit: " << lowerHit << std::endl;
-                    SDL::cout << lowerModule << std::endl;
                     SDL::cout << "fabsdPhi : " << fabsdPhi << std::endl;
                     SDL::cout << "miniCut : " << miniCut << std::endl;
                 }
@@ -335,16 +339,18 @@ bool SDL::MiniDoublet::isMiniDoubletPair(const SDL::Hit& lowerHit, const SDL::Hi
             float fabsdPhiMod = fabsdPhi / dzFrac * (1.f + dzFrac);
             if (not (fabsdPhiMod < miniCut)) // If cut fails continue
             {
-                if (logLevel >= SDL::Log_Debug)
+                if (logLevel >= SDL::Log_Debug2)
                 {
+                    SDL::cout << lowerModule << std::endl;
                     SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
                     SDL::cout << "upperHit: " << upperHit << std::endl;
                     SDL::cout << "lowerHit: " << lowerHit << std::endl;
-                    SDL::cout << lowerModule << std::endl;
                     SDL::cout << "dz : " << dz << std::endl;
                     SDL::cout << "dzFrac : " << dzFrac << std::endl;
                     SDL::cout << "fabsdPhi : " << fabsdPhi << std::endl;
                     SDL::cout << "fabsdPhiMod : " << fabsdPhiMod << std::endl;
+                    SDL::cout << "xl: " << xl <<  " yl: " << yl <<  std::endl;
+                    SDL::cout << "xn: " << xn <<  " yn: " << yn <<  std::endl;
                     SDL::cout << "miniCut : " << miniCut << std::endl;
                 }
                 return false;
@@ -353,14 +359,16 @@ bool SDL::MiniDoublet::isMiniDoubletPair(const SDL::Hit& lowerHit, const SDL::Hi
             {
                 if (logLevel >= SDL::Log_Debug2)
                 {
+                    SDL::cout << lowerModule << std::endl;
                     SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
                     SDL::cout << "upperHit: " << upperHit << std::endl;
                     SDL::cout << "lowerHit: " << lowerHit << std::endl;
-                    SDL::cout << lowerModule << std::endl;
                     SDL::cout << "dz : " << dz << std::endl;
                     SDL::cout << "dzFrac : " << dzFrac << std::endl;
                     SDL::cout << "fabsdPhi : " << fabsdPhi << std::endl;
                     SDL::cout << "fabsdPhiMod : " << fabsdPhiMod << std::endl;
+                    SDL::cout << "xl: " << xl <<  " yl: " << yl <<  std::endl;
+                    SDL::cout << "xn: " << xn <<  " yn: " << yn <<  std::endl;
                     SDL::cout << "miniCut : " << miniCut << std::endl;
                 }
             }
