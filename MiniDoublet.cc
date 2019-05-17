@@ -106,6 +106,78 @@ float SDL::MiniDoublet::dPhiThreshold(const SDL::Hit& lowerHit, const SDL::Modul
 
 }
 
+float SDL::MiniDoublet::fabsdPhiPixelShift(const SDL::Hit& lowerHit, const SDL::Hit& upperHit, const SDL::Module& lowerModule, SDL::LogLevel logLevel)
+{
+
+    float fabsdPhi;
+
+    // dependent variables for this if statement
+    // lowerModule
+    // lowerHit
+    // upperHit
+    // SDL::endcapGeometry
+
+    float xo; // old x (before the pixel hit is moved up or down)
+    float yo; // old y (before the pixel hit is moved up or down)
+    float xn; // new x (after the pixel hit is moved up or down)
+    float yn; // new y (after the pixel hit is moved up or down)
+    unsigned int detid; // Needed to access geometry information
+
+    if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
+    {
+        xo = lowerHit.x();
+        yo = lowerHit.y();
+        detid = lowerModule.partnerDetId();
+    }
+    else
+    {
+        xo = upperHit.x();
+        yo = upperHit.y();
+        detid = lowerModule.detId();
+    }
+
+    float avgr2 = SDL::endcapGeometry.getAverageR2(detid);
+    float r2 = xo * xo + yo * yo;
+    float yintercept = 0;
+    float slope = 0;
+
+    if (r2 < avgr2)
+    {
+        yintercept = SDL::endcapGeometry.getYInterceptLower(detid);
+        slope = SDL::endcapGeometry.getSlopeLower(detid);
+    }
+    else
+    {
+        yintercept = SDL::endcapGeometry.getYInterceptUpper(detid);
+        slope = SDL::endcapGeometry.getSlopeUpper(detid);
+    }
+
+    xn = (xo / slope + yo - yintercept) / (slope + 1.f / slope); // new xn
+    yn = xn * slope + yintercept; // new yn
+
+    if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
+    {
+        SDL::Hit lowerHitMod(lowerHit);
+        lowerHitMod.setXYZ(xn, yn, lowerHit.z());
+        fabsdPhi = std::abs(lowerHitMod.deltaPhi(upperHit));
+    }
+    else
+    {
+        SDL::Hit upperHitMod(upperHit);
+        upperHitMod.setXYZ(xn, yn, upperHit.z());
+        fabsdPhi = std::abs(lowerHit.deltaPhi(upperHitMod));
+    }
+
+    if (logLevel >= SDL::Log_Debug3)
+    {
+        SDL::cout <<  " avgr2: " << avgr2 <<  " r2: " << r2 <<  " yintercept: " << yintercept <<  " slope: " << slope <<  std::endl;
+        SDL::cout <<  " xo: " << xo <<  " yo: " << yo <<  " xn: " << xn <<  " yn: " << yn <<  std::endl;
+    }
+
+    return fabsdPhi;
+}
+
+
 bool SDL::MiniDoublet::isMiniDoubletPair(const SDL::Hit& lowerHit, const SDL::Hit& upperHit, const SDL::Module& lowerModule, SDL::MDAlgo algo, SDL::LogLevel logLevel)
 {
     // If the algorithm is "do all combination" (e.g. used for efficiency calculation)
@@ -298,15 +370,16 @@ bool SDL::MiniDoublet::isMiniDoubletPair(const SDL::Hit& lowerHit, const SDL::Hi
             // However, for PS modules, it is not the case.
             // So we'd have to move the hits to be in same position as the other.
             // We'll move the pixel along the radial direction (assuming the radial direction is more or less same as the strip direction)
-            // TODO figure out which one is pixel hit (SDL::Module can answer this easily)
-            SDL::Hit upperHitMod(upperHit);
-            float xl = upperHitMod.x();
-            float yl = upperHitMod.y();
-            float d = 0; // TODO
-            float xn = xl - d;
-            float yn = yl - d;
-            upperHitMod.setXYZ(xn, yn, upperHit.z());
-            float fabsdPhi = std::abs(lowerHit.deltaPhi(upperHitMod));
+            float fabsdPhi = 0;
+
+            if (lowerModule.moduleType() == SDL::Module::PS)
+            {
+                fabsdPhi = fabsdPhiPixelShift(lowerHit, upperHit, lowerModule);
+            }
+            else
+            {
+                fabsdPhi = std::abs(lowerHit.deltaPhi(upperHit));
+            }
             if (not (fabsdPhi < miniCut)) // If cut fails continue
             {
                 if (logLevel >= SDL::Log_Debug3)
@@ -333,7 +406,7 @@ bool SDL::MiniDoublet::isMiniDoubletPair(const SDL::Hit& lowerHit, const SDL::Hi
                 }
             }
 
-            // Cut #3: Another cut on the dphi after some modification
+            // Cut #4: Another cut on the dphi after some modification
             // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3119-L3124
             float dzFrac = dz / fabs(lowerHit.z());
             float fabsdPhiMod = fabsdPhi / dzFrac * (1.f + dzFrac);
@@ -349,8 +422,6 @@ bool SDL::MiniDoublet::isMiniDoubletPair(const SDL::Hit& lowerHit, const SDL::Hi
                     SDL::cout << "dzFrac : " << dzFrac << std::endl;
                     SDL::cout << "fabsdPhi : " << fabsdPhi << std::endl;
                     SDL::cout << "fabsdPhiMod : " << fabsdPhiMod << std::endl;
-                    SDL::cout << "xl: " << xl <<  " yl: " << yl <<  std::endl;
-                    SDL::cout << "xn: " << xn <<  " yn: " << yn <<  std::endl;
                     SDL::cout << "miniCut : " << miniCut << std::endl;
                 }
                 return false;
@@ -367,8 +438,6 @@ bool SDL::MiniDoublet::isMiniDoubletPair(const SDL::Hit& lowerHit, const SDL::Hi
                     SDL::cout << "dzFrac : " << dzFrac << std::endl;
                     SDL::cout << "fabsdPhi : " << fabsdPhi << std::endl;
                     SDL::cout << "fabsdPhiMod : " << fabsdPhiMod << std::endl;
-                    SDL::cout << "xl: " << xl <<  " yl: " << yl <<  std::endl;
-                    SDL::cout << "xn: " << xn <<  " yn: " << yn <<  std::endl;
                     SDL::cout << "miniCut : " << miniCut << std::endl;
                 }
             }
