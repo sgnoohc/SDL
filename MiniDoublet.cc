@@ -117,6 +117,8 @@ float SDL::MiniDoublet::fabsdPhiPixelShift(const SDL::Hit& lowerHit, const SDL::
     // upperHit
     // SDL::endcapGeometry
 
+    float xa; // "anchor" x (strip hit x)
+    float ya; // "anchor" y (strip hit y)
     float xo; // old x (before the pixel hit is moved up or down)
     float yo; // old y (before the pixel hit is moved up or down)
     float xn; // new x (after the pixel hit is moved up or down)
@@ -127,30 +129,34 @@ float SDL::MiniDoublet::fabsdPhiPixelShift(const SDL::Hit& lowerHit, const SDL::
     {
         xo = lowerHit.x();
         yo = lowerHit.y();
+        xa = upperHit.x();
+        ya = upperHit.y();
         detid = lowerModule.partnerDetId();
     }
     else
     {
         xo = upperHit.x();
         yo = upperHit.y();
+        xa = lowerHit.x();
+        ya = lowerHit.y();
         detid = lowerModule.detId();
     }
 
-    float avgr2 = SDL::endcapGeometry.getAverageR2(detid);
-    float r2 = xo * xo + yo * yo;
     float yintercept = 0;
     float slope = 0;
 
-    if (r2 < avgr2)
-    {
-        yintercept = SDL::endcapGeometry.getYInterceptLower(detid);
-        slope = SDL::endcapGeometry.getSlopeLower(detid);
-    }
-    else
-    {
-        yintercept = SDL::endcapGeometry.getYInterceptUpper(detid);
-        slope = SDL::endcapGeometry.getSlopeUpper(detid);
-    }
+    // Choose the line to slide to based on the "anchor" hit (whichever is the strip module)
+
+    float yintercept_lower = SDL::endcapGeometry.getYInterceptLower(detid);
+    float slope_lower = SDL::endcapGeometry.getSlopeLower(detid);
+    float yintercept_upper = SDL::endcapGeometry.getYInterceptUpper(detid);
+    float slope_upper = SDL::endcapGeometry.getSlopeUpper(detid);
+
+    // Check by plugging anchor hits into y = ax + b and see which one fits better
+    bool use_lower = fabs((yintercept_lower + slope_lower * xa) - ya) < fabs((yintercept_upper + slope_upper * xa) - ya);
+
+    yintercept = use_lower ? yintercept_lower : yintercept_upper;
+    slope = use_lower ? slope_lower : slope_upper;
 
     xn = (xo / slope + yo - yintercept) / (slope + 1.f / slope); // new xn
     yn = xn * slope + yintercept; // new yn
@@ -170,7 +176,9 @@ float SDL::MiniDoublet::fabsdPhiPixelShift(const SDL::Hit& lowerHit, const SDL::
 
     if (logLevel >= SDL::Log_Debug3)
     {
-        SDL::cout <<  " avgr2: " << avgr2 <<  " r2: " << r2 <<  " yintercept: " << yintercept <<  " slope: " << slope <<  std::endl;
+        SDL::cout <<  " use_lower: " << use_lower;
+        SDL::cout <<  " yintercept: " << yintercept <<  " slope: " << slope <<  std::endl;
+        SDL::cout <<  " xa: " << xa <<  " ya: " << ya <<  std::endl;
         SDL::cout <<  " xo: " << xo <<  " yo: " << yo <<  " xn: " << xn <<  " yn: " << yn <<  std::endl;
     }
 
