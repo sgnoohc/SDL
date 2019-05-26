@@ -49,6 +49,9 @@ namespace SDL
             // The math for shifting the pixel hit up or down along the PS module orientation
             static float fabsdPhiPixelShift(const Hit& lowerHit, const Hit& upperHit, const Module& lowerModule, SDL::LogLevel logLevel=SDL::Log_Nothing);
 
+            // The math for shifting the strip hit up or down along the PS module orientation
+            static float fabsdPhiStripShift(const Hit& lowerHit, const Hit& upperHit, const Module& lowerModule, SDL::LogLevel logLevel=SDL::Log_Nothing);
+
             // The function to actually determine whether a hit is a reco-ed mini doublet or not
             static bool isMiniDoubletPair(const Hit& lowerHit, const Hit& upperHit, const Module& lowerModule, MDAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
     };
