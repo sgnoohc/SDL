@@ -8,6 +8,7 @@
 #include "Module.h"
 #include "PrintUtil.h"
 #include "EndcapGeometry.h"
+#include "TiltedGeometry.h"
 
 namespace SDL
 {
