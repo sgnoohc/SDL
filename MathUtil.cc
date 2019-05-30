@@ -1,10 +1,10 @@
-#include "Math.h"
+#include "MathUtil.h"
 
-float SDL::Math::Phi_mpi_pi(float x)
+float SDL::MathUtil::Phi_mpi_pi(float x)
 {
     if (isnan(x))
     {
-        std::cout << "SDL::Math::Phi_0_2pi() function called with NaN" << std::endl;
+        std::cout << "SDL::MathUtil::Phi_0_2pi() function called with NaN" << std::endl;
         return x;
     }
 
@@ -18,7 +18,7 @@ float SDL::Math::Phi_mpi_pi(float x)
 
 }
 
-float SDL::Math::ATan2(float y, float x)
+float SDL::MathUtil::ATan2(float y, float x)
 {
     if (x != 0) return  atan2(y, x);
     if (y == 0) return  0;
