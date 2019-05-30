@@ -109,7 +109,7 @@ const int& SDL::Hit::idx() const
 
 float SDL::Hit::deltaPhi(const SDL::Hit& hit) const
 {
-    return SDL::Math::Phi_mpi_pi(hit.phi() - phi_);
+    return SDL::MathUtil::Phi_mpi_pi(hit.phi() - phi_);
 }
 
 float SDL::Hit::deltaPhiChange(const SDL::Hit& hit) const
