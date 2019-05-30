@@ -1,7 +1,7 @@
 #ifndef Hit_h
 #define Hit_h
 
-#include <math.h>
+// #include <math.h>
 #include <iostream>
 #include <cmath>
 #include <vector>
