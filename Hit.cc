@@ -60,7 +60,7 @@ void SDL::Hit::setDerivedQuantities()
     rt_ = sqrt(x_ * x_ + y_ * y_);
 
     // Setting phi
-    phi_ = SDL::Math::Phi_mpi_pi(M_PI + SDL::Math::ATan2(-y_, -x_));
+    phi_ = SDL::MathUtil::Phi_mpi_pi(M_PI + SDL::MathUtil::ATan2(-y_, -x_));
 
     // Setting eta
     eta_ = ((z_ > 0) - ( z_ < 0)) * std::acosh(r3_ / rt_);

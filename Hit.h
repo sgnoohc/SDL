@@ -1,12 +1,11 @@
 #ifndef Hit_h
 #define Hit_h
 
-// #include <math.h>
 #include <iostream>
 #include <cmath>
 #include <vector>
 
-#include "Math.h"
+#include "MathUtil.h"
 #include "PrintUtil.h"
 
 namespace SDL

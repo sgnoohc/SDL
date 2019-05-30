@@ -1,14 +1,13 @@
-#ifndef Math_h
-#define Math_h
+#ifndef MathUtil_h
+#define MathUtil_h
 
-// #include <math.h>
 #include <iostream>
 #include <cmath>
 
 namespace SDL
 {
     // functions for math related operations
-    namespace Math
+    namespace MathUtil
     {
 
         float Phi_mpi_pi(float phi);
