@@ -240,11 +240,11 @@ bool SDL::Module::parseIsInverted(unsigned int detId)
         {
             if (parseLayer(detId) <= 2)
             {
-                return parseModule(detId) % 2 == 0;
+                return parseModule(detId) % 2 == 1;
             }
             else if (parseLayer(detId) == 3)
             {
-                return parseModule(detId) % 2 == 1;
+                return parseModule(detId) % 2 == 0;
             }
             else
             {
