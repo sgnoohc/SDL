@@ -710,15 +710,17 @@ bool SDL::MiniDoublet::isMiniDoubletPair(const SDL::Hit& lowerHit, const SDL::Hi
 
             // Cut #3: dphi difference
             // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3111
+            // // Old comments ----
+            // // Old comments Slava, 6:17 PM
+            // // Old comments here for the code to work you would need to slide (line extrapolate) the lower or the upper  hit along the strip direction to the radius of the other
+            // // Old comments you'll get it almost right by assuming radial strips and just add the d_rt*(cosPhi, sinPhi)
+            // // Old comments ----
+            // // Old comments The algorithm assumed that the radial position is ~close according to Slava.
+            // // Old comments However, for PS modules, it is not the case.
+            // // Old comments So we'd have to move the hits to be in same position as the other.
+            // // Old comments We'll move the pixel along the radial direction (assuming the radial direction is more or less same as the strip direction)
             // ----
-            // Slava, 6:17 PM
-            // here for the code to work you would need to slide (line extrapolate) the lower or the upper  hit along the strip direction to the radius of the other
-            // you'll get it almost right by assuming radial strips and just add the d_rt*(cosPhi, sinPhi)
-            // ----
-            // The algorithm assumed that the radial position is ~close according to Slava.
-            // However, for PS modules, it is not the case.
-            // So we'd have to move the hits to be in same position as the other.
-            // We'll move the pixel along the radial direction (assuming the radial direction is more or less same as the strip direction)
+            // The new scheme shifts strip hits to be "aligned" along the line of sight from interaction point to the pixel hit (if it is PS modules)
             float fabsdPhi = 0;
             if (lowerModule.moduleType() == SDL::Module::PS)
             {
