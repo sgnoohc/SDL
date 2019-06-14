@@ -54,8 +54,8 @@ namespace SDL
             // The math for shifting the strip hit up or down along the PS module orientation (deprecated)
             static float fabsdPhiStripShift(const Hit& lowerHit, const Hit& upperHit, const Module& lowerModule, SDL::LogLevel logLevel=SDL::Log_Nothing);
 
-            // The math for shifting the strip hit up or down along the PS module orientation, returns new x and y position
-            static std::tuple<float, float> shiftStripHits(const Hit& lowerHit, const Hit& upperHit, const Module& lowerModule, SDL::LogLevel logLevel=SDL::Log_Nothing);
+            // The math for shifting the strip hit up or down along the PS module orientation, returns new x, y and z position
+            static std::tuple<float, float, float> shiftStripHits(const Hit& lowerHit, const Hit& upperHit, const Module& lowerModule, SDL::LogLevel logLevel=SDL::Log_Nothing);
 
             // The function to actually determine whether a hit is a reco-ed mini doublet or not
             static bool isMiniDoubletPair(const Hit& lowerHit, const Hit& upperHit, const Module& lowerModule, MDAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);

@@ -290,7 +290,7 @@ float SDL::MiniDoublet::fabsdPhiStripShift(const SDL::Hit& lowerHit, const SDL::
     return fabsdPhi;
 }
 
-std::tuple<float, float> SDL::MiniDoublet::shiftStripHits(const SDL::Hit& lowerHit, const SDL::Hit& upperHit, const SDL::Module& lowerModule, SDL::LogLevel logLevel)
+std::tuple<float, float, float> SDL::MiniDoublet::shiftStripHits(const SDL::Hit& lowerHit, const SDL::Hit& upperHit, const SDL::Module& lowerModule, SDL::LogLevel logLevel)
 {
 
     // This is the strip shift scheme that is explained in http://uaf-10.t2.ucsd.edu/~phchang/talks/PhilipChang20190607_SDL_Update.pdf (see backup slides)
@@ -317,6 +317,8 @@ std::tuple<float, float> SDL::MiniDoublet::shiftStripHits(const SDL::Hit& lowerH
     float yo; // old y (before the strip hit is moved up or down)
     float xn; // new x (after the strip hit is moved up or down)
     float yn; // new y (after the strip hit is moved up or down)
+    float abszn; // new z in absolute value
+    float zn; // new z with the sign (+/-) accounted
     float angleA; // in r-z plane the theta of the pixel hit in polar coordinate is the angleA
     float angleB; // this is the angle of tilted module in r-z plane ("drdz"), for endcap this is 90 degrees
     unsigned int detid; // The detId of the strip module in the PS pair. Needed to access geometry information
@@ -330,6 +332,7 @@ std::tuple<float, float> SDL::MiniDoublet::shiftStripHits(const SDL::Hit& lowerH
     float slope; // The slope of the possible strip hits for a given module in x-y plane
     float absArctanSlope;
     float angleM; // the angle M is the angle of rotation of the module in x-y plane if the possible strip hits are along the x-axis, then angleM = 0, and if the possible strip hits are along y-axis angleM = 90 degrees
+    float absdzprime; // The distance between the two points after shifting
 
     // Assign hit pointers based on their hit type
     if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
@@ -438,7 +441,22 @@ std::tuple<float, float> SDL::MiniDoublet::shiftStripHits(const SDL::Hit& lowerH
         yn = (xn - xa) * slope + ya; // new yn
     }
 
-    return std::make_tuple(xn, yn);
+    // Computing new Z position
+    absdzprime = fabs(moduleSeparation / std::sin(angleA + angleB) * std::cos(angleA)); // module separation sign is for shifting in radial direction for z-axis direction take care of the sign later
+
+    // Depending on which one as closer to the interactin point compute the new z wrt to the pixel properly
+    if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
+    {
+        abszn = fabs(pixelHitPtr->z()) + absdzprime;
+    }
+    else
+    {
+        abszn = fabs(pixelHitPtr->z()) - absdzprime;
+    }
+
+    zn = abszn * (pixelHitPtr->z() > 0 ? 1 : -1); // Apply the sign of the zn
+
+    return std::make_tuple(xn, yn, zn);
 
 }
 
@@ -447,9 +465,17 @@ bool SDL::MiniDoublet::isNormalTiltedModules(const SDL::Module& lowerModule)
     // The "normal" tilted modules are the subset of tilted modules that will use the tilted module logic
     // If a tiltde module is not part of the "normal" tiltded modules, they will default to endcap logic (the actual defaulting logic is implemented elsewhere)
     if (
-           (lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() != SDL::Module::Center and lowerModule.layer() >= 2)
-           or (lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() == SDL::Module::NegZ and lowerModule.layer() == 1)
-           or (lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() == SDL::Module::PosZ and lowerModule.layer() == 1)
+           (lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() != SDL::Module::Center and lowerModule.layer() == 3)
+           or (lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() == SDL::Module::NegZ and lowerModule.layer() == 2 and lowerModule.rod() > 5)
+           or (lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() == SDL::Module::PosZ and lowerModule.layer() == 2 and lowerModule.rod() < 8)
+           or (lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() == SDL::Module::NegZ and lowerModule.layer() == 1 and lowerModule.rod() > 9)
+           or (lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() == SDL::Module::PosZ and lowerModule.layer() == 1 and lowerModule.rod() < 4)
+
+           // (lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() != SDL::Module::Center and lowerModule.layer() > 2)
+
+           // (lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() != SDL::Module::Center and lowerModule.layer() >= 2)
+           // or (lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() == SDL::Module::NegZ and lowerModule.layer() == 1)
+           // or (lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() == SDL::Module::PosZ and lowerModule.layer() == 1)
 
            // Below is commented out for now. The transition point of endcap v. tilted module logic can be defined using the "rod" numbering of tilted modules.
            // The rod numbering is stupid in that it goes from left to right in z space regardless of the sign of the z.
@@ -524,11 +550,11 @@ bool SDL::MiniDoublet::isMiniDoubletPair(const SDL::Hit& lowerHit, const SDL::Hi
             // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3085
             // float fabsdPhi = std::abs(lowerHit.deltaPhi(upperHit));
             float fabsdPhi = 0;
-            float xn = 0, yn =0;
+            float xn = 0, yn = 0, zn = 0;
             if (lowerModule.side() != SDL::Module::Center) // If barrel and not center it is tilted
             {
                 // Shift the hits and calculate new xn, yn position
-                std::tie(xn, yn) = shiftStripHits(lowerHit, upperHit, lowerModule, logLevel);
+                std::tie(xn, yn, zn) = shiftStripHits(lowerHit, upperHit, lowerModule, logLevel);
 
                 // Lower or the upper hit needs to be modified depending on which one was actually shifted
                 if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
@@ -643,6 +669,8 @@ bool SDL::MiniDoublet::isMiniDoubletPair(const SDL::Hit& lowerHit, const SDL::Hi
         {
             // Cut #1 : dz cut. The dz difference can't be larger than 1cm. (max separation is 4mm for modules in the endcap)
             // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3093
+            // For PS module in case when it is tilted a different dz (after the strip hit shift) is calculated later.
+            // This is because the 10.f cut is meant more for sanity check (most will pass this cut anyway) (TODO: Maybe revisit this cut later?)
             const float dzCut = lowerModule.side() == SDL::Module::Endcap ?  1.f : 10.f;
             float dz = std::abs(lowerHit.z() - upperHit.z());
             if (not (dz < dzCut)) // If cut fails continue
@@ -722,11 +750,11 @@ bool SDL::MiniDoublet::isMiniDoubletPair(const SDL::Hit& lowerHit, const SDL::Hi
             // ----
             // The new scheme shifts strip hits to be "aligned" along the line of sight from interaction point to the pixel hit (if it is PS modules)
             float fabsdPhi = 0;
+            float xn = 0, yn = 0, zn = 0;
             if (lowerModule.moduleType() == SDL::Module::PS)
             {
                 // Shift the hits and calculate new xn, yn position
-                float xn, yn;
-                std::tie(xn, yn) = shiftStripHits(lowerHit, upperHit, lowerModule, logLevel);
+                std::tie(xn, yn, zn) = shiftStripHits(lowerHit, upperHit, lowerModule, logLevel);
 
                 // Appropriate lower or upper hit is modified after checking which one was actually shifted
                 if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
@@ -775,6 +803,21 @@ bool SDL::MiniDoublet::isMiniDoubletPair(const SDL::Hit& lowerHit, const SDL::Hi
 
             // Cut #4: Another cut on the dphi after some modification
             // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3119-L3124
+
+            // dz needs to change if it is a PS module where the strip hits are shifted in order to properly account for the case when a tilted module falls under "endcap logic"
+            // if it was an endcap it will have zero effect
+            if (lowerModule.moduleType() == SDL::Module::PS)
+            {
+                if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
+                {
+                    dz = fabs(lowerHit.z() - zn);
+                }
+                else
+                {
+                    dz = fabs(upperHit.z() - zn);
+                }
+            }
+
             float dzFrac = dz / fabs(lowerHit.z());
             float fabsdPhiMod = fabsdPhi / dzFrac * (1.f + dzFrac);
             if (not (fabsdPhiMod < miniCut)) // If cut fails continue
