@@ -335,17 +335,26 @@ std::tuple<float, float, float> SDL::MiniDoublet::shiftStripHits(const SDL::Hit&
     float absdzprime; // The distance between the two points after shifting
 
     // Assign hit pointers based on their hit type
-    if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
+    if (lowerModule.moduleType() == SDL::Module::PS)
     {
-        pixelHitPtr = &lowerHit;
-        stripHitPtr = &upperHit;
-        detid = lowerModule.partnerDetId(); // partnerDetId returns the partner detId (since lower Module == pixel, get partner ID to access strip one)
+        if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
+        {
+            pixelHitPtr = &lowerHit;
+            stripHitPtr = &upperHit;
+            detid = lowerModule.partnerDetId(); // partnerDetId returns the partner detId (since lower Module == pixel, get partner ID to access strip one)
+        }
+        else
+        {
+            pixelHitPtr = &upperHit;
+            stripHitPtr = &lowerHit;
+            detid = lowerModule.detId(); // Since the lower module is not pixel, the lower module is the strip
+        }
     }
-    else
+    else if (lowerModule.moduleType() == SDL::Module::TwoS) // If it is a TwoS module (if this is called likely an endcap module) then anchor the inner hit and shift the outer hit
     {
-        pixelHitPtr = &upperHit;
-        stripHitPtr = &lowerHit;
-        detid = lowerModule.detId(); // Since the lower module is not pixel, the lower module is the strip
+        pixelHitPtr = &lowerHit; // Even though in this case the "pixelHitPtr" is really just a strip hit, we pretend it is the anchoring pixel hit
+        stripHitPtr = &upperHit;
+        detid = lowerModule.detId(); // partnerDetId returns the partner detId (since lower Module == pixel, get partner ID to access strip one)
     }
 
     // If it is endcap some of the math gets simplified (and also computers don't like infinities)
@@ -380,11 +389,11 @@ std::tuple<float, float, float> SDL::MiniDoublet::shiftStripHits(const SDL::Hit&
 
     if (lowerModule.subdet() == SDL::Module::Endcap)
     {
-       slope = SDL::endcapGeometry.getSlopeLower(detid); // Only need one slope
+        slope = SDL::endcapGeometry.getSlopeLower(detid); // Only need one slope
     }
     if (lowerModule.subdet() == SDL::Module::Barrel)
     {
-       slope = SDL::tiltedGeometry.getSlope(detid);
+        slope = SDL::tiltedGeometry.getSlope(detid);
     }
 
     // Compute arctan of the slope and take care of the slope = infinity case
@@ -751,11 +760,13 @@ bool SDL::MiniDoublet::isMiniDoubletPair(const SDL::Hit& lowerHit, const SDL::Hi
             // The new scheme shifts strip hits to be "aligned" along the line of sight from interaction point to the pixel hit (if it is PS modules)
             float fabsdPhi = 0;
             float xn = 0, yn = 0, zn = 0;
-            if (lowerModule.moduleType() == SDL::Module::PS)
-            {
+            // if (lowerModule.moduleType() == SDL::Module::PS)
+            // {
                 // Shift the hits and calculate new xn, yn position
                 std::tie(xn, yn, zn) = shiftStripHits(lowerHit, upperHit, lowerModule, logLevel);
 
+            if (lowerModule.moduleType() == SDL::Module::PS)
+            {
                 // Appropriate lower or upper hit is modified after checking which one was actually shifted
                 if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
                 {
@@ -772,7 +783,10 @@ bool SDL::MiniDoublet::isMiniDoubletPair(const SDL::Hit& lowerHit, const SDL::Hi
             }
             else
             {
-                fabsdPhi = std::abs(lowerHit.deltaPhi(upperHit));
+                SDL::Hit upperHitMod(upperHit);
+                upperHitMod.setXYZ(xn, yn, upperHit.z());
+                fabsdPhi = std::abs(lowerHit.deltaPhi(upperHitMod));
+                // fabsdPhi = std::abs(lowerHit.deltaPhi(upperHit));
             }
 
             if (not (fabsdPhi < miniCut)) // If cut fails continue
