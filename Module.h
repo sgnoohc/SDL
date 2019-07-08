@@ -6,10 +6,12 @@
 
 #include "Hit.h"
 #include "MiniDoublet.h"
+#include "Segment.h"
 #include "PrintUtil.h"
 
 namespace SDL{
     class MiniDoublet;
+    class Segment;
 }
 
 namespace SDL
@@ -234,6 +236,9 @@ namespace SDL
             // vector of mini doublet pointers
             std::vector<MiniDoublet*> miniDoublets_;
 
+            // vector of segment pointers
+            std::vector<Segment*> segments_;
+
             void setDerivedQuantities();
 
         public:
@@ -259,11 +264,13 @@ namespace SDL
             const ModuleLayerType& moduleLayerType() const;
             const std::vector<Hit*>& getHitPtrs() const;
             const std::vector<MiniDoublet*>& getMiniDoubletPtrs() const;
+            const std::vector<Segment*>& getSegmentPtrs() const;
 
             // modifying the class content
             void setDetId(unsigned int);
             void addHit(Hit* hit);
             void addMiniDoublet(MiniDoublet* md);
+            void addSegment(Segment* sg);
 
             // static functions to parse detId
             static unsigned short parseSubdet(unsigned int);

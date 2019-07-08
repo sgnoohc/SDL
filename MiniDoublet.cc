@@ -41,8 +41,9 @@ namespace SDL
 {
     std::ostream& operator<<(std::ostream& out, const MiniDoublet& md)
     {
-        out << "Lower " << md.lowerHitPtr_ << std::endl;;
-        out << "Upper " << md.upperHitPtr_;
+        out << "MiniDoublet()" << std::endl;
+        out << "    Lower " << md.lowerHitPtr_ << std::endl;;
+        out << "    Upper " << md.upperHitPtr_;
         return out;
     }
 
@@ -497,7 +498,7 @@ bool SDL::MiniDoublet::isNormalTiltedModules(const SDL::Module& lowerModule)
         return false;
 }
 
-bool SDL::MiniDoublet::isMiniDoubletPair(const SDL::Hit& lowerHit, const SDL::Hit& upperHit, const SDL::Module& lowerModule, SDL::MDAlgo algo, SDL::LogLevel logLevel)
+bool SDL::MiniDoublet::isHitPairAMiniDoublet(const SDL::Hit& lowerHit, const SDL::Hit& upperHit, const SDL::Module& lowerModule, SDL::MDAlgo algo, SDL::LogLevel logLevel)
 {
     // If the algorithm is "do all combination" (e.g. used for efficiency calculation)
     if (algo == SDL::AllComb_MDAlgo)

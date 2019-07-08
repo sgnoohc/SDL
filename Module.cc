@@ -89,6 +89,11 @@ const std::vector<SDL::MiniDoublet*>& SDL::Module::getMiniDoubletPtrs() const
     return miniDoublets_;
 }
 
+const std::vector<SDL::Segment*>& SDL::Module::getSegmentPtrs() const
+{
+    return segments_;
+}
+
 void SDL::Module::setDetId(unsigned int detId)
 {
     detId_ = detId;
@@ -118,6 +123,11 @@ void SDL::Module::addHit(SDL::Hit* hit)
 void SDL::Module::addMiniDoublet(SDL::MiniDoublet* md)
 {
     miniDoublets_.push_back(md);
+}
+
+void SDL::Module::addSegment(SDL::Segment* sg)
+{
+    segments_.push_back(sg);
 }
 
 unsigned short SDL::Module::parseSubdet(unsigned int detId)
@@ -339,6 +349,8 @@ namespace SDL
             out << hitPtr << std::endl;
         for (auto& mdPtr : module.miniDoublets_)
             out << mdPtr << std::endl;
+        for (auto& sgPtr : module.segments_)
+            out << sgPtr << std::endl;
         out << "" << std::endl;
 
         return out;

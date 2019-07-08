@@ -79,6 +79,15 @@ void SDL::Event::addMiniDoubletToLowerModule(SDL::MiniDoublet md, unsigned int d
     getModule(detId).addMiniDoublet(&(miniDoublets_.back()));
 }
 
+void SDL::Event::addSegmentToLowerModule(SDL::Segment sg, unsigned int detId)
+{
+    // Add to global list of mini doublets, where it will hold the object's instance
+    segments_.push_back(sg);
+
+    // And get the module (if not exists, then create), and add the address to Module.hits_
+    getModule(detId).addSegment(&(segments_.back()));
+}
+
 void SDL::Event::createMiniDoublets(MDAlgo algo)
 {
     // Loop over lower modules
@@ -114,13 +123,74 @@ void SDL::Event::createMiniDoubletsFromLowerModule(unsigned int detId, SDL::MDAl
             // Get reference to upper Hit
             SDL::Hit& upperHit = *upperHitPtr;
 
-            if (SDL::MiniDoublet::isMiniDoubletPair(lowerHit, upperHit, lowerModule, algo, logLevel_))
+            if (SDL::MiniDoublet::isHitPairAMiniDoublet(lowerHit, upperHit, lowerModule, algo, logLevel_))
                 addMiniDoubletToLowerModule(SDL::MiniDoublet(lowerHitPtr, upperHitPtr), lowerModule.detId());
 
         }
 
     }
 
+}
+
+void SDL::Event::createSegments(SGAlgo algo)
+{
+    // Loop over lower modules
+    for (auto& lowerModulePtr : getLowerModulePtrs())
+    {
+
+        // Create mini doublets
+        createSegmentsFromInnerLowerModule(lowerModulePtr->detId(), algo);
+
+    }
+}
+
+void SDL::Event::createSegmentsFromInnerLowerModule(unsigned int detId, SDL::SGAlgo algo)
+{
+
+    // x's and y's are mini doublets
+    // -------x--------
+    // --------x------- <--- outer lower module
+    //
+    // --------y-------
+    // -------y-------- <--- inner lower module
+
+    // Get reference to the inner lower Module
+    Module& innerLowerModule = getModule(detId);
+
+    // Triple nested loops
+    // Loop over inner lower module mini-doublets
+    for (auto& innerMiniDoubletPtr : innerLowerModule.getMiniDoubletPtrs())
+    {
+
+        // Get reference to mini-doublet in inner lower module
+        SDL::MiniDoublet& innerMiniDoublet = *innerMiniDoubletPtr;
+
+        // Get connected outer lower module detids
+        std::vector<unsigned int> connectedModuleDetIds = moduleConnectionMap.getConnectedModuleDetIds(detId);
+
+        // Loop over connected outer lower modules
+        for (auto& outerLowerModuleDetId : connectedModuleDetIds)
+        {
+
+            if (not hasModule(outerLowerModuleDetId))
+                continue;
+
+            // Get reference to the outer lower module
+            Module& outerLowerModule = getModule(outerLowerModuleDetId);
+
+            // Loop over outer lower module mini-doublets
+            for (auto& outerMiniDoubletPtr : outerLowerModule.getMiniDoubletPtrs())
+            {
+
+                // Get reference to mini-doublet in outer lower module
+                SDL::MiniDoublet& outerMiniDoublet = *outerMiniDoubletPtr;
+
+                if (SDL::Segment::isMiniDoubletPairASegment(innerMiniDoublet, outerMiniDoublet, innerLowerModule, outerLowerModule, algo, logLevel_))
+                    addSegmentToLowerModule(SDL::Segment(innerMiniDoubletPtr, outerMiniDoubletPtr), innerLowerModule.detId());
+
+            }
+        }
+    }
 }
 
 namespace SDL

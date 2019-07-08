@@ -12,8 +12,10 @@
 #include "Module.h"
 #include "Hit.h"
 #include "MiniDoublet.h"
+#include "Segment.h"
 #include "PrintUtil.h"
 #include "Algo.h"
+#include "ModuleConnectionMap.h"
 
 namespace SDL
 {
@@ -29,6 +31,9 @@ namespace SDL
 
             // list of MiniDoublets (this holds the actual instances)
             std::list<MiniDoublet> miniDoublets_;
+
+            // list of MiniDoublets (this holds the actual instances)
+            std::list<Segment> segments_;
 
             // list of module pointers (hold only the pointers to the actual instances)
             std::vector<Module*> modulePtrs_;
@@ -61,11 +66,20 @@ namespace SDL
             // MiniDoublet related functions
             void addMiniDoubletToLowerModule(MiniDoublet md, unsigned int detId);
 
+            // Segment related functions
+            void addSegmentToLowerModule(Segment md, unsigned int detId);
+
             // Create mini doublets
             void createMiniDoublets(MDAlgo algo=Default_MDAlgo);
 
             // Create mini doublet for a module
             void createMiniDoubletsFromLowerModule(unsigned int detId, MDAlgo algo=Default_MDAlgo);
+
+            // Create mini doublets
+            void createSegments(SGAlgo algo=Default_SGAlgo);
+
+            // Create mini doublet for a module
+            void createSegmentsFromInnerLowerModule(unsigned int detId, SGAlgo algo=Default_SGAlgo);
 
             // cout printing
             friend std::ostream& operator<<(std::ostream& out, const Event& event);
