@@ -45,6 +45,7 @@ bool SDL::Segment::isMiniDoubletPairASegment(
     }
     else if (algo == SDL::Default_SGAlgo)
     {
+        // Port your favorite segment formation algorithm code here
         return true;
     }
     else
