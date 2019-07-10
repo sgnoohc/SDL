@@ -12,6 +12,7 @@
 namespace SDL{
     class MiniDoublet;
     class Segment;
+    class Hit;
 }
 
 namespace SDL

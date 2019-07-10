@@ -50,6 +50,11 @@ void SDL::Hit::setIdx(int idx)
     idx_ = idx;
 }
 
+void SDL::Hit::setModule(SDL::Module* module)
+{
+    modulePtr_ = module;
+}
+
 void SDL::Hit::setDerivedQuantities()
 {
 
@@ -105,6 +110,11 @@ const float& SDL::Hit::eta() const
 const int& SDL::Hit::idx() const
 {
     return idx_;
+}
+
+const SDL::Module& SDL::Hit::getModule() const
+{
+    return (*modulePtr_);
 }
 
 float SDL::Hit::deltaPhi(const SDL::Hit& hit) const

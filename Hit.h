@@ -7,6 +7,12 @@
 
 #include "MathUtil.h"
 #include "PrintUtil.h"
+#include "Module.h"
+
+namespace SDL
+{
+    class Module;
+}
 
 namespace SDL
 {
@@ -14,6 +20,8 @@ namespace SDL
     class Hit
     {
         private:
+            Module* modulePtr_;
+
             float x_;
             float y_;
             float z_;
@@ -39,6 +47,7 @@ namespace SDL
             void setZ(float z);
             void setXYZ(float x, float y, float z);
             void setIdx(int idx);
+            void setModule(Module*);
 
             // accessor functions
             const float& x() const;
@@ -49,6 +58,7 @@ namespace SDL
             const float& phi() const;
             const float& eta() const;
             const int& idx() const;
+            const Module& getModule() const;
 
             // variable computation between two hits
             float deltaPhi(const Hit&) const;

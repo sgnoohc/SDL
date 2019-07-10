@@ -14,6 +14,7 @@
 namespace SDL
 {
     class Module;
+    class Hit;
 }
 
 namespace SDL
