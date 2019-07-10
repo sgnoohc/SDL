@@ -81,39 +81,40 @@ bool SDL::Segment::isMiniDoubletPairASegmentBarrelBarrel(const MiniDoublet& inne
     // std::array<float, 5> miniMulsPtScaleEndcap {0.006, 0.006, 0.006, 0.006, 0.006}; //inter/extra-polated from L11 and L13 both roughly 0.006 [larger R have smaller value by ~50%]
     const float sdMuls = miniMulsPtScaleBarrel[innerLowerModule.layer()] * 3.f / ptCut * 2.f;//will need a better guess than x2?
 
+    // Get the relevant anchor hits
+    const Hit& innerMiniDoubletAnchorHit = innerLowerModule.moduleType() == SDL::Module::PS ? ( innerLowerModule.moduleLayerType() == SDL::Module::Pixel ? *innerMiniDoublet.lowerHitPtr() : *innerMiniDoublet.upperHitPtr()): *innerMiniDoublet.lowerHitPtr();
+    const Hit& outerMiniDoubletAnchorHit = outerLowerModule.moduleType() == SDL::Module::PS ? ( outerLowerModule.moduleLayerType() == SDL::Module::Pixel ? *outerMiniDoublet.lowerHitPtr() : *outerMiniDoublet.upperHitPtr()): *outerMiniDoublet.lowerHitPtr();
+
     // MiniDoublet information
-    float innerMiniDoubletLowerHitRt = innerMiniDoublet.lowerHitPtr()->rt();
-    float outerMiniDoubletLowerHitRt = outerMiniDoublet.lowerHitPtr()->rt();
-    float innerMiniDoubletLowerHitZ = innerMiniDoublet.lowerHitPtr()->z();
-    float outerMiniDoubletLowerHitZ = outerMiniDoublet.lowerHitPtr()->z();
+    float innerMiniDoubletAnchorHitRt = innerMiniDoubletAnchorHit.rt();
+    float outerMiniDoubletAnchorHitRt = outerMiniDoubletAnchorHit.rt();
+    float innerMiniDoubletAnchorHitZ = innerMiniDoubletAnchorHit.z();
+    float outerMiniDoubletAnchorHitZ = outerMiniDoubletAnchorHit.z();
 
-    Hit& innerMiniDoubletLowerHit = *innerMiniDoublet.lowerHitPtr();
-    Hit& outerMiniDoubletLowerHit = *outerMiniDoublet.lowerHitPtr();
-
-    const float sdSlope = std::asin(std::min(outerMiniDoubletLowerHitRt * k2Rinv1GeVf / ptCut, sinAlphaMax));
-    const float sdPVoff = 0.1f / outerMiniDoubletLowerHitRt;
+    const float sdSlope = std::asin(std::min(outerMiniDoubletAnchorHitRt * k2Rinv1GeVf / ptCut, sinAlphaMax));
+    const float sdPVoff = 0.1f / outerMiniDoubletAnchorHitRt;
     const float dzDrtScale = std::tan(sdSlope) / sdSlope; //FIXME: need approximate value
     const float pixelPSZpitch = 0.15;
     const float strip2SZpitch = 5.0;
 
     const float zGeom = innerLowerModule.layer() <= 2 ? 2.f * pixelPSZpitch : 2.f * strip2SZpitch; //twice the macro-pixel or strip size
 
-    float zLo = innerMiniDoubletLowerHitZ + (innerMiniDoubletLowerHitZ - deltaZLum) * (outerMiniDoubletLowerHitRt / innerMiniDoubletLowerHitRt - 1.f) * (innerMiniDoubletLowerHitZ > 0.f ? 1.f : dzDrtScale) - zGeom; //slope-correction only on outer end
-    float zHi = innerMiniDoubletLowerHitZ + (innerMiniDoubletLowerHitZ + deltaZLum) * (outerMiniDoubletLowerHitRt / innerMiniDoubletLowerHitRt - 1.f) * (innerMiniDoubletLowerHitZ < 0.f ? 1.f : dzDrtScale) + zGeom;
+    float zLo = innerMiniDoubletAnchorHitZ + (innerMiniDoubletAnchorHitZ - deltaZLum) * (outerMiniDoubletAnchorHitRt / innerMiniDoubletAnchorHitRt - 1.f) * (innerMiniDoubletAnchorHitZ > 0.f ? 1.f : dzDrtScale) - zGeom; //slope-correction only on outer end
+    float zHi = innerMiniDoubletAnchorHitZ + (innerMiniDoubletAnchorHitZ + deltaZLum) * (outerMiniDoubletAnchorHitRt / innerMiniDoubletAnchorHitRt - 1.f) * (innerMiniDoubletAnchorHitZ < 0.f ? 1.f : dzDrtScale) + zGeom;
 
     // Cut #1: Z compatibility
-    if (not (outerMiniDoubletLowerHitZ > zLo and outerMiniDoubletLowerHitZ < zHi))
+    if (not (outerMiniDoubletAnchorHitZ > zLo and outerMiniDoubletAnchorHitZ < zHi))
     {
         if (logLevel >= SDL::Log_Debug3)
         {
             SDL::cout << "Failed Cut #1 in " << __FUNCTION__ << std::endl;
-            std::cout <<  " zLo: " << zLo <<  " outerMiniDoubletLowerHitZ: " << outerMiniDoubletLowerHitZ <<  " zHi: " << zHi <<  std::endl;
+            std::cout <<  " zLo: " << zLo <<  " outerMiniDoubletAnchorHitZ: " << outerMiniDoubletAnchorHitZ <<  " zHi: " << zHi <<  std::endl;
         }
         return false;
     }
 
     const float sdCut = sdSlope + sqrt(sdMuls * sdMuls + sdPVoff * sdPVoff);
-    const float deltaPhi = innerMiniDoubletLowerHit.deltaPhi(outerMiniDoubletLowerHit);
+    const float deltaPhi = innerMiniDoubletAnchorHit.deltaPhi(outerMiniDoubletAnchorHit);
 
     // Cut #2: phi differences between the two minidoublets
     if (not (std::abs(deltaPhi) <= sdCut))
@@ -126,7 +127,7 @@ bool SDL::Segment::isMiniDoubletPairASegmentBarrelBarrel(const MiniDoublet& inne
         return false;
     }
 
-    const float deltaPhiChange = innerMiniDoubletLowerHit.deltaPhiChange(outerMiniDoubletLowerHit);
+    const float deltaPhiChange = innerMiniDoubletAnchorHit.deltaPhiChange(outerMiniDoubletAnchorHit);
 
     // Cut #3: phi change between the two minidoublets
     if (not (std::abs(deltaPhiChange) <= sdCut))
