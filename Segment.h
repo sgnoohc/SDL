@@ -53,8 +53,8 @@ namespace SDL
             bool isIdxMatched(const Segment&) const;
 
             // The function to actually determine whether a pair of mini-doublets is a reco-ed segment or not
-            static bool isMiniDoubletPairASegment(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, const Module& innerLowerModule, const Module& outerLowerModule, SGAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
-            static bool isMiniDoubletPairASegmentBarrelBarrel(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, const Module& innerLowerModule, const Module& outerLowerModule, SGAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
+            static bool isMiniDoubletPairASegment(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
+            static bool isMiniDoubletPairASegmentBarrelBarrel(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
 
             // cout printing
             friend std::ostream& operator<<(std::ostream& out, const Segment& md);

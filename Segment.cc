@@ -39,13 +39,7 @@ bool SDL::Segment::isIdxMatched(const Segment& md) const
     return true;
 }
 
-bool SDL::Segment::isMiniDoubletPairASegment(
-        const MiniDoublet& innerMiniDoublet,
-        const MiniDoublet& outerMiniDoublet,
-        const Module& innerLowerModule,
-        const Module& outerLowerModule,
-        SGAlgo algo,
-        SDL::LogLevel logLevel)
+bool SDL::Segment::isMiniDoubletPairASegment(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel)
 {
     // If the algorithm is "do all combination" (e.g. used for efficiency calculation)
     if (algo == SDL::AllComb_SGAlgo)
@@ -54,11 +48,13 @@ bool SDL::Segment::isMiniDoubletPairASegment(
     }
     else if (algo == SDL::Default_SGAlgo)
     {
+        const Module& innerLowerModule = innerMiniDoublet.lowerHitPtr()->getModule();
+        const Module& outerLowerModule = outerMiniDoublet.lowerHitPtr()->getModule();
         // Port your favorite segment formation algorithm code here
         // Case 1: Barrel - Barrel
         if (innerLowerModule.subdet() == SDL::Module::Barrel and outerLowerModule.subdet() == SDL::Module::Barrel)
         {
-            return isMiniDoubletPairASegmentBarrelBarrel(innerMiniDoublet, outerMiniDoublet, innerLowerModule, outerLowerModule, algo, logLevel);
+            return isMiniDoubletPairASegmentBarrelBarrel(innerMiniDoublet, outerMiniDoublet, algo, logLevel);
         }
         return false;
     }
@@ -69,14 +65,11 @@ bool SDL::Segment::isMiniDoubletPairASegment(
     }
 }
 
-bool SDL::Segment::isMiniDoubletPairASegmentBarrelBarrel(
-        const MiniDoublet& innerMiniDoublet,
-        const MiniDoublet& outerMiniDoublet,
-        const Module& innerLowerModule,
-        const Module& outerLowerModule,
-        SGAlgo algo,
-        SDL::LogLevel logLevel)
+bool SDL::Segment::isMiniDoubletPairASegmentBarrelBarrel(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel)
 {
+
+    const Module& innerLowerModule = innerMiniDoublet.lowerHitPtr()->getModule();
+    const Module& outerLowerModule = outerMiniDoublet.lowerHitPtr()->getModule();
 
     // Constants
     const float kRinv1GeVf = (2.99792458e-3 * 3.8);
@@ -111,6 +104,11 @@ bool SDL::Segment::isMiniDoubletPairASegmentBarrelBarrel(
     // Cut #1: Z compatibility
     if (not (outerMiniDoubletLowerHitZ > zLo and outerMiniDoubletLowerHitZ < zHi))
     {
+        if (logLevel >= SDL::Log_Debug3)
+        {
+            SDL::cout << "Failed Cut #1 in " << __FUNCTION__ << std::endl;
+            std::cout <<  " zLo: " << zLo <<  " outerMiniDoubletLowerHitZ: " << outerMiniDoubletLowerHitZ <<  " zHi: " << zHi <<  std::endl;
+        }
         return false;
     }
 
@@ -120,6 +118,11 @@ bool SDL::Segment::isMiniDoubletPairASegmentBarrelBarrel(
     // Cut #2: phi differences between the two minidoublets
     if (not (std::abs(deltaPhi) <= sdCut))
     {
+        if (logLevel >= SDL::Log_Debug3)
+        {
+            SDL::cout << "Failed Cut #2 in " << __FUNCTION__ << std::endl;
+            std::cout <<  " deltaPhi: " << deltaPhi <<  " sdCut: " << sdCut <<  std::endl;
+        }
         return false;
     }
 
@@ -128,6 +131,11 @@ bool SDL::Segment::isMiniDoubletPairASegmentBarrelBarrel(
     // Cut #3: phi change between the two minidoublets
     if (not (std::abs(deltaPhiChange) <= sdCut))
     {
+        if (logLevel >= SDL::Log_Debug3)
+        {
+            SDL::cout << "Failed Cut #3 in " << __FUNCTION__ << std::endl;
+            std::cout <<  " deltaPhiChange: " << deltaPhiChange <<  " sdCut: " << sdCut <<  std::endl;
+        }
         return false;
     }
 
