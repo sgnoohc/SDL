@@ -219,8 +219,10 @@ bool SDL::Segment::isMiniDoubletPairASegmentEndcap(const MiniDoublet& innerMiniD
     }
 
     // Cut #2: dPhi compatibility
-    const float sdLum = deltaZLum / std::abs(innerMiniDoubletAnchorHitZ);
-    const float sdCut = sdSlope + sqrt(sdMuls * sdMuls + sdPVoff * sdPVoff + sdLum * sdLum);
+    // const float sdLum = deltaZLum / std::abs(innerMiniDoubletAnchorHitZ);
+    // const float sdCut = sdSlope + sqrt(sdMuls * sdMuls + sdPVoff * sdPVoff + sdLum * sdLum);
+    const float sdCut = sdSlope;
+    // const float sdCut = sdSlope + sqrt(sdMuls * sdMuls + sdPVoff * sdPVoff);
     const float dPhiPos = innerMiniDoubletAnchorHit.deltaPhi(outerMiniDoubletAnchorHit);
     if (not (std::abs(dPhiPos) <= sdCut))
     {
