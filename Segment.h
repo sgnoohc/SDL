@@ -17,7 +17,7 @@ namespace SDL
     {
 
         // Segment is two mini-doublets
-        // So physically it will look like
+        // So physically it will look like the following:
         //
         // Below, the pair of x's are one mini-doublet and the pair of y's are another mini-doublet
         //

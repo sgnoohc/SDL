@@ -49,7 +49,7 @@ bool SDL::Segment::isMiniDoubletPairASegment(const MiniDoublet& innerMiniDoublet
     else if (algo == SDL::Default_SGAlgo)
     {
         const Module& innerLowerModule = innerMiniDoublet.lowerHitPtr()->getModule();
-        const Module& outerLowerModule = outerMiniDoublet.lowerHitPtr()->getModule();
+        // const Module& outerLowerModule = outerMiniDoublet.lowerHitPtr()->getModule();
         // Port your favorite segment formation algorithm code here
         // Case 1: Barrel - Barrel
         // if (innerLowerModule.subdet() == SDL::Module::Barrel and outerLowerModule.subdet() == SDL::Module::Barrel)
@@ -161,8 +161,8 @@ bool SDL::Segment::isMiniDoubletPairASegmentEndcap(const MiniDoublet& innerMiniD
     const float sinAlphaMax = 0.95;
     const float deltaZLum = 15.f;
     // std::array<float, 6> miniMulsPtScaleBarrel {0.0052, 0.0038, 0.0034, 0.0034, 0.0032, 0.0034};
-    std::array<float, 5> miniMulsPtScaleEndcap {0.006, 0.006, 0.006, 0.006, 0.006}; //inter/extra-polated from L11 and L13 both roughly 0.006 [larger R have smaller value by ~50%]
-    const float sdMuls = miniMulsPtScaleEndcap[innerLowerModule.layer()] * 3.f / ptCut * 2.f;//will need a better guess than x2?
+    // std::array<float, 5> miniMulsPtScaleEndcap {0.006, 0.006, 0.006, 0.006, 0.006}; //inter/extra-polated from L11 and L13 both roughly 0.006 [larger R have smaller value by ~50%]
+    // const float sdMuls = miniMulsPtScaleEndcap[innerLowerModule.layer()] * 3.f / ptCut * 2.f;//will need a better guess than x2?
 
     // Get the relevant anchor hits
     const Hit& innerMiniDoubletAnchorHit = innerLowerModule.moduleType() == SDL::Module::PS ? ( innerLowerModule.moduleLayerType() == SDL::Module::Pixel ? *innerMiniDoublet.lowerHitPtr() : *innerMiniDoublet.upperHitPtr()): *innerMiniDoublet.lowerHitPtr();
@@ -175,20 +175,20 @@ bool SDL::Segment::isMiniDoubletPairASegmentEndcap(const MiniDoublet& innerMiniD
     float outerMiniDoubletAnchorHitZ = outerMiniDoubletAnchorHit.z();
 
     const float sdSlope = std::asin(std::min(outerMiniDoubletAnchorHitRt * k2Rinv1GeVf / ptCut, sinAlphaMax));
-    const float sdPVoff = 0.1f / outerMiniDoubletAnchorHitRt;
-    const float dzDrtScale = std::tan(sdSlope) / sdSlope; //FIXME: need approximate value
+    // const float sdPVoff = 0.1f / outerMiniDoubletAnchorHitRt;
+    // const float dzDrtScale = std::tan(sdSlope) / sdSlope; //FIXME: need approximate value
     const float pixelPSZpitch = 0.15;
     const float strip2SZpitch = 5.0;
     const float disks2SMinRadius = 60.f;
 
-    const float zGeom = innerLowerModule.layer() <= 2 ? 2.f * pixelPSZpitch : 2.f * strip2SZpitch; //twice the macro-pixel or strip size
+    // const float zGeom = innerLowerModule.layer() <= 2 ? 2.f * pixelPSZpitch : 2.f * strip2SZpitch; //twice the macro-pixel or strip size
 
     const float rtGeom = (innerMiniDoubletAnchorHitRt < disks2SMinRadius && outerMiniDoubletAnchorHitRt < disks2SMinRadius ? 2.f * pixelPSZpitch
             : (innerMiniDoubletAnchorHitRt < disks2SMinRadius || outerMiniDoubletAnchorHitRt < disks2SMinRadius) ? (pixelPSZpitch + strip2SZpitch)
             : 2.f * strip2SZpitch);
 
-    float zLo = innerMiniDoubletAnchorHitZ + (innerMiniDoubletAnchorHitZ - deltaZLum) * (outerMiniDoubletAnchorHitRt / innerMiniDoubletAnchorHitRt - 1.f) * (innerMiniDoubletAnchorHitZ > 0.f ? 1.f : dzDrtScale) - zGeom; //slope-correction only on outer end
-    float zHi = innerMiniDoubletAnchorHitZ + (innerMiniDoubletAnchorHitZ + deltaZLum) * (outerMiniDoubletAnchorHitRt / innerMiniDoubletAnchorHitRt - 1.f) * (innerMiniDoubletAnchorHitZ < 0.f ? 1.f : dzDrtScale) + zGeom;
+    // float zLo = innerMiniDoubletAnchorHitZ + (innerMiniDoubletAnchorHitZ - deltaZLum) * (outerMiniDoubletAnchorHitRt / innerMiniDoubletAnchorHitRt - 1.f) * (innerMiniDoubletAnchorHitZ > 0.f ? 1.f : dzDrtScale) - zGeom; //slope-correction only on outer end
+    // float zHi = innerMiniDoubletAnchorHitZ + (innerMiniDoubletAnchorHitZ + deltaZLum) * (outerMiniDoubletAnchorHitRt / innerMiniDoubletAnchorHitRt - 1.f) * (innerMiniDoubletAnchorHitZ < 0.f ? 1.f : dzDrtScale) + zGeom;
 
     // Cut #0: preliminary cut (if the combo is between negative and positive don't even bother...)
     if (innerMiniDoubletAnchorHitZ * outerMiniDoubletAnchorHitZ < 0)

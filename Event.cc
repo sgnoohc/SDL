@@ -2,6 +2,7 @@
 
 SDL::Event::Event() : logLevel_(SDL::Log_Nothing)
 {
+    createLayers();
 }
 
 SDL::Event::~Event()
@@ -61,6 +62,36 @@ const std::vector<SDL::Module*> SDL::Event::getLowerModulePtrs() const
     return lowerModulePtrs_;
 }
 
+void SDL::Event::createLayers()
+{
+    // Create barrel layers
+    for (int ilayer = SDL::Layer::BarrelLayer0; ilayer < SDL::Layer::nBarrelLayer; ++ilayer)
+    {
+        barrelLayers_[ilayer] = SDL::Layer(ilayer, SDL::Layer::Barrel);
+        layerPtrs_.push_back(&(barrelLayers_[ilayer]));
+    }
+
+    // Create endcap layers
+    for (int ilayer = SDL::Layer::EndcapLayer0; ilayer < SDL::Layer::nEndcapLayer; ++ilayer)
+    {
+        endcapLayers_[ilayer] = SDL::Layer(ilayer, SDL::Layer::Endcap);
+        layerPtrs_.push_back(&(endcapLayers_[ilayer]));
+    }
+}
+
+SDL::Layer& SDL::Event::getLayer(int ilayer, SDL::Layer::SubDet subdet)
+{
+    if (subdet == SDL::Layer::Barrel)
+        return barrelLayers_[ilayer];
+    else // if (subdet == SDL::Layer::Endcap)
+        return endcapLayers_[ilayer];
+}
+
+const std::vector<SDL::Layer*> SDL::Event::getLayerPtrs() const
+{
+    return layerPtrs_;
+}
+
 void SDL::Event::addHitToModule(SDL::Hit hit, unsigned int detId)
 {
     // Add to global list of hits, where it will hold the object's instance
@@ -81,11 +112,29 @@ void SDL::Event::addMiniDoubletToLowerModule(SDL::MiniDoublet md, unsigned int d
 
 void SDL::Event::addSegmentToLowerModule(SDL::Segment sg, unsigned int detId)
 {
-    // Add to global list of mini doublets, where it will hold the object's instance
+    // Add to global list of segments, where it will hold the object's instance
     segments_.push_back(sg);
 
     // And get the module (if not exists, then create), and add the address to Module.hits_
     getModule(detId).addSegment(&(segments_.back()));
+}
+
+void SDL::Event::addSegmentToLowerLayer(SDL::Segment sg, int layerIdx, SDL::Layer::SubDet subdet)
+{
+    // Add to global list of segments, where it will hold the object's instance
+    segments_.push_back(sg);
+
+    // And get the layer
+    getLayer(layerIdx, subdet).addSegment(&(segments_.back()));
+}
+
+void SDL::Event::addTrackletToLowerLayer(SDL::Tracklet tl, int layerIdx, SDL::Layer::SubDet subdet)
+{
+    // Add to global list of tracklets, where it will hold the object's instance
+    tracklets_.push_back(tl);
+
+    // And get the layer
+    getLayer(layerIdx, subdet).addTracklet(&(tracklets_.back()));
 }
 
 void SDL::Event::createMiniDoublets(MDAlgo algo)
@@ -186,12 +235,51 @@ void SDL::Event::createSegmentsFromInnerLowerModule(unsigned int detId, SDL::SGA
                 SDL::MiniDoublet& outerMiniDoublet = *outerMiniDoubletPtr;
 
                 if (SDL::Segment::isMiniDoubletPairASegment(innerMiniDoublet, outerMiniDoublet, algo, logLevel_))
+                {
                     addSegmentToLowerModule(SDL::Segment(innerMiniDoubletPtr, outerMiniDoubletPtr), innerLowerModule.detId());
+                    if (innerLowerModule.subdet() == SDL::Module::Barrel)
+                        addSegmentToLowerLayer(SDL::Segment(innerMiniDoubletPtr, outerMiniDoubletPtr), innerLowerModule.layer(), SDL::Layer::Barrel);
+                    else
+                        addSegmentToLowerLayer(SDL::Segment(innerMiniDoubletPtr, outerMiniDoubletPtr), innerLowerModule.layer(), SDL::Layer::Endcap);
+                }
 
             }
         }
     }
 }
+
+void SDL::Event::createTracklets(TLAlgo algo)
+{
+    for (auto& tracklet_compatible_layer_pair : SDL::Layer::getListOfTrackletCompatibleLayerPairs())
+    {
+        int innerLayerIdx = tracklet_compatible_layer_pair.first.first;
+        SDL::Layer::SubDet innerLayerSubDet = tracklet_compatible_layer_pair.first.second;
+        int outerLayerIdx = tracklet_compatible_layer_pair.second.first;
+        SDL::Layer::SubDet outerLayerSubDet = tracklet_compatible_layer_pair.second.second;
+        createTrackletsFromTwoLayers(innerLayerIdx, innerLayerSubDet, outerLayerIdx, outerLayerSubDet, algo);
+    }
+}
+
+// Create tracklets from two layers (inefficient way)
+void SDL::Event::createTrackletsFromTwoLayers(int innerLayerIdx, SDL::Layer::SubDet innerLayerSubDet, int outerLayerIdx, SDL::Layer::SubDet outerLayerSubDet, TLAlgo algo)
+{
+    Layer& innerLayer = getLayer(innerLayerIdx, innerLayerSubDet);
+    Layer& outerLayer = getLayer(outerLayerIdx, outerLayerSubDet);
+
+    for (auto& innerSegmentPtr : innerLayer.getSegmentPtrs())
+    {
+        Segment& innerSegment = *innerSegmentPtr;
+        for (auto& outerSegmentPtr : outerLayer.getSegmentPtrs())
+        {
+            Segment& outerSegment = *outerSegmentPtr;
+
+            if (SDL::Tracklet::isSegmentPairATracklet(innerSegment, outerSegment, algo, logLevel_))
+                addTrackletToLowerLayer(SDL::Tracklet(innerSegmentPtr, outerSegmentPtr), innerLayerIdx, innerLayerSubDet);
+
+        }
+    }
+}
+
 
 namespace SDL
 {
@@ -207,6 +295,11 @@ namespace SDL
         for (auto& modulePtr : event.modulePtrs_)
         {
             out << modulePtr;
+        }
+
+        for (auto& layerPtr : event.layerPtrs_)
+        {
+            out << layerPtr;
         }
 
         return out;

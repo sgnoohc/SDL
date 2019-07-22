@@ -16,6 +16,13 @@ namespace SDL
         Default_SGAlgo = 1,
         AllComb_SGAlgo = 2
     };
+
+    // Tracklet algorithm enum
+    enum TLAlgo
+    {
+        Default_TLAlgo = 1,
+        AllComb_TLAlgo = 2
+    };
 };
 
 #endif

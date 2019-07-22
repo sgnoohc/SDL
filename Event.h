@@ -13,6 +13,7 @@
 #include "Hit.h"
 #include "MiniDoublet.h"
 #include "Segment.h"
+#include "Layer.h"
 #include "PrintUtil.h"
 #include "Algo.h"
 #include "ModuleConnectionMap.h"
@@ -26,17 +27,29 @@ namespace SDL
             // map of modules (this holds the actual instances)
             std::map<unsigned int, Module> modulesMapByDetId_;
 
+            // map of barrel layers (this holds the actual instances)
+            std::map<int, Layer> barrelLayers_;
+
+            // map of endcap layers (this holds the actual instances)
+            std::map<int, Layer> endcapLayers_;
+
             // list of hits (this holds the actual instances)
             std::list<Hit> hits_;
 
             // list of MiniDoublets (this holds the actual instances)
             std::list<MiniDoublet> miniDoublets_;
 
-            // list of MiniDoublets (this holds the actual instances)
+            // list of Segments (this holds the actual instances)
             std::list<Segment> segments_;
+
+            // list of Tracklets (this holds the actual instances)
+            std::list<Tracklet> tracklets_;
 
             // list of module pointers (hold only the pointers to the actual instances)
             std::vector<Module*> modulePtrs_;
+
+            // list of layer pointers (hold only the pointers to the actual instances)
+            std::vector<Layer*> layerPtrs_;
 
             // list of lower module pointers (hold only the pointers to the actual instances)
             // (lower means, the module that is closer to the luminous region)
@@ -57,6 +70,11 @@ namespace SDL
             const std::vector<Module*> getModulePtrs() const;
             const std::vector<Module*> getLowerModulePtrs() const;
 
+            // Layer related functions
+            void createLayers();
+            Layer& getLayer(int layer, SDL::Layer::SubDet subdet);
+            const std::vector<Layer*> getLayerPtrs() const;
+
             // Set debug
             void setLogLevel(SDL::LogLevel logLevel=SDL::Log_Nothing);
 
@@ -69,17 +87,29 @@ namespace SDL
             // Segment related functions
             void addSegmentToLowerModule(Segment md, unsigned int detId);
 
+            // Segment related functions
+            void addSegmentToLowerLayer(Segment md, int layerIdx, SDL::Layer::SubDet subdet);
+
+            // Tracklet related functions
+            void addTrackletToLowerLayer(Tracklet tl, int layerIdx, SDL::Layer::SubDet subdet);
+
             // Create mini doublets
             void createMiniDoublets(MDAlgo algo=Default_MDAlgo);
 
             // Create mini doublet for a module
             void createMiniDoubletsFromLowerModule(unsigned int detId, MDAlgo algo=Default_MDAlgo);
 
-            // Create mini doublets
+            // Create segments
             void createSegments(SGAlgo algo=Default_SGAlgo);
 
-            // Create mini doublet for a module
+            // Create segments for a lower module
             void createSegmentsFromInnerLowerModule(unsigned int detId, SGAlgo algo=Default_SGAlgo);
+
+            // Create tracklets
+            void createTracklets(TLAlgo algo=Default_TLAlgo);
+
+            // Create tracklets from two layers (inefficient way)
+            void createTrackletsFromTwoLayers(int innerLayerIdx, SDL::Layer::SubDet innerLayerSubDet, int outerLayerIdx, SDL::Layer::SubDet outerLayerSubDet, TLAlgo algo=Default_TLAlgo);
 
             // cout printing
             friend std::ostream& operator<<(std::ostream& out, const Event& event);
