@@ -54,8 +54,9 @@ namespace SDL
 
             // The function to actually determine whether a pair of mini-doublets is a reco-ed segment or not
             static bool isMiniDoubletPairASegment(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
-            static bool isMiniDoubletPairASegmentBarrel(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
-            static bool isMiniDoubletPairASegmentEndcap(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
+            static bool isMiniDoubletPairASegmentCandidateBarrel(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
+            static bool isMiniDoubletPairASegmentCandidateEndcap(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
+            static bool isMiniDoubletPairAngleCompatible(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
 
             // cout printing
             friend std::ostream& operator<<(std::ostream& out, const Segment& md);

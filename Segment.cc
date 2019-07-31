@@ -55,13 +55,17 @@ bool SDL::Segment::isMiniDoubletPairASegment(const MiniDoublet& innerMiniDoublet
         // if (innerLowerModule.subdet() == SDL::Module::Barrel and outerLowerModule.subdet() == SDL::Module::Barrel)
         if (innerLowerModule.subdet() == SDL::Module::Barrel)
         {
-            return isMiniDoubletPairASegmentBarrel(innerMiniDoublet, outerMiniDoublet, algo, logLevel);
+            if (not isMiniDoubletPairASegmentCandidateBarrel(innerMiniDoublet, outerMiniDoublet, algo, logLevel))
+                return false;
         }
         else // if (innerLowerModule.subdet() == SDL::Module::Endcap)
         {
-            return isMiniDoubletPairASegmentEndcap(innerMiniDoublet, outerMiniDoublet, algo, logLevel);
+            if (not isMiniDoubletPairASegmentCandidateEndcap(innerMiniDoublet, outerMiniDoublet, algo, logLevel))
+                return false;
         }
-        return false;
+        if (not isMiniDoubletPairAngleCompatible(innerMiniDoublet, outerMiniDoublet, algo, logLevel))
+            return false;
+        return true;
     }
     else
     {
@@ -70,7 +74,7 @@ bool SDL::Segment::isMiniDoubletPairASegment(const MiniDoublet& innerMiniDoublet
     }
 }
 
-bool SDL::Segment::isMiniDoubletPairASegmentBarrel(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel)
+bool SDL::Segment::isMiniDoubletPairASegmentCandidateBarrel(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel)
 {
 
     const Module& innerLowerModule = innerMiniDoublet.lowerHitPtr()->getModule();
@@ -148,7 +152,7 @@ bool SDL::Segment::isMiniDoubletPairASegmentBarrel(const MiniDoublet& innerMiniD
     return true;
 }
 
-bool SDL::Segment::isMiniDoubletPairASegmentEndcap(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel)
+bool SDL::Segment::isMiniDoubletPairASegmentCandidateEndcap(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel)
 {
 
     const Module& innerLowerModule = innerMiniDoublet.lowerHitPtr()->getModule();
@@ -247,6 +251,73 @@ bool SDL::Segment::isMiniDoubletPairASegmentEndcap(const MiniDoublet& innerMiniD
         }
         return false;
     }
+
+    return true;
+}
+
+bool SDL::Segment::isMiniDoubletPairAngleCompatible(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel)
+{
+    //loose angle compatibility
+    const float kRinv1GeVf = (2.99792458e-3 * 3.8);
+    const float k2Rinv1GeVf = kRinv1GeVf / 2.;
+    const float ptCut = 1.0;
+    const float sinAlphaMax = 0.95;
+    const float deltaZLum = 15.f;
+
+    // Get the relevant anchor hits
+    const Module& innerLowerModule = innerMiniDoublet.lowerHitPtr()->getModule();
+    const Module& outerLowerModule = outerMiniDoublet.lowerHitPtr()->getModule();
+
+    const Hit& innerMiniDoubletAnchorHit = innerLowerModule.moduleType() == SDL::Module::PS ? ( innerLowerModule.moduleLayerType() == SDL::Module::Pixel ? *innerMiniDoublet.lowerHitPtr() : *innerMiniDoublet.upperHitPtr()): *innerMiniDoublet.lowerHitPtr();
+    const Hit& outerMiniDoubletAnchorHit = outerLowerModule.moduleType() == SDL::Module::PS ? ( outerLowerModule.moduleLayerType() == SDL::Module::Pixel ? *outerMiniDoublet.lowerHitPtr() : *outerMiniDoublet.upperHitPtr()): *outerMiniDoublet.lowerHitPtr();
+
+    float innerMiniDoubletAnchorHitRt = innerMiniDoubletAnchorHit.rt();
+    float outerMiniDoubletAnchorHitRt = outerMiniDoubletAnchorHit.rt();
+
+    float segmentDr = outerMiniDoubletAnchorHit.rt() - innerMiniDoubletAnchorHit.rt();
+    float sdZ = innerMiniDoubletAnchorHit.z();
+    float sdRt = innerMiniDoubletAnchorHit.rt();
+
+    const float dAlpha_Bfield = std::asin(std::min(segmentDr * k2Rinv1GeVf / ptCut, sinAlphaMax));
+
+    std::array<float, 6> miniDeltaBarrel {0.26, 0.16, 0.16, 0.18, 0.18, 0.18};
+    std::array<float, 5> miniDeltaEndcap {0.4 , 0.4 , 0.4 , 0.4 , 0.4};
+
+    float miniDelta = innerLowerModule.subdet() == SDL::Module::Barrel ? miniDeltaBarrel[innerLowerModule.layer()-1] : miniDeltaEndcap[innerLowerModule.layer()-1];
+
+    float dAlpha_res = 0.04f / miniDelta * (innerLowerModule.subdet() == SDL::Module::Barrel ? 1.0f : std::abs(sdZ / sdRt)); //4-strip difference
+    // float dAlpha_compat = dAlpha_Bfield + sqrt(dAlpha_res * dAlpha_res + sdMuls*sdMuls);
+
+    // iFlag = SDSelectFlags::alphaRef;
+
+    // if (!((std::abs(mdRef.alpha - sd.alphaRHmax) > dAlpha_compat)
+    //             && (std::abs(mdRef.alpha - sd.alphaRHmin) > dAlpha_compat))) sdFlag |= 1 << iFlag;
+    // else if (cumulativeCuts)
+    // {
+    //     if (debug_sdBuild) std::cout << debugPrefix << " Failed SelectFlags::alphaRef " << mdRef.alpha << " " << sd.alphaRHmax << " " << sd.alphaRHmin << " " << dAlpha_compat << std::endl;
+    //     continue;
+    // }
+
+    // if (sdFlag == sdMasksCumulative[iFlag]) nPass[iFlag]++;
+
+    // iFlag = SDSelectFlags::alphaOut;
+    // if (!((std::abs(mdOut.alpha - sd.alphaRHmax) > dAlpha_compat)
+    //             && (std::abs(mdOut.alpha - sd.alphaRHmin) > dAlpha_compat))) sdFlag |= 1 << iFlag;//FIXME: this could be more restrictive: dBfiled cancels out
+    // else if (cumulativeCuts)
+    // {
+    //     if (debug_sdBuild) std::cout << debugPrefix << " Failed SelectFlags::alphaOut " << mdOut.alpha << " " << sd.alphaRHmax << " " << sd.alphaRHmin << " " << dAlpha_compat << std::endl;
+    //     continue;
+    // }
+
+    // if (sdFlag == sdMasksCumulative[iFlag]) nPass[iFlag]++;
+
+    // iFlag = SDSelectFlags::alphaRefOut;
+    // if (!(std::abs(mdOut.alpha - mdRef.alpha) > dAlpha_compat)) sdFlag |= 1 << iFlag;
+    // else if (cumulativeCuts)
+    // {
+    //     if (debug_sdBuild) std::cout << debugPrefix << " Failed SelectFlags::alphaRefOut " << mdRef.alpha << " " << mdOut.alpha << " " << dAlpha_compat << std::endl;
+    //     continue;
+    // }
 
     return true;
 }
