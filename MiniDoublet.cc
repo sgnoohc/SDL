@@ -28,6 +28,71 @@ SDL::Hit* SDL::MiniDoublet::upperHitPtr() const
     return upperHitPtr_;
 }
 
+bool SDL::MiniDoublet::passesMiniDoubletAlgo(SDL::MDAlgo algo) const
+{
+    // Each algorithm is an enum shift it by its value and check against the flag
+    return passAlgo_ & (1 << algo);
+}
+
+void SDL::MiniDoublet::runMiniDoubletAlgo(SDL::MDAlgo algo, SDL::LogLevel logLevel)
+{
+    if (algo == SDL::AllComb_MDAlgo)
+    {
+        runMiniDoubletAllCombAlgo();
+    }
+    else if (algo == SDL::Default_MDAlgo)
+    {
+        runMiniDoubletDefaultAlgo(logLevel);
+    }
+    else
+    {
+        SDL::cout << "Warning: Unrecognized mini-doublet algorithm!" << algo << std::endl;
+        return;
+    }
+}
+
+void SDL::MiniDoublet::runMiniDoubletAllCombAlgo()
+{
+    passAlgo_ |= (1 << SDL::AllComb_MDAlgo);
+}
+
+void SDL::MiniDoublet::runMiniDoubletDefaultAlgo(SDL::LogLevel logLevel)
+{
+    // Retreived the lower module object
+    const SDL::Module& lowerModule = lowerHitPtr_->getModule();
+
+    if ( (lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() == SDL::Module::Center) or isNormalTiltedModules(lowerModule))
+    {
+        runMiniDoubletDefaultAlgoBarrel(logLevel);
+    }
+    else
+    {
+        runMiniDoubletDefaultAlgoEndcap(logLevel);
+    }
+}
+
+void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
+{
+    bool passed_algorithm = false;
+
+    // Run the algorithm
+    passed_algorithm = true;
+
+    if (passed_algorithm)
+        passAlgo_ |= (1 << SDL::Default_MDAlgo);
+}
+
+void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
+{
+    bool passed_algorithm = false;
+
+    // Run the algorithm
+    passed_algorithm = true;
+
+    if (passed_algorithm)
+        passAlgo_ |= (1 << SDL::Default_MDAlgo);
+}
+
 bool SDL::MiniDoublet::isIdxMatched(const MiniDoublet& md) const
 {
     if (not lowerHitPtr_->isIdxMatched(*(md.lowerHitPtr())))
@@ -480,18 +545,6 @@ bool SDL::MiniDoublet::isNormalTiltedModules(const SDL::Module& lowerModule)
            or (lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() == SDL::Module::PosZ and lowerModule.layer() == 2 and lowerModule.rod() < 8)
            or (lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() == SDL::Module::NegZ and lowerModule.layer() == 1 and lowerModule.rod() > 9)
            or (lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() == SDL::Module::PosZ and lowerModule.layer() == 1 and lowerModule.rod() < 4)
-
-           // (lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() != SDL::Module::Center and lowerModule.layer() > 2)
-
-           // (lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() != SDL::Module::Center and lowerModule.layer() >= 2)
-           // or (lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() == SDL::Module::NegZ and lowerModule.layer() == 1)
-           // or (lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() == SDL::Module::PosZ and lowerModule.layer() == 1)
-
-           // Below is commented out for now. The transition point of endcap v. tilted module logic can be defined using the "rod" numbering of tilted modules.
-           // The rod numbering is stupid in that it goes from left to right in z space regardless of the sign of the z.
-           // See http://uaf-10.t2.ucsd.edu/~phchang/talks/PhilipChang20190330_ModuleStructure.pdf#page=9
-           // or (lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() == SDL::Module::NegZ and lowerModule.layer() == 1 and lowerModule.rod() > 2)
-           // or (lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() == SDL::Module::PosZ and lowerModule.layer() == 1 and lowerModule.rod() < 11)
        )
         return true;
     else

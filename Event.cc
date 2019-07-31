@@ -172,8 +172,17 @@ void SDL::Event::createMiniDoubletsFromLowerModule(unsigned int detId, SDL::MDAl
             // Get reference to upper Hit
             SDL::Hit& upperHit = *upperHitPtr;
 
-            if (SDL::MiniDoublet::isHitPairAMiniDoublet(lowerHit, upperHit, lowerModule, algo, logLevel_))
-                addMiniDoubletToLowerModule(SDL::MiniDoublet(lowerHitPtr, upperHitPtr), lowerModule.detId());
+            // Create a mini-doublet candidate
+            SDL::MiniDoublet mdCand(lowerHitPtr, upperHitPtr);
+
+            // Run mini-doublet algorithm on mdCand (mini-doublet candidate)
+            mdCand.runMiniDoubletAlgo(algo, logLevel_);
+
+            if (mdCand.passesMiniDoubletAlgo(algo))
+                addMiniDoubletToLowerModule(mdCand, lowerModule.detId());
+
+            // if (SDL::MiniDoublet::isHitPairAMiniDoublet(lowerHit, upperHit, lowerModule, algo, logLevel_))
+            //     addMiniDoubletToLowerModule(SDL::MiniDoublet(lowerHitPtr, upperHitPtr), lowerModule.detId());
 
         }
 

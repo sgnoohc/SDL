@@ -29,6 +29,9 @@ namespace SDL
             // Upper is always the one further away from the beam position
             Hit* upperHitPtr_;
 
+            // Bits to flag whether this mini-doublet passes some algorithm
+            int passAlgo_;
+
         public:
             MiniDoublet();
             MiniDoublet(const MiniDoublet&);
@@ -37,6 +40,20 @@ namespace SDL
 
             Hit* lowerHitPtr() const;
             Hit* upperHitPtr() const;
+
+            // return whether it passed the algorithm
+            bool passesMiniDoubletAlgo(MDAlgo algo) const;
+
+            // The function to run mini-doublet algorithm on a mini-doublet candidate
+            void runMiniDoubletAlgo(MDAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
+
+            // The following algorithm does nothing and accepts the mini-doublet
+            void runMiniDoubletAllCombAlgo();
+
+            // The default algorithms;
+            void runMiniDoubletDefaultAlgo(SDL::LogLevel logLevel);
+            void runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel);
+            void runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel);
 
             bool isIdxMatched(const MiniDoublet&) const;
 
@@ -63,6 +80,7 @@ namespace SDL
 
             // The function to determine transition region for inner most tilted layer
             static bool isNormalTiltedModules(const Module& lowerModule);
+
     };
 }
 

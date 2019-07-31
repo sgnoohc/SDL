@@ -6,22 +6,22 @@ namespace SDL
     // Mini-Doublet algorithm enum
     enum MDAlgo
     {
-        Default_MDAlgo = 1,
-        AllComb_MDAlgo = 2
+        Default_MDAlgo = 0,
+        AllComb_MDAlgo
     };
 
     // Segment algorithm enum
     enum SGAlgo
     {
-        Default_SGAlgo = 1,
-        AllComb_SGAlgo = 2
+        Default_SGAlgo = 0,
+        AllComb_SGAlgo
     };
 
     // Tracklet algorithm enum
     enum TLAlgo
     {
-        Default_TLAlgo = 1,
-        AllComb_TLAlgo = 2
+        Default_TLAlgo = 0,
+        AllComb_TLAlgo
     };
 };
 
