@@ -32,6 +32,10 @@ namespace SDL
             // Bits to flag whether this mini-doublet passes some algorithm
             int passAlgo_;
 
+            // Some mini-doublet related variables
+            float dz_;
+            float shiftedDz_;
+
         public:
             MiniDoublet();
             MiniDoublet(const MiniDoublet&);
@@ -40,6 +44,12 @@ namespace SDL
 
             Hit* lowerHitPtr() const;
             Hit* upperHitPtr() const;
+            const int& getPassAlgo() const;
+            const float& getDz() const;
+            const float& getShiftedDz() const;
+
+            void setDz(float dz);
+            void setShiftedDz(float dz);
 
             // return whether it passed the algorithm
             bool passesMiniDoubletAlgo(MDAlgo algo) const;

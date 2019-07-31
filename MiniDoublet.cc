@@ -11,10 +11,16 @@ SDL::MiniDoublet::~MiniDoublet()
 }
 
 SDL::MiniDoublet::MiniDoublet(const MiniDoublet& md): lowerHitPtr_(md.lowerHitPtr()), upperHitPtr_(md.upperHitPtr())
+                                                      ,passAlgo_(md.getPassAlgo())
+                                                      ,dz_(md.getDz())
+                                                      ,shiftedDz_(md.getShiftedDz())
 {
 }
 
 SDL::MiniDoublet::MiniDoublet(SDL::Hit* lowerHitPtr, SDL::Hit* upperHitPtr) : lowerHitPtr_(lowerHitPtr), upperHitPtr_(upperHitPtr)
+                                                      ,passAlgo_(0)
+                                                      ,dz_(0)
+                                                      ,shiftedDz_(0)
 {
 }
 
@@ -26,6 +32,31 @@ SDL::Hit* SDL::MiniDoublet::lowerHitPtr() const
 SDL::Hit* SDL::MiniDoublet::upperHitPtr() const
 {
     return upperHitPtr_;
+}
+
+const int& SDL::MiniDoublet::getPassAlgo() const
+{
+    return passAlgo_;
+}
+
+const float& SDL::MiniDoublet::getDz() const
+{
+    return dz_;
+}
+
+const float& SDL::MiniDoublet::getShiftedDz() const
+{
+    return shiftedDz_;
+}
+
+void SDL::MiniDoublet::setDz(float dz)
+{
+    dz_ = dz;
+}
+
+void SDL::MiniDoublet::setShiftedDz(float shiftedDz)
+{
+    shiftedDz_ = shiftedDz;
 }
 
 bool SDL::MiniDoublet::passesMiniDoubletAlgo(SDL::MDAlgo algo) const
@@ -84,9 +115,12 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
 
     // Cut #1: The dz difference
     // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3067
+
+    setDz(lowerHit.z() - upperHit.z());
+    const float& dz = getDz();
+
     const float dzCut = 10.f; // Could be tighter for PS modules
-    float dz = std::abs(lowerHit.z() - upperHit.z());
-    if (not (dz < dzCut)) // If cut fails continue
+    if (not (std::abs(dz) < dzCut)) // If cut fails continue
     {
         if (logLevel >= SDL::Log_Debug3)
         {
@@ -263,9 +297,12 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
     // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3093
     // For PS module in case when it is tilted a different dz (after the strip hit shift) is calculated later.
     // This is because the 10.f cut is meant more for sanity check (most will pass this cut anyway) (TODO: Maybe revisit this cut later?)
+
+    setDz(lowerHit.z() - upperHit.z());
+    float dz = getDz(); // Not const since later it might change depending on the type of module
+
     const float dzCut = lowerModule.side() == SDL::Module::Endcap ?  1.f : 10.f;
-    float dz = std::abs(lowerHit.z() - upperHit.z());
-    if (not (dz < dzCut)) // If cut fails continue
+    if (not (std::abs(dz) < dzCut)) // If cut fails continue
     {
         if (logLevel >= SDL::Log_Debug2)
         {
@@ -416,15 +453,17 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
     {
         if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
         {
-            dz = fabs(lowerHit.z() - zn);
+            setShiftedDz(lowerHit.z() - zn);
+            dz = getShiftedDz();
         }
         else
         {
-            dz = fabs(upperHit.z() - zn);
+            setShiftedDz(upperHit.z() - zn);
+            dz = getShiftedDz();
         }
     }
 
-    float dzFrac = dz / fabs(lowerHit.z());
+    float dzFrac = std::abs(dz) / fabs(lowerHit.z());
     float fabsdPhiMod = fabsdPhi / dzFrac * (1.f + dzFrac);
     if (not (fabsdPhiMod < miniCut)) // If cut fails continue
     {
@@ -937,6 +976,8 @@ bool SDL::MiniDoublet::isNormalTiltedModules(const SDL::Module& lowerModule)
         return false;
 }
 
+// NOTE: Deprecated
+[[deprecated("SDL:: isHitPairAMiniDoublet() is deprecated. Create an instance of MiniDoublet and Use runMiniDoubletAlgo()")]]
 bool SDL::MiniDoublet::isHitPairAMiniDoublet(const SDL::Hit& lowerHit, const SDL::Hit& upperHit, const SDL::Module& lowerModule, SDL::MDAlgo algo, SDL::LogLevel logLevel)
 {
     // If the algorithm is "do all combination" (e.g. used for efficiency calculation)
