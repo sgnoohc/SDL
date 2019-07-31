@@ -61,7 +61,7 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgo(SDL::LogLevel logLevel)
     // Retreived the lower module object
     const SDL::Module& lowerModule = lowerHitPtr_->getModule();
 
-    if ( (lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() == SDL::Module::Center) or isNormalTiltedModules(lowerModule))
+    if (useBarrelLogic(lowerModule))
     {
         runMiniDoubletDefaultAlgoBarrel(logLevel);
     }
@@ -73,24 +73,397 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgo(SDL::LogLevel logLevel)
 
 void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
 {
-    bool passed_algorithm = false;
+    // First get the object that the pointer points to
+    const SDL::Hit& lowerHit = (*lowerHitPtr_);
+    const SDL::Hit& upperHit = (*upperHitPtr_);
 
-    // Run the algorithm
-    passed_algorithm = true;
+    // Retreived the lower module object
+    const SDL::Module& lowerModule = lowerHitPtr_->getModule();
 
-    if (passed_algorithm)
-        passAlgo_ |= (1 << SDL::Default_MDAlgo);
+    // There are series of cuts that applies to mini-doublet in a "barrel" region
+
+    // Cut #1: The dz difference
+    // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3067
+    const float dzCut = 10.f; // Could be tighter for PS modules
+    float dz = std::abs(lowerHit.z() - upperHit.z());
+    if (not (dz < dzCut)) // If cut fails continue
+    {
+        if (logLevel >= SDL::Log_Debug3)
+        {
+            SDL::cout << lowerModule << std::endl;
+            SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
+            SDL::cout << "upperHit: " << upperHit << std::endl;
+            SDL::cout << "lowerHit: " << lowerHit << std::endl;
+            SDL::cout << "dz : " << dz << std::endl;
+            SDL::cout << "dzCut : " << dzCut << std::endl;
+        }
+
+        // did not pass default algo
+        passAlgo_ &= (0 << SDL::Default_MDAlgo);
+        return;
+    }
+    else
+    {
+        if (logLevel >= SDL::Log_Debug3)
+        {
+            SDL::cout << lowerModule << std::endl;
+            SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
+            SDL::cout << "upperHit: " << upperHit << std::endl;
+            SDL::cout << "lowerHit: " << lowerHit << std::endl;
+            SDL::cout << "dz : " << dz << std::endl;
+            SDL::cout << "dzCut : " << dzCut << std::endl;
+        }
+    }
+
+    // Calculate the cut thresholds for the selection
+    float miniCut = 0;
+    if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
+        miniCut = MiniDoublet::dPhiThreshold(lowerHit, lowerModule);
+    else
+        miniCut = MiniDoublet::dPhiThreshold(upperHit, lowerModule);
+
+    // Cut #2: dphi difference
+    // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3085
+    // float fabsdPhi = std::abs(lowerHit.deltaPhi(upperHit));
+    float fabsdPhi = 0;
+    float xn = 0, yn = 0, zn = 0;
+    if (lowerModule.side() != SDL::Module::Center) // If barrel and not center it is tilted
+    {
+        // Shift the hits and calculate new xn, yn position
+        std::tie(xn, yn, zn) = shiftStripHits(lowerHit, upperHit, lowerModule, logLevel);
+
+        // Lower or the upper hit needs to be modified depending on which one was actually shifted
+        if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
+        {
+            SDL::Hit upperHitMod(upperHit);
+            upperHitMod.setXYZ(xn, yn, upperHit.z());
+            fabsdPhi = std::abs(lowerHit.deltaPhi(upperHitMod));
+        }
+        else
+        {
+            SDL::Hit lowerHitMod(lowerHit);
+            lowerHitMod.setXYZ(xn, yn, lowerHit.z());
+            fabsdPhi = std::abs(lowerHitMod.deltaPhi(upperHit));
+        }
+    }
+    else
+    {
+        fabsdPhi = std::abs(lowerHit.deltaPhi(upperHit));
+    }
+
+    if (not (fabsdPhi < miniCut)) // If cut fails continue
+    {
+        if (logLevel >= SDL::Log_Debug3)
+        {
+            SDL::cout << lowerModule << std::endl;
+            SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
+            SDL::cout << "upperHit: " << upperHit << std::endl;
+            SDL::cout << "lowerHit: " << lowerHit << std::endl;
+            SDL::cout << "fabsdPhi : " << fabsdPhi << std::endl;
+            SDL::cout << "miniCut : " << miniCut << std::endl;
+        }
+
+        // did not pass default algo
+        passAlgo_ &= (0 << SDL::Default_MDAlgo);
+        return;
+    }
+    else
+    {
+        if (logLevel >= SDL::Log_Debug3)
+        {
+            SDL::cout << lowerModule << std::endl;
+            SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
+            SDL::cout << "upperHit: " << upperHit << std::endl;
+            SDL::cout << "lowerHit: " << lowerHit << std::endl;
+            SDL::cout << "fabsdPhi : " << fabsdPhi << std::endl;
+            SDL::cout << "miniCut : " << miniCut << std::endl;
+        }
+    }
+
+    // Cut #3: The dphi change going from lower Hit to upper Hit
+    // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3076
+    float fabsdPhiChange;
+    if (lowerModule.side() != SDL::Module::Center)
+    {
+        // When it is tilted, use the new shifted positions
+        if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
+        {
+            SDL::Hit upperHitMod(upperHit);
+            upperHitMod.setXYZ(xn, yn, upperHit.z());
+            // dPhi Change should be calculated so that the upper hit has higher rt.
+            // In principle, this kind of check rt_lower < rt_upper should not be necessary because the hit shifting should have taken care of this.
+            // (i.e. the strip hit is shifted to be aligned in the line of sight from interaction point to pixel hit of PS module guaranteeing rt ordering)
+            // But I still placed this check for safety. (TODO: After cheking explicitly if not needed remove later?)
+            fabsdPhiChange = lowerHit.rt() < upperHitMod.rt() ? std::abs(lowerHit.deltaPhiChange(upperHitMod)) : std::abs(upperHitMod.deltaPhiChange(lowerHit));
+        }
+        else
+        {
+            SDL::Hit lowerHitMod(lowerHit);
+            lowerHitMod.setXYZ(xn, yn, lowerHit.z());
+            // dPhi Change should be calculated so that the upper hit has higher rt.
+            // In principle, this kind of check rt_lower < rt_upper should not be necessary because the hit shifting should have taken care of this.
+            // (i.e. the strip hit is shifted to be aligned in the line of sight from interaction point to pixel hit of PS module guaranteeing rt ordering)
+            // But I still placed this check for safety. (TODO: After cheking explicitly if not needed remove later?)
+            fabsdPhiChange = lowerHitMod.rt() < upperHit.rt() ? std::abs(lowerHitMod.deltaPhiChange(upperHit)) : std::abs(upperHit.deltaPhiChange(lowerHitMod));
+        }
+    }
+    else
+    {
+        // When it is flat lying module, whichever is the lowerSide will always have rt lower
+        fabsdPhiChange = std::abs(lowerHit.deltaPhiChange(upperHit));
+    }
+
+    if (not (fabsdPhiChange < miniCut)) // If cut fails continue
+    {
+        if (logLevel >= SDL::Log_Debug3)
+        {
+            SDL::cout << lowerModule << std::endl;
+            SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
+            SDL::cout << "upperHit: " << upperHit << std::endl;
+            SDL::cout << "lowerHit: " << lowerHit << std::endl;
+            SDL::cout << "fabsdPhiChange : " << fabsdPhiChange << std::endl;
+            SDL::cout << "miniCut : " << miniCut << std::endl;
+        }
+
+        // did not pass default algo
+        passAlgo_ &= (0 << SDL::Default_MDAlgo);
+        return;
+    }
+    else
+    {
+        if (logLevel >= SDL::Log_Debug3)
+        {
+            SDL::cout << lowerModule << std::endl;
+            SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
+            SDL::cout << "upperHit: " << upperHit << std::endl;
+            SDL::cout << "lowerHit: " << lowerHit << std::endl;
+            SDL::cout << "fabsdPhiChange : " << fabsdPhiChange << std::endl;
+            SDL::cout << "miniCut : " << miniCut << std::endl;
+        }
+    }
+
+    // If all cut passed this pair is good, and make and add the mini-doublet
+    passAlgo_ |= (1 << SDL::Default_MDAlgo);
+    return;
+
 }
 
 void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
 {
-    bool passed_algorithm = false;
+    // First get the object that the pointer points to
+    const SDL::Hit& lowerHit = (*lowerHitPtr_);
+    const SDL::Hit& upperHit = (*upperHitPtr_);
 
-    // Run the algorithm
-    passed_algorithm = true;
+    // Retreived the lower module object
+    const SDL::Module& lowerModule = lowerHitPtr_->getModule();
 
-    if (passed_algorithm)
-        passAlgo_ |= (1 << SDL::Default_MDAlgo);
+    // There are series of cuts that applies to mini-doublet in a "endcap" region
+
+    // Cut #1 : dz cut. The dz difference can't be larger than 1cm. (max separation is 4mm for modules in the endcap)
+    // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3093
+    // For PS module in case when it is tilted a different dz (after the strip hit shift) is calculated later.
+    // This is because the 10.f cut is meant more for sanity check (most will pass this cut anyway) (TODO: Maybe revisit this cut later?)
+    const float dzCut = lowerModule.side() == SDL::Module::Endcap ?  1.f : 10.f;
+    float dz = std::abs(lowerHit.z() - upperHit.z());
+    if (not (dz < dzCut)) // If cut fails continue
+    {
+        if (logLevel >= SDL::Log_Debug2)
+        {
+            SDL::cout << lowerModule << std::endl;
+            SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
+            SDL::cout << "upperHit: " << upperHit << std::endl;
+            SDL::cout << "lowerHit: " << lowerHit << std::endl;
+            SDL::cout << "dz : " << dz << std::endl;
+            SDL::cout << "dzCut : " << dzCut << std::endl;
+        }
+
+        // did not pass default algo
+        passAlgo_ &= (0 << SDL::Default_MDAlgo);
+        return;
+    }
+    else
+    {
+        if (logLevel >= SDL::Log_Debug3)
+        {
+            SDL::cout << lowerModule << std::endl;
+            SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
+            SDL::cout << "upperHit: " << upperHit << std::endl;
+            SDL::cout << "lowerHit: " << lowerHit << std::endl;
+            SDL::cout << "dz : " << dz << std::endl;
+            SDL::cout << "dzCut : " << dzCut << std::endl;
+        }
+    }
+
+    // Cut #2 : drt cut. The dz difference can't be larger than 1cm. (max separation is 4mm for modules in the endcap)
+    // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3100
+    const float drtCut = 10.f; // i.e. should be smaller than the module length. Could be tighter if PS modules
+    float drt = std::abs(lowerHit.rt() - upperHit.rt());
+    if (not (drt < drtCut)) // If cut fails continue
+    {
+        if (logLevel >= SDL::Log_Debug2)
+        {
+            SDL::cout << lowerModule << std::endl;
+            SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
+            SDL::cout << "upperHit: " << upperHit << std::endl;
+            SDL::cout << "lowerHit: " << lowerHit << std::endl;
+            SDL::cout << "drt : " << drt << std::endl;
+            SDL::cout << "drtCut : " << drtCut << std::endl;
+        }
+
+        // did not pass default algo
+        passAlgo_ &= (0 << SDL::Default_MDAlgo);
+        return;
+    }
+    else
+    {
+        if (logLevel >= SDL::Log_Debug3)
+        {
+            SDL::cout << lowerModule << std::endl;
+            SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
+            SDL::cout << "upperHit: " << upperHit << std::endl;
+            SDL::cout << "lowerHit: " << lowerHit << std::endl;
+            SDL::cout << "drt : " << drt << std::endl;
+            SDL::cout << "drtCut : " << drtCut << std::endl;
+        }
+    }
+
+    // Calculate the cut thresholds for the selection
+    float miniCut = 0;
+    if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
+        miniCut = MiniDoublet::dPhiThreshold(lowerHit, lowerModule);
+    else
+        miniCut = MiniDoublet::dPhiThreshold(upperHit, lowerModule);
+
+    // Cut #3: dphi difference
+    // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3111
+    // // Old comments ----
+    // // Old comments Slava, 6:17 PM
+    // // Old comments here for the code to work you would need to slide (line extrapolate) the lower or the upper  hit along the strip direction to the radius of the other
+    // // Old comments you'll get it almost right by assuming radial strips and just add the d_rt*(cosPhi, sinPhi)
+    // // Old comments ----
+    // // Old comments The algorithm assumed that the radial position is ~close according to Slava.
+    // // Old comments However, for PS modules, it is not the case.
+    // // Old comments So we'd have to move the hits to be in same position as the other.
+    // // Old comments We'll move the pixel along the radial direction (assuming the radial direction is more or less same as the strip direction)
+    // ----
+    // The new scheme shifts strip hits to be "aligned" along the line of sight from interaction point to the pixel hit (if it is PS modules)
+    float fabsdPhi = 0;
+    float xn = 0, yn = 0, zn = 0;
+    // if (lowerModule.moduleType() == SDL::Module::PS)
+    // {
+    // Shift the hits and calculate new xn, yn position
+    std::tie(xn, yn, zn) = shiftStripHits(lowerHit, upperHit, lowerModule, logLevel);
+
+    if (lowerModule.moduleType() == SDL::Module::PS)
+    {
+        // Appropriate lower or upper hit is modified after checking which one was actually shifted
+        if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
+        {
+            SDL::Hit upperHitMod(upperHit);
+            upperHitMod.setXYZ(xn, yn, upperHit.z());
+            fabsdPhi = std::abs(lowerHit.deltaPhi(upperHitMod));
+        }
+        else
+        {
+            SDL::Hit lowerHitMod(lowerHit);
+            lowerHitMod.setXYZ(xn, yn, lowerHit.z());
+            fabsdPhi = std::abs(lowerHitMod.deltaPhi(upperHit));
+        }
+    }
+    else
+    {
+        SDL::Hit upperHitMod(upperHit);
+        upperHitMod.setXYZ(xn, yn, upperHit.z());
+        fabsdPhi = std::abs(lowerHit.deltaPhi(upperHitMod));
+        // fabsdPhi = std::abs(lowerHit.deltaPhi(upperHit));
+    }
+
+    if (not (fabsdPhi < miniCut)) // If cut fails continue
+    {
+        if (logLevel >= SDL::Log_Debug2)
+        {
+            SDL::cout << lowerModule << std::endl;
+            SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
+            SDL::cout << "upperHit: " << upperHit << std::endl;
+            SDL::cout << "lowerHit: " << lowerHit << std::endl;
+            SDL::cout << "fabsdPhi : " << fabsdPhi << std::endl;
+            SDL::cout << "miniCut : " << miniCut << std::endl;
+        }
+
+        // did not pass default algo
+        passAlgo_ &= (0 << SDL::Default_MDAlgo);
+        return;
+    }
+    else
+    {
+        if (logLevel >= SDL::Log_Debug3)
+        {
+            SDL::cout << lowerModule << std::endl;
+            SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
+            SDL::cout << "upperHit: " << upperHit << std::endl;
+            SDL::cout << "lowerHit: " << lowerHit << std::endl;
+            SDL::cout << "fabsdPhi : " << fabsdPhi << std::endl;
+            SDL::cout << "miniCut : " << miniCut << std::endl;
+        }
+    }
+
+    // Cut #4: Another cut on the dphi after some modification
+    // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3119-L3124
+
+    // dz needs to change if it is a PS module where the strip hits are shifted in order to properly account for the case when a tilted module falls under "endcap logic"
+    // if it was an endcap it will have zero effect
+    if (lowerModule.moduleType() == SDL::Module::PS)
+    {
+        if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
+        {
+            dz = fabs(lowerHit.z() - zn);
+        }
+        else
+        {
+            dz = fabs(upperHit.z() - zn);
+        }
+    }
+
+    float dzFrac = dz / fabs(lowerHit.z());
+    float fabsdPhiMod = fabsdPhi / dzFrac * (1.f + dzFrac);
+    if (not (fabsdPhiMod < miniCut)) // If cut fails continue
+    {
+        if (logLevel >= SDL::Log_Debug2)
+        {
+            SDL::cout << lowerModule << std::endl;
+            SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
+            SDL::cout << "upperHit: " << upperHit << std::endl;
+            SDL::cout << "lowerHit: " << lowerHit << std::endl;
+            SDL::cout << "dz : " << dz << std::endl;
+            SDL::cout << "dzFrac : " << dzFrac << std::endl;
+            SDL::cout << "fabsdPhi : " << fabsdPhi << std::endl;
+            SDL::cout << "fabsdPhiMod : " << fabsdPhiMod << std::endl;
+            SDL::cout << "miniCut : " << miniCut << std::endl;
+        }
+
+        // did not pass default algo
+        passAlgo_ &= (0 << SDL::Default_MDAlgo);
+        return;
+    }
+    else
+    {
+        if (logLevel >= SDL::Log_Debug3)
+        {
+            SDL::cout << lowerModule << std::endl;
+            SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
+            SDL::cout << "upperHit: " << upperHit << std::endl;
+            SDL::cout << "lowerHit: " << lowerHit << std::endl;
+            SDL::cout << "dz : " << dz << std::endl;
+            SDL::cout << "dzFrac : " << dzFrac << std::endl;
+            SDL::cout << "fabsdPhi : " << fabsdPhi << std::endl;
+            SDL::cout << "fabsdPhiMod : " << fabsdPhiMod << std::endl;
+            SDL::cout << "miniCut : " << miniCut << std::endl;
+        }
+    }
+
+    // If all cut passed this pair is good, and make and add the mini-doublet
+    passAlgo_ |= (1 << SDL::Default_MDAlgo);
+    return;
 }
 
 bool SDL::MiniDoublet::isIdxMatched(const MiniDoublet& md) const
@@ -533,6 +906,19 @@ std::tuple<float, float, float> SDL::MiniDoublet::shiftStripHits(const SDL::Hit&
 
     return std::make_tuple(xn, yn, zn);
 
+}
+
+bool SDL::MiniDoublet::useBarrelLogic(const SDL::Module& lowerModule)
+{
+
+    // Either it is a barrel and flat module (i.e. "Center")
+    // or if it is a "normal" tilted modules (ones that are not too steeply tilted)
+    // then use barrel logic
+
+    if ( (lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() == SDL::Module::Center) or isNormalTiltedModules(lowerModule))
+        return true;
+    else
+        return false;
 }
 
 bool SDL::MiniDoublet::isNormalTiltedModules(const SDL::Module& lowerModule)

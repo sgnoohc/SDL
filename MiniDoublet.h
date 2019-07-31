@@ -78,6 +78,9 @@ namespace SDL
             // The function to actually determine whether a pair of hits is a reco-ed mini doublet or not
             static bool isHitPairAMiniDoublet(const Hit& lowerHit, const Hit& upperHit, const Module& lowerModule, MDAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
 
+            // Condition that a module falls into "barrel"-logic of the mini-doublet algorithm
+            static bool useBarrelLogic(const Module& lowerModule);
+
             // The function to determine transition region for inner most tilted layer
             static bool isNormalTiltedModules(const Module& lowerModule);
 

@@ -181,9 +181,6 @@ void SDL::Event::createMiniDoubletsFromLowerModule(unsigned int detId, SDL::MDAl
             if (mdCand.passesMiniDoubletAlgo(algo))
                 addMiniDoubletToLowerModule(mdCand, lowerModule.detId());
 
-            // if (SDL::MiniDoublet::isHitPairAMiniDoublet(lowerHit, upperHit, lowerModule, algo, logLevel_))
-            //     addMiniDoubletToLowerModule(SDL::MiniDoublet(lowerHitPtr, upperHitPtr), lowerModule.detId());
-
         }
 
     }
