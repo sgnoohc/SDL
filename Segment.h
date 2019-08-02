@@ -41,6 +41,12 @@ namespace SDL
             // Outer MiniDoublet (outer means one further away from the beam position, i.e. upper "layer")
             MiniDoublet* outerMiniDoubletPtr_;
 
+            // Bits to flag whether this segment passes some algorithm
+            int passAlgo_;
+
+            // Some reco'ed quantities
+            float dphichange_;
+
         public:
             Segment();
             Segment(const Segment&);
@@ -49,6 +55,24 @@ namespace SDL
 
             MiniDoublet* innerMiniDoubletPtr() const;
             MiniDoublet* outerMiniDoubletPtr() const;
+            const int& getPassAlgo() const;
+            const float& getDeltaPhiChange() const;
+
+            void setDeltaPhiChange(float);
+
+            // return whether it passed the algorithm
+            bool passesSegmentAlgo(SGAlgo algo) const;
+
+            // The function to run segment algorithm on a segment candidate
+            void runSegmentAlgo(SGAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
+
+            // The following algorithm does nothing and accept everything
+            void runSegmentAllCombAlgo();
+
+            // The default algorithms
+            void runSegmentDefaultAlgo(SDL::LogLevel logLevel);
+            void runSegmentDefaultAlgoBarrel(SDL::LogLevel logLevel);
+            void runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel);
 
             bool isIdxMatched(const Segment&) const;
 
@@ -56,7 +80,8 @@ namespace SDL
             static bool isMiniDoubletPairASegment(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
             static bool isMiniDoubletPairASegmentCandidateBarrel(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
             static bool isMiniDoubletPairASegmentCandidateEndcap(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
-            static bool isMiniDoubletPairAngleCompatible(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
+            static bool isMiniDoubletPairAngleCompatibleBarrel(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
+            static bool isMiniDoubletPairAngleCompatibleEndcap(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
 
             // cout printing
             friend std::ostream& operator<<(std::ostream& out, const Segment& md);

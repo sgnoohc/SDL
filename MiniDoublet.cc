@@ -14,6 +14,8 @@ SDL::MiniDoublet::MiniDoublet(const MiniDoublet& md): lowerHitPtr_(md.lowerHitPt
                                                       ,passAlgo_(md.getPassAlgo())
                                                       ,dz_(md.getDz())
                                                       ,shiftedDz_(md.getShiftedDz())
+                                                      ,dphi_(md.getDeltaPhi())
+                                                      ,dphichange_(md.getDeltaPhiChange())
 {
 }
 
@@ -21,6 +23,8 @@ SDL::MiniDoublet::MiniDoublet(SDL::Hit* lowerHitPtr, SDL::Hit* upperHitPtr) : lo
                                                       ,passAlgo_(0)
                                                       ,dz_(0)
                                                       ,shiftedDz_(0)
+                                                      ,dphi_(0)
+                                                      ,dphichange_(0)
 {
 }
 
@@ -49,6 +53,16 @@ const float& SDL::MiniDoublet::getShiftedDz() const
     return shiftedDz_;
 }
 
+const float& SDL::MiniDoublet::getDeltaPhi() const
+{
+    return dphi_;
+}
+
+const float& SDL::MiniDoublet::getDeltaPhiChange() const
+{
+    return dphichange_;
+}
+
 void SDL::MiniDoublet::setDz(float dz)
 {
     dz_ = dz;
@@ -57,6 +71,16 @@ void SDL::MiniDoublet::setDz(float dz)
 void SDL::MiniDoublet::setShiftedDz(float shiftedDz)
 {
     shiftedDz_ = shiftedDz;
+}
+
+void SDL::MiniDoublet::setDeltaPhi(float dphi)
+{
+    dphi_ = dphi;
+}
+
+void SDL::MiniDoublet::setDeltaPhiChange(float dphichange)
+{
+    dphichange_ = dphichange;
 }
 
 bool SDL::MiniDoublet::passesMiniDoubletAlgo(SDL::MDAlgo algo) const
@@ -158,8 +182,6 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
 
     // Cut #2: dphi difference
     // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3085
-    // float fabsdPhi = std::abs(lowerHit.deltaPhi(upperHit));
-    float fabsdPhi = 0;
     float xn = 0, yn = 0, zn = 0;
     if (lowerModule.side() != SDL::Module::Center) // If barrel and not center it is tilted
     {
@@ -171,21 +193,21 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
         {
             SDL::Hit upperHitMod(upperHit);
             upperHitMod.setXYZ(xn, yn, upperHit.z());
-            fabsdPhi = std::abs(lowerHit.deltaPhi(upperHitMod));
+            setDeltaPhi(lowerHit.deltaPhi(upperHitMod));
         }
         else
         {
             SDL::Hit lowerHitMod(lowerHit);
             lowerHitMod.setXYZ(xn, yn, lowerHit.z());
-            fabsdPhi = std::abs(lowerHitMod.deltaPhi(upperHit));
+            setDeltaPhi(lowerHitMod.deltaPhi(upperHit));
         }
     }
     else
     {
-        fabsdPhi = std::abs(lowerHit.deltaPhi(upperHit));
+        setDeltaPhi(lowerHit.deltaPhi(upperHit));
     }
 
-    if (not (fabsdPhi < miniCut)) // If cut fails continue
+    if (not (std::abs(getDeltaPhi()) < miniCut)) // If cut fails continue
     {
         if (logLevel >= SDL::Log_Debug3)
         {
@@ -193,7 +215,7 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
             SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
             SDL::cout << "upperHit: " << upperHit << std::endl;
             SDL::cout << "lowerHit: " << lowerHit << std::endl;
-            SDL::cout << "fabsdPhi : " << fabsdPhi << std::endl;
+            SDL::cout << "fabsdPhi : " << getDeltaPhi() << std::endl;
             SDL::cout << "miniCut : " << miniCut << std::endl;
         }
 
@@ -209,14 +231,13 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
             SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
             SDL::cout << "upperHit: " << upperHit << std::endl;
             SDL::cout << "lowerHit: " << lowerHit << std::endl;
-            SDL::cout << "fabsdPhi : " << fabsdPhi << std::endl;
+            SDL::cout << "fabsdPhi : " << getDeltaPhi() << std::endl;
             SDL::cout << "miniCut : " << miniCut << std::endl;
         }
     }
 
     // Cut #3: The dphi change going from lower Hit to upper Hit
     // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3076
-    float fabsdPhiChange;
     if (lowerModule.side() != SDL::Module::Center)
     {
         // When it is tilted, use the new shifted positions
@@ -228,7 +249,7 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
             // In principle, this kind of check rt_lower < rt_upper should not be necessary because the hit shifting should have taken care of this.
             // (i.e. the strip hit is shifted to be aligned in the line of sight from interaction point to pixel hit of PS module guaranteeing rt ordering)
             // But I still placed this check for safety. (TODO: After cheking explicitly if not needed remove later?)
-            fabsdPhiChange = lowerHit.rt() < upperHitMod.rt() ? std::abs(lowerHit.deltaPhiChange(upperHitMod)) : std::abs(upperHitMod.deltaPhiChange(lowerHit));
+            setDeltaPhiChange(lowerHit.rt() < upperHitMod.rt() ? lowerHit.deltaPhiChange(upperHitMod) : upperHitMod.deltaPhiChange(lowerHit));
         }
         else
         {
@@ -238,16 +259,16 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
             // In principle, this kind of check rt_lower < rt_upper should not be necessary because the hit shifting should have taken care of this.
             // (i.e. the strip hit is shifted to be aligned in the line of sight from interaction point to pixel hit of PS module guaranteeing rt ordering)
             // But I still placed this check for safety. (TODO: After cheking explicitly if not needed remove later?)
-            fabsdPhiChange = lowerHitMod.rt() < upperHit.rt() ? std::abs(lowerHitMod.deltaPhiChange(upperHit)) : std::abs(upperHit.deltaPhiChange(lowerHitMod));
+            setDeltaPhiChange(lowerHitMod.rt() < upperHit.rt() ? lowerHitMod.deltaPhiChange(upperHit) : upperHit.deltaPhiChange(lowerHitMod));
         }
     }
     else
     {
         // When it is flat lying module, whichever is the lowerSide will always have rt lower
-        fabsdPhiChange = std::abs(lowerHit.deltaPhiChange(upperHit));
+        setDeltaPhiChange(lowerHit.deltaPhiChange(upperHit));
     }
 
-    if (not (fabsdPhiChange < miniCut)) // If cut fails continue
+    if (not (std::abs(getDeltaPhiChange()) < miniCut)) // If cut fails continue
     {
         if (logLevel >= SDL::Log_Debug3)
         {
@@ -255,7 +276,7 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
             SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
             SDL::cout << "upperHit: " << upperHit << std::endl;
             SDL::cout << "lowerHit: " << lowerHit << std::endl;
-            SDL::cout << "fabsdPhiChange : " << fabsdPhiChange << std::endl;
+            SDL::cout << "fabsdPhiChange : " << getDeltaPhiChange() << std::endl;
             SDL::cout << "miniCut : " << miniCut << std::endl;
         }
 
@@ -271,7 +292,7 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
             SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
             SDL::cout << "upperHit: " << upperHit << std::endl;
             SDL::cout << "lowerHit: " << lowerHit << std::endl;
-            SDL::cout << "fabsdPhiChange : " << fabsdPhiChange << std::endl;
+            SDL::cout << "fabsdPhiChange : " << getDeltaPhiChange() << std::endl;
             SDL::cout << "miniCut : " << miniCut << std::endl;
         }
     }
@@ -384,7 +405,6 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
     // // Old comments We'll move the pixel along the radial direction (assuming the radial direction is more or less same as the strip direction)
     // ----
     // The new scheme shifts strip hits to be "aligned" along the line of sight from interaction point to the pixel hit (if it is PS modules)
-    float fabsdPhi = 0;
     float xn = 0, yn = 0, zn = 0;
     // if (lowerModule.moduleType() == SDL::Module::PS)
     // {
@@ -398,24 +418,23 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
         {
             SDL::Hit upperHitMod(upperHit);
             upperHitMod.setXYZ(xn, yn, upperHit.z());
-            fabsdPhi = std::abs(lowerHit.deltaPhi(upperHitMod));
+            setDeltaPhi(lowerHit.deltaPhi(upperHitMod));
         }
         else
         {
             SDL::Hit lowerHitMod(lowerHit);
             lowerHitMod.setXYZ(xn, yn, lowerHit.z());
-            fabsdPhi = std::abs(lowerHitMod.deltaPhi(upperHit));
+            setDeltaPhi(lowerHitMod.deltaPhi(upperHit));
         }
     }
     else
     {
         SDL::Hit upperHitMod(upperHit);
         upperHitMod.setXYZ(xn, yn, upperHit.z());
-        fabsdPhi = std::abs(lowerHit.deltaPhi(upperHitMod));
-        // fabsdPhi = std::abs(lowerHit.deltaPhi(upperHit));
+        setDeltaPhi(lowerHit.deltaPhi(upperHitMod));
     }
 
-    if (not (fabsdPhi < miniCut)) // If cut fails continue
+    if (not (std::abs(getDeltaPhi()) < miniCut)) // If cut fails continue
     {
         if (logLevel >= SDL::Log_Debug2)
         {
@@ -423,7 +442,7 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
             SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
             SDL::cout << "upperHit: " << upperHit << std::endl;
             SDL::cout << "lowerHit: " << lowerHit << std::endl;
-            SDL::cout << "fabsdPhi : " << fabsdPhi << std::endl;
+            SDL::cout << "fabsdPhi : " << getDeltaPhi() << std::endl;
             SDL::cout << "miniCut : " << miniCut << std::endl;
         }
 
@@ -439,7 +458,7 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
             SDL::cout << "Debug: " << __FUNCTION__ << "()" << std::endl;
             SDL::cout << "upperHit: " << upperHit << std::endl;
             SDL::cout << "lowerHit: " << lowerHit << std::endl;
-            SDL::cout << "fabsdPhi : " << fabsdPhi << std::endl;
+            SDL::cout << "fabsdPhi : " << getDeltaPhi() << std::endl;
             SDL::cout << "miniCut : " << miniCut << std::endl;
         }
     }
@@ -464,8 +483,8 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
     }
 
     float dzFrac = std::abs(dz) / fabs(lowerHit.z());
-    float fabsdPhiMod = fabsdPhi / dzFrac * (1.f + dzFrac);
-    if (not (fabsdPhiMod < miniCut)) // If cut fails continue
+    setDeltaPhiChange(getDeltaPhi() / dzFrac * (1.f + dzFrac));
+    if (not (std::abs(getDeltaPhiChange()) < miniCut)) // If cut fails continue
     {
         if (logLevel >= SDL::Log_Debug2)
         {
@@ -475,8 +494,8 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
             SDL::cout << "lowerHit: " << lowerHit << std::endl;
             SDL::cout << "dz : " << dz << std::endl;
             SDL::cout << "dzFrac : " << dzFrac << std::endl;
-            SDL::cout << "fabsdPhi : " << fabsdPhi << std::endl;
-            SDL::cout << "fabsdPhiMod : " << fabsdPhiMod << std::endl;
+            SDL::cout << "fabsdPhi : " << std::abs(getDeltaPhi()) << std::endl;
+            SDL::cout << "fabsdPhiMod : " << getDeltaPhiChange() << std::endl;
             SDL::cout << "miniCut : " << miniCut << std::endl;
         }
 
@@ -494,8 +513,8 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
             SDL::cout << "lowerHit: " << lowerHit << std::endl;
             SDL::cout << "dz : " << dz << std::endl;
             SDL::cout << "dzFrac : " << dzFrac << std::endl;
-            SDL::cout << "fabsdPhi : " << fabsdPhi << std::endl;
-            SDL::cout << "fabsdPhiMod : " << fabsdPhiMod << std::endl;
+            SDL::cout << "fabsdPhi : " << std::abs(getDeltaPhi()) << std::endl;
+            SDL::cout << "fabsdPhiMod : " << getDeltaPhiChange() << std::endl;
             SDL::cout << "miniCut : " << miniCut << std::endl;
         }
     }
@@ -519,8 +538,12 @@ namespace SDL
     std::ostream& operator<<(std::ostream& out, const MiniDoublet& md)
     {
         out << "MiniDoublet()" << std::endl;
-        out << "    Lower " << md.lowerHitPtr_ << std::endl;;
-        out << "    Upper " << md.upperHitPtr_;
+        out << "    Lower " << md.lowerHitPtr_ << std::endl;
+        out << "    Upper " << md.upperHitPtr_ << std::endl;
+        out << "        dz " << md.getDz() << std::endl;
+        out << "        shiftedDz " << md.getShiftedDz() << std::endl;
+        out << "        dphi " << md.getDeltaPhi() << std::endl;
+        out << "        dphichange " << md.getDeltaPhiChange();
         return out;
     }
 

@@ -32,9 +32,11 @@ namespace SDL
             // Bits to flag whether this mini-doublet passes some algorithm
             int passAlgo_;
 
-            // Some mini-doublet related variables
+            // Some mini-doublet related reconstructon variables
             float dz_;
             float shiftedDz_;
+            float dphi_;
+            float dphichange_;
 
         public:
             MiniDoublet();
@@ -47,9 +49,13 @@ namespace SDL
             const int& getPassAlgo() const;
             const float& getDz() const;
             const float& getShiftedDz() const;
+            const float& getDeltaPhi() const;
+            const float& getDeltaPhiChange() const;
 
-            void setDz(float dz);
-            void setShiftedDz(float dz);
+            void setDz(float);
+            void setShiftedDz(float);
+            void setDeltaPhi(float);
+            void setDeltaPhiChange(float);
 
             // return whether it passed the algorithm
             bool passesMiniDoubletAlgo(MDAlgo algo) const;

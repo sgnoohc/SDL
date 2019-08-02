@@ -240,7 +240,13 @@ void SDL::Event::createSegmentsFromInnerLowerModule(unsigned int detId, SDL::SGA
                 // Get reference to mini-doublet in outer lower module
                 SDL::MiniDoublet& outerMiniDoublet = *outerMiniDoubletPtr;
 
-                if (SDL::Segment::isMiniDoubletPairASegment(innerMiniDoublet, outerMiniDoublet, algo, logLevel_))
+                // Create a segment candidate
+                SDL::Segment sgCand(innerMiniDoubletPtr, outerMiniDoubletPtr);
+
+                // Run segment algorithm on sgCand (segment candidate)
+                sgCand.runSegmentAlgo(algo, logLevel_);
+
+                if (sgCand.passesSegmentAlgo(algo))
                 {
                     addSegmentToLowerModule(SDL::Segment(innerMiniDoubletPtr, outerMiniDoubletPtr), innerLowerModule.detId());
                     if (innerLowerModule.subdet() == SDL::Module::Barrel)
