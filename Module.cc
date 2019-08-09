@@ -347,16 +347,18 @@ namespace SDL
         out << ", ring=" << module.ring_;
         out << ", module=" << module.module_;
         out << ", moduleType=" << module.moduleType_;
+        out << ", moduleLayerType=" << module.moduleLayerType_;
         out << ", isLower=" << module.isLower_;
         out << ", isInverted=" << module.isInverted_;
+        out << ", isNormalTitled=" << SDL::MiniDoublet::isNormalTiltedModules(module);
         out << ")" << std::endl;
         out << "==============================" << std::endl;
         for (auto& hitPtr : module.hits_)
             out << hitPtr << std::endl;
-        for (auto& mdPtr : module.miniDoublets_)
-            out << mdPtr << std::endl;
-        for (auto& sgPtr : module.segments_)
-            out << sgPtr << std::endl;
+        // for (auto& mdPtr : module.miniDoublets_)
+        //     out << mdPtr << std::endl;
+        // for (auto& sgPtr : module.segments_)
+        //     out << sgPtr << std::endl;
         out << "" << std::endl;
 
         return out;

@@ -4,10 +4,9 @@
 #include <vector>
 #include <iostream>
 
-#include "Hit.h"
-#include "MiniDoublet.h"
-#include "Segment.h"
 #include "PrintUtil.h"
+#include "MiniDoublet.h"
+#include "Hit.h"
 
 namespace SDL{
     class MiniDoublet;

@@ -1,14 +1,15 @@
 #ifndef Tracklet_h
 #define Tracklet_h
 
-#include "Tracklet.h"
 #include "Module.h"
 #include "Algo.h"
+#include "Segment.h"
 
 namespace SDL
 {
     class Module;
     class Tracklet;
+    class Segment;
 }
 
 namespace SDL

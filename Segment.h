@@ -2,6 +2,7 @@
 #define Segment_h
 
 #include "MiniDoublet.h"
+#include "TiltedGeometry.h"
 #include "Module.h"
 #include "Algo.h"
 
@@ -45,6 +46,7 @@ namespace SDL
             int passAlgo_;
 
             // Some reco'ed quantities
+            float rt_;
             float dphichange_;
 
         public:
@@ -56,8 +58,10 @@ namespace SDL
             MiniDoublet* innerMiniDoubletPtr() const;
             MiniDoublet* outerMiniDoubletPtr() const;
             const int& getPassAlgo() const;
+            const float& getRt() const;
             const float& getDeltaPhiChange() const;
 
+            void setRt(float);
             void setDeltaPhiChange(float);
 
             // return whether it passed the algorithm
@@ -80,7 +84,6 @@ namespace SDL
             static bool isMiniDoubletPairASegment(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
             static bool isMiniDoubletPairASegmentCandidateBarrel(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
             static bool isMiniDoubletPairASegmentCandidateEndcap(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
-            static bool isMiniDoubletPairAngleCompatibleBarrel(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
             static bool isMiniDoubletPairAngleCompatibleEndcap(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
 
             // cout printing

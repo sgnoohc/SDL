@@ -25,3 +25,13 @@ float SDL::MathUtil::ATan2(float y, float x)
     if (y >  0) return  M_PI / 2;
     else        return -M_PI / 2;
 }
+
+float SDL::MathUtil::ptEstimateFromDeltaPhiChangeAndRt(float dPhiChange, float rt)
+{
+    return rt * 2.99792458e-3 * 3.8 / 2. / std::sin(dPhiChange);
+}
+
+float SDL::MathUtil::dphiEstimateFromPtAndRt(float pt, float rt)
+{
+    return std::asin(rt / (2 * pt / (2.99792458e-3 * 3.8)));
+}

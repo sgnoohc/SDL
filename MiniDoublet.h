@@ -5,11 +5,12 @@
 #include <tuple>
 
 #include "Algo.h"
-#include "Hit.h"
-#include "Module.h"
 #include "PrintUtil.h"
+#include "MathUtil.h"
 #include "EndcapGeometry.h"
 #include "TiltedGeometry.h"
+#include "Hit.h"
+#include "Module.h"
 
 namespace SDL
 {
@@ -33,10 +34,14 @@ namespace SDL
             int passAlgo_;
 
             // Some mini-doublet related reconstructon variables
+            Hit lowerShiftedHit_;
+            Hit upperShiftedHit_;
             float dz_;
             float shiftedDz_;
             float dphi_;
+            float dphi_noshift_;
             float dphichange_;
+            float dphichange_noshift_;
 
         public:
             MiniDoublet();
@@ -47,15 +52,23 @@ namespace SDL
             Hit* lowerHitPtr() const;
             Hit* upperHitPtr() const;
             const int& getPassAlgo() const;
+            const Hit& getLowerShiftedHit() const;
+            const Hit& getUpperShiftedHit() const;
             const float& getDz() const;
             const float& getShiftedDz() const;
             const float& getDeltaPhi() const;
             const float& getDeltaPhiChange() const;
+            const float& getDeltaPhiNoShift() const;
+            const float& getDeltaPhiChangeNoShift() const;
 
+            void setLowerShiftedHit(float, float, float, int=-1);
+            void setUpperShiftedHit(float, float, float, int=-1);
             void setDz(float);
             void setShiftedDz(float);
             void setDeltaPhi(float);
             void setDeltaPhiChange(float);
+            void setDeltaPhiNoShift(float);
+            void setDeltaPhiChangeNoShift(float);
 
             // return whether it passed the algorithm
             bool passesMiniDoubletAlgo(MDAlgo algo) const;

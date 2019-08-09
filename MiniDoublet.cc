@@ -12,10 +12,14 @@ SDL::MiniDoublet::~MiniDoublet()
 
 SDL::MiniDoublet::MiniDoublet(const MiniDoublet& md): lowerHitPtr_(md.lowerHitPtr()), upperHitPtr_(md.upperHitPtr())
                                                       ,passAlgo_(md.getPassAlgo())
+                                                      ,lowerShiftedHit_(md.getLowerShiftedHit())
+                                                      ,upperShiftedHit_(md.getUpperShiftedHit())
                                                       ,dz_(md.getDz())
                                                       ,shiftedDz_(md.getShiftedDz())
                                                       ,dphi_(md.getDeltaPhi())
+                                                      ,dphi_noshift_(md.getDeltaPhiNoShift())
                                                       ,dphichange_(md.getDeltaPhiChange())
+                                                      ,dphichange_noshift_(md.getDeltaPhiChangeNoShift())
 {
 }
 
@@ -24,7 +28,9 @@ SDL::MiniDoublet::MiniDoublet(SDL::Hit* lowerHitPtr, SDL::Hit* upperHitPtr) : lo
                                                       ,dz_(0)
                                                       ,shiftedDz_(0)
                                                       ,dphi_(0)
+                                                      ,dphi_noshift_(0)
                                                       ,dphichange_(0)
+                                                      ,dphichange_noshift_(0)
 {
 }
 
@@ -41,6 +47,16 @@ SDL::Hit* SDL::MiniDoublet::upperHitPtr() const
 const int& SDL::MiniDoublet::getPassAlgo() const
 {
     return passAlgo_;
+}
+
+const SDL::Hit& SDL::MiniDoublet::getLowerShiftedHit() const
+{
+    return lowerShiftedHit_;
+}
+
+const SDL::Hit& SDL::MiniDoublet::getUpperShiftedHit() const
+{
+    return upperShiftedHit_;
 }
 
 const float& SDL::MiniDoublet::getDz() const
@@ -63,6 +79,28 @@ const float& SDL::MiniDoublet::getDeltaPhiChange() const
     return dphichange_;
 }
 
+const float& SDL::MiniDoublet::getDeltaPhiNoShift() const
+{
+    return dphi_noshift_;
+}
+
+const float& SDL::MiniDoublet::getDeltaPhiChangeNoShift() const
+{
+    return dphichange_noshift_;
+}
+
+void SDL::MiniDoublet::setLowerShiftedHit(float x, float y, float z, int idx)
+{
+    lowerShiftedHit_.setXYZ(x, y, z);
+    lowerShiftedHit_.setIdx(idx);
+}
+
+void SDL::MiniDoublet::setUpperShiftedHit(float x, float y, float z, int idx)
+{
+    upperShiftedHit_.setXYZ(x, y, z);
+    upperShiftedHit_.setIdx(idx);
+}
+
 void SDL::MiniDoublet::setDz(float dz)
 {
     dz_ = dz;
@@ -81,6 +119,16 @@ void SDL::MiniDoublet::setDeltaPhi(float dphi)
 void SDL::MiniDoublet::setDeltaPhiChange(float dphichange)
 {
     dphichange_ = dphichange;
+}
+
+void SDL::MiniDoublet::setDeltaPhiNoShift(float dphi)
+{
+    dphi_noshift_ = dphi;
+}
+
+void SDL::MiniDoublet::setDeltaPhiChangeNoShift(float dphichange)
+{
+    dphichange_noshift_ = dphichange;
 }
 
 bool SDL::MiniDoublet::passesMiniDoubletAlgo(SDL::MDAlgo algo) const
@@ -191,20 +239,27 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
         // Lower or the upper hit needs to be modified depending on which one was actually shifted
         if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
         {
-            SDL::Hit upperHitMod(upperHit);
-            upperHitMod.setXYZ(xn, yn, upperHit.z());
-            setDeltaPhi(lowerHit.deltaPhi(upperHitMod));
+            // SDL::Hit upperHitMod(upperHit);
+            // upperHitMod.setXYZ(xn, yn, upperHit.z());
+            // setDeltaPhi(lowerHit.deltaPhi(upperHitMod));
+            setUpperShiftedHit(xn, yn, upperHit.z());
+            setDeltaPhi(lowerHit.deltaPhi(getUpperShiftedHit()));
+            setDeltaPhiNoShift(lowerHit.deltaPhi(upperHit));
         }
         else
         {
-            SDL::Hit lowerHitMod(lowerHit);
-            lowerHitMod.setXYZ(xn, yn, lowerHit.z());
-            setDeltaPhi(lowerHitMod.deltaPhi(upperHit));
+            // SDL::Hit lowerHitMod(lowerHit);
+            // lowerHitMod.setXYZ(xn, yn, lowerHit.z());
+            // setDeltaPhi(lowerHitMod.deltaPhi(upperHit));
+            setLowerShiftedHit(xn, yn, lowerHit.z());
+            setDeltaPhi(getLowerShiftedHit().deltaPhi(upperHit));
+            setDeltaPhiNoShift(lowerHit.deltaPhi(upperHit));
         }
     }
     else
     {
         setDeltaPhi(lowerHit.deltaPhi(upperHit));
+        setDeltaPhiNoShift(lowerHit.deltaPhi(upperHit));
     }
 
     if (not (std::abs(getDeltaPhi()) < miniCut)) // If cut fails continue
@@ -243,29 +298,34 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
         // When it is tilted, use the new shifted positions
         if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
         {
-            SDL::Hit upperHitMod(upperHit);
-            upperHitMod.setXYZ(xn, yn, upperHit.z());
+            // SDL::Hit upperHitMod(upperHit);
+            // upperHitMod.setXYZ(xn, yn, upperHit.z());
             // dPhi Change should be calculated so that the upper hit has higher rt.
             // In principle, this kind of check rt_lower < rt_upper should not be necessary because the hit shifting should have taken care of this.
             // (i.e. the strip hit is shifted to be aligned in the line of sight from interaction point to pixel hit of PS module guaranteeing rt ordering)
             // But I still placed this check for safety. (TODO: After cheking explicitly if not needed remove later?)
-            setDeltaPhiChange(lowerHit.rt() < upperHitMod.rt() ? lowerHit.deltaPhiChange(upperHitMod) : upperHitMod.deltaPhiChange(lowerHit));
+            // setDeltaPhiChange(lowerHit.rt() < upperHitMod.rt() ? lowerHit.deltaPhiChange(upperHitMod) : upperHitMod.deltaPhiChange(lowerHit));
+            setDeltaPhiChange(lowerHit.rt() < getUpperShiftedHit().rt() ? lowerHit.deltaPhiChange(getUpperShiftedHit()) : getUpperShiftedHit().deltaPhiChange(lowerHit));
+            setDeltaPhiChangeNoShift(lowerHit.rt() < upperHit.rt() ? lowerHit.deltaPhiChange(upperHit) : upperHit.deltaPhiChange(lowerHit));
         }
         else
         {
-            SDL::Hit lowerHitMod(lowerHit);
-            lowerHitMod.setXYZ(xn, yn, lowerHit.z());
+            // SDL::Hit lowerHitMod(lowerHit);
+            // lowerHitMod.setXYZ(xn, yn, lowerHit.z());
             // dPhi Change should be calculated so that the upper hit has higher rt.
             // In principle, this kind of check rt_lower < rt_upper should not be necessary because the hit shifting should have taken care of this.
             // (i.e. the strip hit is shifted to be aligned in the line of sight from interaction point to pixel hit of PS module guaranteeing rt ordering)
             // But I still placed this check for safety. (TODO: After cheking explicitly if not needed remove later?)
-            setDeltaPhiChange(lowerHitMod.rt() < upperHit.rt() ? lowerHitMod.deltaPhiChange(upperHit) : upperHit.deltaPhiChange(lowerHitMod));
+            // setDeltaPhiChange(lowerHitMod.rt() < upperHit.rt() ? lowerHitMod.deltaPhiChange(upperHit) : upperHit.deltaPhiChange(lowerHitMod));
+            setDeltaPhiChange(getLowerShiftedHit().rt() < upperHit.rt() ? getLowerShiftedHit().deltaPhiChange(upperHit) : upperHit.deltaPhiChange(getLowerShiftedHit()));
+            setDeltaPhiChangeNoShift(lowerHit.rt() < upperHit.rt() ? lowerHit.deltaPhiChange(upperHit) : upperHit.deltaPhiChange(lowerHit));
         }
     }
     else
     {
         // When it is flat lying module, whichever is the lowerSide will always have rt lower
         setDeltaPhiChange(lowerHit.deltaPhiChange(upperHit));
+        setDeltaPhiChangeNoShift(lowerHit.deltaPhiChange(upperHit));
     }
 
     if (not (std::abs(getDeltaPhiChange()) < miniCut)) // If cut fails continue
@@ -416,22 +476,31 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
         // Appropriate lower or upper hit is modified after checking which one was actually shifted
         if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
         {
-            SDL::Hit upperHitMod(upperHit);
-            upperHitMod.setXYZ(xn, yn, upperHit.z());
-            setDeltaPhi(lowerHit.deltaPhi(upperHitMod));
+            // SDL::Hit upperHitMod(upperHit);
+            // upperHitMod.setXYZ(xn, yn, upperHit.z());
+            // setDeltaPhi(lowerHit.deltaPhi(upperHitMod));
+            setUpperShiftedHit(xn, yn, upperHit.z());
+            setDeltaPhi(lowerHit.deltaPhi(getUpperShiftedHit()));
+            setDeltaPhiNoShift(lowerHit.deltaPhi(upperHit));
         }
         else
         {
-            SDL::Hit lowerHitMod(lowerHit);
-            lowerHitMod.setXYZ(xn, yn, lowerHit.z());
-            setDeltaPhi(lowerHitMod.deltaPhi(upperHit));
+            // SDL::Hit lowerHitMod(lowerHit);
+            // lowerHitMod.setXYZ(xn, yn, lowerHit.z());
+            // setDeltaPhi(lowerHitMod.deltaPhi(upperHit));
+            setLowerShiftedHit(xn, yn, lowerHit.z());
+            setDeltaPhi(getLowerShiftedHit().deltaPhi(upperHit));
+            setDeltaPhiNoShift(lowerHit.deltaPhi(upperHit));
         }
     }
     else
     {
-        SDL::Hit upperHitMod(upperHit);
-        upperHitMod.setXYZ(xn, yn, upperHit.z());
-        setDeltaPhi(lowerHit.deltaPhi(upperHitMod));
+        // SDL::Hit upperHitMod(upperHit);
+        // upperHitMod.setXYZ(xn, yn, upperHit.z());
+        // setDeltaPhi(lowerHit.deltaPhi(upperHitMod));
+        setUpperShiftedHit(xn, yn, upperHit.z());
+        setDeltaPhi(lowerHit.deltaPhi(getUpperShiftedHit()));
+        setDeltaPhiNoShift(lowerHit.deltaPhi(upperHit));
     }
 
     if (not (std::abs(getDeltaPhi()) < miniCut)) // If cut fails continue
@@ -484,6 +553,7 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
 
     float dzFrac = std::abs(dz) / fabs(lowerHit.z());
     setDeltaPhiChange(getDeltaPhi() / dzFrac * (1.f + dzFrac));
+    setDeltaPhiChangeNoShift(getDeltaPhiNoShift() / dzFrac * (1.f + dzFrac));
     if (not (std::abs(getDeltaPhiChange()) < miniCut)) // If cut fails continue
     {
         if (logLevel >= SDL::Log_Debug2)
@@ -540,10 +610,16 @@ namespace SDL
         out << "MiniDoublet()" << std::endl;
         out << "    Lower " << md.lowerHitPtr_ << std::endl;
         out << "    Upper " << md.upperHitPtr_ << std::endl;
+        out << "    Lower Shifted " << md.lowerShiftedHit_ << std::endl;
+        out << "    Upper Shifted " << md.upperShiftedHit_ << std::endl;
         out << "        dz " << md.getDz() << std::endl;
         out << "        shiftedDz " << md.getShiftedDz() << std::endl;
         out << "        dphi " << md.getDeltaPhi() << std::endl;
-        out << "        dphichange " << md.getDeltaPhiChange();
+        out << "        dphinoshift " << md.getDeltaPhiNoShift() << std::endl;
+        out << "        dphichange " << md.getDeltaPhiChange() << std::endl;
+        out << "        dphichangenoshift " << md.getDeltaPhiChangeNoShift() << std::endl;
+        out << "        ptestimate " << SDL::MathUtil::ptEstimateFromDeltaPhiChangeAndRt(md.getDeltaPhiChange(), md.lowerHitPtr_->rt()) << std::endl;
+        out << "        ptestimate from noshift " << SDL::MathUtil::ptEstimateFromDeltaPhiChangeAndRt(md.getDeltaPhiChangeNoShift(), md.lowerHitPtr_->rt());
         return out;
     }
 
@@ -884,7 +960,10 @@ std::tuple<float, float, float> SDL::MiniDoublet::shiftStripHits(const SDL::Hit&
     // If the lowerModule is pixel, then the module separation direction is positive and vice versa.
     // (i.e. if the pixel was the upper module, then the anchor points are going to shift inward in x-y plane wrt to pixel x-y point and vice versa.)
     // (cf. this should be taking care of the "rt" size comparison that would be done when calculating fabsdPhiChange variable.)
-    moduleSeparation = (isEndcap ? 0.40 : 0.26) * (lowerModule.moduleLayerType() == SDL::Module::Pixel ? 1 : -1);
+    if (lowerModule.moduleType() == SDL::Module::PS) // ensure this happens only for PS modules
+        moduleSeparation = (isEndcap ? 0.40 : 0.26) * (lowerModule.moduleLayerType() == SDL::Module::Pixel ? 1 : -1);
+    else
+        moduleSeparation = (isEndcap ? 0.40 : 0.26);
 
     drprime = (moduleSeparation / std::sin(angleA + angleB)) * std::sin(angleA);
 
@@ -965,6 +1044,37 @@ std::tuple<float, float, float> SDL::MiniDoublet::shiftStripHits(const SDL::Hit&
     }
 
     zn = abszn * (pixelHitPtr->z() > 0 ? 1 : -1); // Apply the sign of the zn
+
+    if (logLevel == SDL::Log_Debug3)
+    {
+        SDL::cout << upperHit << std::endl;
+        SDL::cout << lowerHit << std::endl;
+        SDL::cout <<  " lowerModule.moduleType()==SDL::Module::PS: " << (lowerModule.moduleType()==SDL::Module::PS) <<  std::endl;
+        SDL::cout <<  " lowerModule.moduleLayerType()==SDL::Module::Pixel: " << (lowerModule.moduleLayerType()==SDL::Module::Pixel) <<  std::endl;
+        SDL::cout <<  " pixelHitPtr: " << pixelHitPtr <<  std::endl;
+        SDL::cout <<  " stripHitPtr: " << stripHitPtr <<  std::endl;
+        SDL::cout <<  " detid: " << detid <<  std::endl;
+        SDL::cout <<  " isEndcap: " << isEndcap <<  std::endl;
+        SDL::cout <<  " pixelHitPtr->rt(): " << pixelHitPtr->rt() <<  std::endl;
+        SDL::cout <<  " pixelHitPtr->z(): " << pixelHitPtr->z() <<  std::endl;
+        SDL::cout <<  " angleA: " << angleA <<  std::endl;
+        SDL::cout <<  " angleB: " << angleB <<  std::endl;
+        SDL::cout <<  " moduleSeparation: " << moduleSeparation <<  std::endl;
+        SDL::cout <<  " drprime: " << drprime <<  std::endl;
+        SDL::cout <<  " slope: " << slope <<  std::endl;
+        SDL::cout <<  " absArctanSlope: " << absArctanSlope <<  std::endl;
+        SDL::cout <<  " angleM: " << angleM <<  std::endl;
+        SDL::cout <<  " drprime_x: " << drprime_x <<  std::endl;
+        SDL::cout <<  " drprime_y: " << drprime_y <<  std::endl;
+        SDL::cout <<  " xa: " << xa <<  std::endl;
+        SDL::cout <<  " ya: " << ya <<  std::endl;
+        SDL::cout <<  " xo: " << xo <<  std::endl;
+        SDL::cout <<  " yo: " << yo <<  std::endl;
+        SDL::cout <<  " xn: " << xn <<  std::endl;
+        SDL::cout <<  " yn: " << yn <<  std::endl;
+        SDL::cout <<  " absdzprime: " << absdzprime <<  std::endl;
+        SDL::cout <<  " zn: " << zn <<  std::endl;
+    }
 
     return std::make_tuple(xn, yn, zn);
 

@@ -7,7 +7,6 @@
 
 #include "MathUtil.h"
 #include "PrintUtil.h"
-#include "Module.h"
 
 namespace SDL
 {

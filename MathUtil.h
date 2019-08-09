@@ -12,6 +12,8 @@ namespace SDL
 
         float Phi_mpi_pi(float phi);
         float ATan2(float y, float x);
+        float ptEstimateFromDeltaPhiChangeAndRt(float dphiChange, float rt);
+        float dphiEstimateFromPtAndRt(float pt, float rt);
 
     }
 }
