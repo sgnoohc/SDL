@@ -12,7 +12,8 @@ SDL::Segment::Segment(const Segment& sg) :
     innerMiniDoubletPtr_(sg.innerMiniDoubletPtr()),
     outerMiniDoubletPtr_(sg.outerMiniDoubletPtr()),
     passAlgo_(sg.getPassAlgo()),
-    rt_(sg.getRt()),
+    rtOut_(sg.getRtOut()),
+    rtIn_(sg.getRtIn()),
     dphichange_(sg.getDeltaPhiChange())
 {
 }
@@ -21,7 +22,8 @@ SDL::Segment::Segment(SDL::MiniDoublet* innerMiniDoubletPtr, SDL::MiniDoublet* o
     innerMiniDoubletPtr_(innerMiniDoubletPtr),
     outerMiniDoubletPtr_(outerMiniDoubletPtr),
     passAlgo_(0),
-    rt_(0),
+    rtOut_(0),
+    rtIn_(0),
     dphichange_(0)
 {
 }
@@ -41,9 +43,14 @@ const int& SDL::Segment::getPassAlgo() const
     return passAlgo_;
 }
 
-const float& SDL::Segment::getRt() const
+const float& SDL::Segment::getRtOut() const
 {
-    return rt_;
+    return rtOut_;
+}
+
+const float& SDL::Segment::getRtIn() const
+{
+    return rtIn_;
 }
 
 const float& SDL::Segment::getDeltaPhiChange() const
@@ -51,9 +58,14 @@ const float& SDL::Segment::getDeltaPhiChange() const
     return dphichange_;
 }
 
-void SDL::Segment::setRt(float rt)
+void SDL::Segment::setRtOut(float rt)
 {
-    rt_ = rt;
+    rtOut_ = rt;
+}
+
+void SDL::Segment::setRtIn(float rt)
+{
+    rtIn_ = rt;
 }
 
 void SDL::Segment::setDeltaPhiChange(float dphichange)
@@ -134,7 +146,8 @@ void SDL::Segment::runSegmentDefaultAlgoBarrel(SDL::LogLevel logLevel)
     float outerMiniDoubletAnchorHitZ = outerMiniDoubletAnchorHit.z();
 
     // Reco value set
-    setRt(outerMiniDoubletAnchorHitRt);
+    setRtOut(outerMiniDoubletAnchorHitRt);
+    setRtIn(innerMiniDoubletAnchorHitRt);
 
     const float sdSlope = std::asin(std::min(outerMiniDoubletAnchorHitRt * k2Rinv1GeVf / ptCut, sinAlphaMax));
     const float sdPVoff = 0.1f / outerMiniDoubletAnchorHitRt;
@@ -300,7 +313,8 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
     float outerMiniDoubletAnchorHitZ = outerMiniDoubletAnchorHit.z();
 
     // Reco value set
-    setRt(outerMiniDoubletAnchorHitRt);
+    setRtOut(outerMiniDoubletAnchorHitRt);
+    setRtIn(innerMiniDoubletAnchorHitRt);
 
     const float sdSlope = std::asin(std::min(outerMiniDoubletAnchorHitRt * k2Rinv1GeVf / ptCut, sinAlphaMax));
     // const float sdPVoff = 0.1f / outerMiniDoubletAnchorHitRt;
@@ -687,15 +701,25 @@ namespace SDL
 {
     std::ostream& operator<<(std::ostream& out, const Segment& sg)
     {
-        out << "Segment()" << std::endl;
-        out << "    Lower " << sg.innerMiniDoubletPtr_ << std::endl;
-        out << "    Upper " << sg.outerMiniDoubletPtr_ << std::endl;
-        out << "Inner MD Module " << std::endl;
-        out << sg.innerMiniDoubletPtr_->lowerHitPtr()->getModule();
-        out << "outer MD Module " << std::endl;
-        out << sg.outerMiniDoubletPtr_->lowerHitPtr()->getModule();
-        out << "    sg_dPhiChange " << sg.getDeltaPhiChange() << std::endl;
-        out << "    ptestimate " << SDL::MathUtil::ptEstimateFromDeltaPhiChangeAndRt(sg.getDeltaPhiChange(), sg.getRt());
+        out << "sg_dPhiChange " << sg.getDeltaPhiChange() << std::endl;
+        out << "ptestimate " << SDL::MathUtil::ptEstimateFromDeltaPhiChangeAndRt(sg.getDeltaPhiChange(), sg.getRtOut()) << std::endl;
+        out << std::endl;
+        out << "Inner Mini-Doublet" << std::endl;
+        out << "------------------------------" << std::endl;
+        {
+            IndentingOStreambuf indent(out);
+            out << sg.innerMiniDoubletPtr_ << std::endl;
+        }
+        out << "Outer Mini-Doublet" << std::endl;
+        out << "------------------------------" << std::endl;
+        {
+            IndentingOStreambuf indent(out);
+            out << sg.outerMiniDoubletPtr_;
+        }
+        // out << "Inner MD Module " << std::endl;
+        // out << sg.innerMiniDoubletPtr_->lowerHitPtr()->getModule();
+        // out << "outer MD Module " << std::endl;
+        // out << sg.outerMiniDoubletPtr_->lowerHitPtr()->getModule();
         return out;
     }
 

@@ -46,7 +46,8 @@ namespace SDL
             int passAlgo_;
 
             // Some reco'ed quantities
-            float rt_;
+            float rtOut_; // Rt of the outer mini-doublet (anchor hit = pixel hit, if available)
+            float rtIn_; // Rt of the inner mini-doublet (anchor hit = pixel hit, if available)
             float dphichange_;
 
         public:
@@ -58,10 +59,12 @@ namespace SDL
             MiniDoublet* innerMiniDoubletPtr() const;
             MiniDoublet* outerMiniDoubletPtr() const;
             const int& getPassAlgo() const;
-            const float& getRt() const;
+            const float& getRtOut() const;
+            const float& getRtIn() const;
             const float& getDeltaPhiChange() const;
 
-            void setRt(float);
+            void setRtOut(float);
+            void setRtIn(float);
             void setDeltaPhiChange(float);
 
             // return whether it passed the algorithm

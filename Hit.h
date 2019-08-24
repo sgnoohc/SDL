@@ -71,6 +71,7 @@ namespace SDL
             Hit& operator = (const Hit&);
             Hit& operator -=(const Hit&);
             Hit& operator +=(const Hit&);
+            Hit& operator /=(const float&);
 
             // cout printing
             friend std::ostream& operator<<(std::ostream& out, const Hit& hit);

@@ -173,6 +173,7 @@ SDL::Hit& SDL::Hit::operator = (const Hit& hit)
     x_ = hit.x();
     y_ = hit.y();
     z_ = hit.z();
+    setDerivedQuantities();
     return *this;
 }
 
@@ -181,6 +182,7 @@ SDL::Hit& SDL::Hit::operator -=(const Hit& hit)
     x_ -= hit.x();
     y_ -= hit.y();
     z_ -= hit.z();
+    setDerivedQuantities();
     return *this;
 }
 
@@ -189,6 +191,16 @@ SDL::Hit& SDL::Hit::operator +=(const Hit& hit)
     x_ += hit.x();
     y_ += hit.y();
     z_ += hit.z();
+    setDerivedQuantities();
+    return *this;
+}
+
+SDL::Hit& SDL::Hit::operator /=(const float& denom)
+{
+    x_ /= denom;
+    y_ /= denom;
+    z_ /= denom;
+    setDerivedQuantities();
     return *this;
 }
 

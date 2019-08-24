@@ -248,11 +248,11 @@ void SDL::Event::createSegmentsFromInnerLowerModule(unsigned int detId, SDL::SGA
 
                 if (sgCand.passesSegmentAlgo(algo))
                 {
-                    addSegmentToLowerModule(SDL::Segment(innerMiniDoubletPtr, outerMiniDoubletPtr), innerLowerModule.detId());
+                    addSegmentToLowerModule(sgCand, innerLowerModule.detId());
                     if (innerLowerModule.subdet() == SDL::Module::Barrel)
-                        addSegmentToLowerLayer(SDL::Segment(innerMiniDoubletPtr, outerMiniDoubletPtr), innerLowerModule.layer(), SDL::Layer::Barrel);
+                        addSegmentToLowerLayer(sgCand, innerLowerModule.layer(), SDL::Layer::Barrel);
                     else
-                        addSegmentToLowerLayer(SDL::Segment(innerMiniDoubletPtr, outerMiniDoubletPtr), innerLowerModule.layer(), SDL::Layer::Endcap);
+                        addSegmentToLowerLayer(sgCand, innerLowerModule.layer(), SDL::Layer::Endcap);
                 }
 
             }
@@ -280,13 +280,24 @@ void SDL::Event::createTrackletsFromTwoLayers(int innerLayerIdx, SDL::Layer::Sub
 
     for (auto& innerSegmentPtr : innerLayer.getSegmentPtrs())
     {
-        Segment& innerSegment = *innerSegmentPtr;
+        SDL::Segment& innerSegment = *innerSegmentPtr;
         for (auto& outerSegmentPtr : outerLayer.getSegmentPtrs())
         {
-            Segment& outerSegment = *outerSegmentPtr;
+            // SDL::Segment& outerSegment = *outerSegmentPtr;
 
-            if (SDL::Tracklet::isSegmentPairATracklet(innerSegment, outerSegment, algo, logLevel_))
-                addTrackletToLowerLayer(SDL::Tracklet(innerSegmentPtr, outerSegmentPtr), innerLayerIdx, innerLayerSubDet);
+            // if (SDL::Tracklet::isSegmentPairATracklet(innerSegment, outerSegment, algo, logLevel_))
+            //     addTrackletToLowerLayer(SDL::Tracklet(innerSegmentPtr, outerSegmentPtr), innerLayerIdx, innerLayerSubDet);
+
+            SDL::Segment& outerSegment = *outerSegmentPtr;
+
+            SDL::Tracklet tlCand(innerSegmentPtr, outerSegmentPtr);
+
+            tlCand.runTrackletAlgo(algo, logLevel_);
+
+            if (tlCand.passesTrackletAlgo(algo))
+            {
+                addTrackletToLowerLayer(tlCand, innerLayerIdx, innerLayerSubDet);
+            }
 
         }
     }

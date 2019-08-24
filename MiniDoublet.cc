@@ -21,6 +21,7 @@ SDL::MiniDoublet::MiniDoublet(const MiniDoublet& md): lowerHitPtr_(md.lowerHitPt
                                                       ,dphichange_(md.getDeltaPhiChange())
                                                       ,dphichange_noshift_(md.getDeltaPhiChangeNoShift())
 {
+    setAnchorHit();
 }
 
 SDL::MiniDoublet::MiniDoublet(SDL::Hit* lowerHitPtr, SDL::Hit* upperHitPtr) : lowerHitPtr_(lowerHitPtr), upperHitPtr_(upperHitPtr)
@@ -32,6 +33,30 @@ SDL::MiniDoublet::MiniDoublet(SDL::Hit* lowerHitPtr, SDL::Hit* upperHitPtr) : lo
                                                       ,dphichange_(0)
                                                       ,dphichange_noshift_(0)
 {
+    setAnchorHit();
+}
+
+void SDL::MiniDoublet::setAnchorHit()
+{
+    const SDL::Module& lowerModule = lowerHitPtr()->getModule();
+
+    // Assign anchor hit pointers based on their hit type
+    if (lowerModule.moduleType() == SDL::Module::PS)
+    {
+        if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
+        {
+            anchorHitPtr_ = lowerHitPtr();
+        }
+        else
+        {
+            anchorHitPtr_ = upperHitPtr();
+        }
+    }
+    else
+    {
+        anchorHitPtr_ = lowerHitPtr();
+    }
+
 }
 
 SDL::Hit* SDL::MiniDoublet::lowerHitPtr() const
@@ -42,6 +67,11 @@ SDL::Hit* SDL::MiniDoublet::lowerHitPtr() const
 SDL::Hit* SDL::MiniDoublet::upperHitPtr() const
 {
     return upperHitPtr_;
+}
+
+SDL::Hit* SDL::MiniDoublet::anchorHitPtr() const
+{
+    return anchorHitPtr_;
 }
 
 const int& SDL::MiniDoublet::getPassAlgo() const
@@ -607,19 +637,31 @@ namespace SDL
 {
     std::ostream& operator<<(std::ostream& out, const MiniDoublet& md)
     {
-        out << "MiniDoublet()" << std::endl;
-        out << "    Lower " << md.lowerHitPtr_ << std::endl;
-        out << "    Upper " << md.upperHitPtr_ << std::endl;
-        out << "    Lower Shifted " << md.lowerShiftedHit_ << std::endl;
-        out << "    Upper Shifted " << md.upperShiftedHit_ << std::endl;
-        out << "        dz " << md.getDz() << std::endl;
-        out << "        shiftedDz " << md.getShiftedDz() << std::endl;
-        out << "        dphi " << md.getDeltaPhi() << std::endl;
-        out << "        dphinoshift " << md.getDeltaPhiNoShift() << std::endl;
-        out << "        dphichange " << md.getDeltaPhiChange() << std::endl;
-        out << "        dphichangenoshift " << md.getDeltaPhiChangeNoShift() << std::endl;
-        out << "        ptestimate " << SDL::MathUtil::ptEstimateFromDeltaPhiChangeAndRt(md.getDeltaPhiChange(), md.lowerHitPtr_->rt()) << std::endl;
-        out << "        ptestimate from noshift " << SDL::MathUtil::ptEstimateFromDeltaPhiChangeAndRt(md.getDeltaPhiChangeNoShift(), md.lowerHitPtr_->rt());
+        out << "dz " << md.getDz() << std::endl;
+        out << "shiftedDz " << md.getShiftedDz() << std::endl;
+        out << "dphi " << md.getDeltaPhi() << std::endl;
+        out << "dphinoshift " << md.getDeltaPhiNoShift() << std::endl;
+        out << "dphichange " << md.getDeltaPhiChange() << std::endl;
+        out << "dphichangenoshift " << md.getDeltaPhiChangeNoShift() << std::endl;
+        out << "ptestimate " << SDL::MathUtil::ptEstimateFromDeltaPhiChangeAndRt(md.getDeltaPhiChange(), md.lowerHitPtr_->rt()) << std::endl;
+        out << "ptestimate from noshift " << SDL::MathUtil::ptEstimateFromDeltaPhiChangeAndRt(md.getDeltaPhiChangeNoShift(), md.lowerHitPtr_->rt()) << std::endl;
+        out << std::endl;
+        out << "Lower Hit " << std::endl;
+        out << "------------------------------" << std::endl;
+        {
+            IndentingOStreambuf indent(out);
+            out << "Lower         " << md.lowerHitPtr_ << std::endl;
+            out << "Lower Shifted " << md.lowerShiftedHit_ << std::endl;
+            out << md.lowerHitPtr_->getModule() << std::endl;
+        }
+        out << "Upper Hit " << std::endl;
+        out << "------------------------------" << std::endl;
+        {
+            IndentingOStreambuf indent(out);
+            out << "Upper         " << md.upperHitPtr_ << std::endl;
+            out << "Upper Shifted " << md.upperShiftedHit_ << std::endl;
+            out << md.upperHitPtr_->getModule();
+        }
         return out;
     }
 

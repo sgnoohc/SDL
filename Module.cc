@@ -338,23 +338,21 @@ namespace SDL
 {
     std::ostream& operator<<(std::ostream& out, const Module& module)
     {
-        out << "==============================" << std::endl;
         out << "Module(detId=" << module.detId();
-        out << ", subdet=" << module.subdet_;
-        out << ", side=" << module.side_;
+        out << ", subdet=" << (module.subdet_ == SDL::Module::Barrel ? "Barrel" : "Endcap");
+        out << ", side=" << (module.side_ == SDL::Module::Center ? "Center" : "Side");
         out << ", layer=" << module.layer_;
         out << ", rod=" << module.rod_;
         out << ", ring=" << module.ring_;
         out << ", module=" << module.module_;
-        out << ", moduleType=" << module.moduleType_;
-        out << ", moduleLayerType=" << module.moduleLayerType_;
+        out << ", moduleType=" << (module.moduleType_ == SDL::Module::PS ? "PS" : "2S");
+        out << ", moduleLayerType=" << (module.moduleLayerType_ == SDL::Module::Pixel ? "Pixel" : "Strip");
         out << ", isLower=" << module.isLower_;
         out << ", isInverted=" << module.isInverted_;
         out << ", isNormalTitled=" << SDL::MiniDoublet::isNormalTiltedModules(module);
         out << ")" << std::endl;
-        out << "==============================" << std::endl;
-        for (auto& hitPtr : module.hits_)
-            out << hitPtr << std::endl;
+        // for (auto& hitPtr : module.hits_)
+        //     out << hitPtr << std::endl;
         // for (auto& mdPtr : module.miniDoublets_)
         //     out << mdPtr << std::endl;
         // for (auto& sgPtr : module.segments_)

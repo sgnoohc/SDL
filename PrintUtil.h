@@ -44,4 +44,18 @@ namespace SDL
 
 }
 
+class IndentingOStreambuf : public std::streambuf
+{
+    std::streambuf*     myDest;
+    bool                myIsAtStartOfLine;
+    std::string         myIndent;
+    std::ostream*       myOwner;
+protected:
+    virtual int overflow( int ch );
+public:
+    explicit IndentingOStreambuf(std::streambuf* dest, int indent = 4 );
+    explicit IndentingOStreambuf(std::ostream& dest, int indent = 4 );
+    virtual  ~IndentingOStreambuf();
+};
+
 #endif

@@ -1,9 +1,12 @@
 #ifndef Tracklet_h
 #define Tracklet_h
 
+#include <iomanip>
+
 #include "Module.h"
 #include "Algo.h"
 #include "Segment.h"
+#include "PrintUtil.h"
 
 namespace SDL
 {
@@ -51,6 +54,13 @@ namespace SDL
             // Outer Segment (outer means one further away from the beam position, i.e. upper "layer")
             Segment* outerSegmentPtr_;
 
+            // Bits to flag whether this tracklet passes some algorithm
+            int passAlgo_;
+
+            // Some reco'ed quantities
+            float deltaBeta_;
+
+
         public:
             Tracklet();
             Tracklet(const Tracklet&);
@@ -59,6 +69,27 @@ namespace SDL
 
             Segment* innerSegmentPtr() const;
             Segment* outerSegmentPtr() const;
+            const int& getPassAlgo() const;
+            const float& getDeltaBeta() const;
+
+            void setDeltaBeta(float);
+
+            // return whether it passed the algorithm
+            bool passesTrackletAlgo(TLAlgo algo) const;
+
+            // The function to run segment algorithm on a segment candidate
+            void runTrackletAlgo(TLAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
+
+            // The following algorithm does nothing and accept everything
+            void runTrackletAllCombAlgo();
+
+            // The default algorithms
+            void runTrackletDefaultAlgo(SDL::LogLevel logLevel);
+            void runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel logLevel);
+            void runTrackletDefaultAlgoBarrelBarrelEndcapEndcap(SDL::LogLevel logLevel);
+            void runTrackletDefaultAlgoBarrelBarrel(SDL::LogLevel logLevel);
+            void runTrackletDefaultAlgoBarrelEndcap(SDL::LogLevel logLevel);
+            void runTrackletDefaultAlgoEndcapEndcap(SDL::LogLevel logLevel);
 
             bool isIdxMatched(const Tracklet&) const;
 

@@ -34,3 +34,35 @@ SDL::oprefixstream::oprefixstream(std::string const& prefix, std::ostream& out):
     std::ostream(static_cast<std::streambuf*>(this))
 {
 }
+
+int IndentingOStreambuf::overflow( int ch )
+{
+    if ( myIsAtStartOfLine && ch != '\n' ) {
+        myDest->sputn( myIndent.data(), myIndent.size() );
+    }
+    myIsAtStartOfLine = ch == '\n';
+    return myDest->sputc( ch );
+}
+IndentingOStreambuf::IndentingOStreambuf( 
+        std::streambuf* dest, int indent)
+    : myDest( dest )
+      , myIsAtStartOfLine( true )
+    , myIndent( indent, ' ' )
+      , myOwner( NULL )
+{
+}
+IndentingOStreambuf::IndentingOStreambuf(
+        std::ostream& dest, int indent)
+    : myDest( dest.rdbuf() )
+      , myIsAtStartOfLine( true )
+    , myIndent( indent, ' ' )
+      , myOwner( &dest )
+{
+    myOwner->rdbuf( this );
+}
+IndentingOStreambuf::~IndentingOStreambuf()
+{
+    if ( myOwner != NULL ) {
+        myOwner->rdbuf( myDest );
+    }
+}

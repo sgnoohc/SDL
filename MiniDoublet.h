@@ -30,6 +30,9 @@ namespace SDL
             // Upper is always the one further away from the beam position
             Hit* upperHitPtr_;
 
+            // Anchor hit is either Pixel hit (if available) or lower hit
+            Hit* anchorHitPtr_;
+
             // Bits to flag whether this mini-doublet passes some algorithm
             int passAlgo_;
 
@@ -51,6 +54,7 @@ namespace SDL
 
             Hit* lowerHitPtr() const;
             Hit* upperHitPtr() const;
+            Hit* anchorHitPtr() const;
             const int& getPassAlgo() const;
             const Hit& getLowerShiftedHit() const;
             const Hit& getUpperShiftedHit() const;
@@ -61,6 +65,7 @@ namespace SDL
             const float& getDeltaPhiNoShift() const;
             const float& getDeltaPhiChangeNoShift() const;
 
+            void setAnchorHit();
             void setLowerShiftedHit(float, float, float, int=-1);
             void setUpperShiftedHit(float, float, float, int=-1);
             void setDz(float);
