@@ -12,7 +12,8 @@ SDL::Tracklet::Tracklet(const Tracklet& tl) :
     innerSegmentPtr_(tl.innerSegmentPtr()),
     outerSegmentPtr_(tl.outerSegmentPtr()),
     passAlgo_(tl.getPassAlgo()),
-    deltaBeta_(tl.getDeltaBeta())
+    deltaBeta_(tl.getDeltaBeta()),
+    deltaBetaCut_(tl.getDeltaBetaCut())
 {
 }
 
@@ -20,7 +21,8 @@ SDL::Tracklet::Tracklet(SDL::Segment* innerSegmentPtr, SDL::Segment* outerSegmen
     innerSegmentPtr_(innerSegmentPtr),
     outerSegmentPtr_(outerSegmentPtr),
     passAlgo_(0),
-    deltaBeta_(0)
+    deltaBeta_(0),
+    deltaBetaCut_(0)
 {
 }
 
@@ -47,6 +49,16 @@ const float& SDL::Tracklet::getDeltaBeta() const
 void SDL::Tracklet::setDeltaBeta(float deltaBeta)
 {
     deltaBeta_ = deltaBeta;
+}
+
+const float& SDL::Tracklet::getDeltaBetaCut() const
+{
+    return deltaBetaCut_;
+}
+
+void SDL::Tracklet::setDeltaBetaCut(float deltaBetaCut)
+{
+    deltaBetaCut_ = deltaBetaCut;
 }
 
 bool SDL::Tracklet::passesTrackletAlgo(SDL::TLAlgo algo) const
@@ -360,30 +372,31 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel
     // const float dZeta = sdIn.zeta - sdOut.zeta;
 
     setDeltaBeta(dBeta);
+    setDeltaBetaCut(std::sqrt(dBetaCut2));
 
-    if (not (dBeta * dBeta <= dBetaCut2))
-    {
-        if (logLevel >= SDL::Log_Debug3)
-        {
-            SDL::cout << "Failed Cut #8 in " << __FUNCTION__ << std::endl;
-            SDL::cout <<  " dBeta*dBeta: " << dBeta*dBeta <<  " dBetaCut2: " << dBetaCut2 <<  std::endl;
-            SDL::cout <<  " dBetaRes: " << dBetaRes <<  " dBetaMuls: " << dBetaMuls <<  " dBetaLum2: " << dBetaLum2 <<  std::endl;
-            SDL::cout <<  " dBetaRIn2: " << dBetaRIn2 <<  " dBetaROut2: " << dBetaROut2 <<  std::endl;
-            SDL::cout <<  " betaInRHmin: " << betaInRHmin <<  " betaInRHmax: " << betaInRHmax <<  std::endl;
-            SDL::cout <<  " betaOutRHmin: " << betaOutRHmin <<  " betaOutRHmax: " << betaOutRHmax <<  std::endl;
-        }
-        passAlgo_ &= (0 << SDL::Default_TLAlgo);
-        return;
-    }
-    else if (logLevel >= SDL::Log_Debug3)
-    {
-        SDL::cout << "Passed Cut #8 in " << __FUNCTION__ << std::endl;
-        SDL::cout <<  " dBeta*dBeta: " << dBeta*dBeta <<  " dBetaCut2: " << dBetaCut2 <<  std::endl;
-        SDL::cout <<  " dBetaRes: " << dBetaRes <<  " dBetaMuls: " << dBetaMuls <<  " dBetaLum2: " << dBetaLum2 <<  std::endl;
-        SDL::cout <<  " dBetaRIn2: " << dBetaRIn2 <<  " dBetaROut2: " << dBetaROut2 <<  std::endl;
-        SDL::cout <<  " betaInRHmin: " << betaInRHmin <<  " betaInRHmax: " << betaInRHmax <<  std::endl;
-        SDL::cout <<  " betaOutRHmin: " << betaOutRHmin <<  " betaOutRHmax: " << betaOutRHmax <<  std::endl;
-    }
+    // if (not (dBeta * dBeta <= dBetaCut2))
+    // {
+    //     if (logLevel >= SDL::Log_Debug3)
+    //     {
+    //         SDL::cout << "Failed Cut #8 in " << __FUNCTION__ << std::endl;
+    //         SDL::cout <<  " dBeta*dBeta: " << dBeta*dBeta <<  " dBetaCut2: " << dBetaCut2 <<  std::endl;
+    //         SDL::cout <<  " dBetaRes: " << dBetaRes <<  " dBetaMuls: " << dBetaMuls <<  " dBetaLum2: " << dBetaLum2 <<  std::endl;
+    //         SDL::cout <<  " dBetaRIn2: " << dBetaRIn2 <<  " dBetaROut2: " << dBetaROut2 <<  std::endl;
+    //         SDL::cout <<  " betaInRHmin: " << betaInRHmin <<  " betaInRHmax: " << betaInRHmax <<  std::endl;
+    //         SDL::cout <<  " betaOutRHmin: " << betaOutRHmin <<  " betaOutRHmax: " << betaOutRHmax <<  std::endl;
+    //     }
+    //     passAlgo_ &= (0 << SDL::Default_TLAlgo);
+    //     return;
+    // }
+    // else if (logLevel >= SDL::Log_Debug3)
+    // {
+    //     SDL::cout << "Passed Cut #8 in " << __FUNCTION__ << std::endl;
+    //     SDL::cout <<  " dBeta*dBeta: " << dBeta*dBeta <<  " dBetaCut2: " << dBetaCut2 <<  std::endl;
+    //     SDL::cout <<  " dBetaRes: " << dBetaRes <<  " dBetaMuls: " << dBetaMuls <<  " dBetaLum2: " << dBetaLum2 <<  std::endl;
+    //     SDL::cout <<  " dBetaRIn2: " << dBetaRIn2 <<  " dBetaROut2: " << dBetaROut2 <<  std::endl;
+    //     SDL::cout <<  " betaInRHmin: " << betaInRHmin <<  " betaInRHmax: " << betaInRHmax <<  std::endl;
+    //     SDL::cout <<  " betaOutRHmin: " << betaOutRHmin <<  " betaOutRHmax: " << betaOutRHmax <<  std::endl;
+    // }
 
     passAlgo_ |= (1 << SDL::Default_TLAlgo);
     return;

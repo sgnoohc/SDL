@@ -59,6 +59,7 @@ namespace SDL
 
             // Some reco'ed quantities
             float deltaBeta_;
+            float deltaBetaCut_;
 
 
         public:
@@ -71,8 +72,10 @@ namespace SDL
             Segment* outerSegmentPtr() const;
             const int& getPassAlgo() const;
             const float& getDeltaBeta() const;
+            const float& getDeltaBetaCut() const;
 
             void setDeltaBeta(float);
+            void setDeltaBetaCut(float);
 
             // return whether it passed the algorithm
             bool passesTrackletAlgo(TLAlgo algo) const;
