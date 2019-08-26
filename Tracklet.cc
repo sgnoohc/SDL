@@ -12,8 +12,13 @@ SDL::Tracklet::Tracklet(const Tracklet& tl) :
     innerSegmentPtr_(tl.innerSegmentPtr()),
     outerSegmentPtr_(tl.outerSegmentPtr()),
     passAlgo_(tl.getPassAlgo()),
+    passBitsDefaultAlgo_(tl.getPassBitsDefaultAlgo()),
     deltaBeta_(tl.getDeltaBeta()),
-    deltaBetaCut_(tl.getDeltaBetaCut())
+    deltaBetaCut_(tl.getDeltaBetaCut()),
+    betaIn_(tl.getBetaIn()),
+    betaInCut_(tl.getBetaInCut()),
+    betaOut_(tl.getBetaOut()),
+    betaOutCut_(tl.getBetaOutCut())
 {
 }
 
@@ -21,8 +26,13 @@ SDL::Tracklet::Tracklet(SDL::Segment* innerSegmentPtr, SDL::Segment* outerSegmen
     innerSegmentPtr_(innerSegmentPtr),
     outerSegmentPtr_(outerSegmentPtr),
     passAlgo_(0),
+    passBitsDefaultAlgo_(0),
     deltaBeta_(0),
-    deltaBetaCut_(0)
+    deltaBetaCut_(0),
+    betaIn_(0),
+    betaInCut_(0),
+    betaOut_(0),
+    betaOutCut_(0)
 {
 }
 
@@ -39,6 +49,11 @@ SDL::Segment* SDL::Tracklet::outerSegmentPtr() const
 const int& SDL::Tracklet::getPassAlgo() const
 {
     return passAlgo_;
+}
+
+const int& SDL::Tracklet::getPassBitsDefaultAlgo() const
+{
+    return passBitsDefaultAlgo_;
 }
 
 const float& SDL::Tracklet::getDeltaBeta() const
@@ -59,6 +74,46 @@ const float& SDL::Tracklet::getDeltaBetaCut() const
 void SDL::Tracklet::setDeltaBetaCut(float deltaBetaCut)
 {
     deltaBetaCut_ = deltaBetaCut;
+}
+
+const float& SDL::Tracklet::getBetaIn() const
+{
+    return betaIn_;
+}
+
+void SDL::Tracklet::setBetaIn(float betaIn)
+{
+    betaIn_ = betaIn;
+}
+
+const float& SDL::Tracklet::getBetaInCut() const
+{
+    return betaInCut_;
+}
+
+void SDL::Tracklet::setBetaInCut(float betaInCut)
+{
+    betaInCut_ = betaInCut;
+}
+
+const float& SDL::Tracklet::getBetaOut() const
+{
+    return betaOut_;
+}
+
+void SDL::Tracklet::setBetaOut(float betaOut)
+{
+    betaOut_ = betaOut;
+}
+
+const float& SDL::Tracklet::getBetaOutCut() const
+{
+    return betaOutCut_;
+}
+
+void SDL::Tracklet::setBetaOutCut(float betaOutCut)
+{
+    betaOutCut_ = betaOutCut;
 }
 
 bool SDL::Tracklet::passesTrackletAlgo(SDL::TLAlgo algo) const
@@ -137,6 +192,9 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel
     const float dzDrtScale = tan(sdlSlope) / sdlSlope;//FIXME: need approximate value
     const float zLo = zIn + (zIn - deltaZLum) * (rtOut_o_rtIn - 1.f) * (zIn > 0.f ? 1.f : dzDrtScale) - zGeom; //slope-correction only on outer end
 
+    // Reset passBitsDefaultAlgo_;
+    passBitsDefaultAlgo_ = 0;
+
     // Cut #1: Z compatibility
     if (not (zOut >= zLo))
     {
@@ -167,6 +225,8 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel
         passAlgo_ &= (0 << SDL::Default_TLAlgo);
         return;
     }
+    // Flag the pass bit
+    passBitsDefaultAlgo_ |= (1 << TrackletSelection::deltaZ);
 
     const float drOutIn = (rtOut - rtIn);
 
@@ -200,6 +260,8 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel
         passAlgo_ &= (0 << SDL::Default_TLAlgo);
         return;
     }
+    // Flag the pass bit
+    passBitsDefaultAlgo_ |= (1 << TrackletSelection::deltaZPointed);
 
     const float sdlPVoff = 0.1f / rtOut;
     const float sdlCut = sdlSlope + sqrt(sdlMuls * sdlMuls + sdlPVoff*sdlPVoff);
@@ -220,6 +282,8 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel
         passAlgo_ &= (0 << SDL::Default_TLAlgo);
         return;
     }
+    // Flag the pass bit
+    passBitsDefaultAlgo_ |= (1 << TrackletSelection::deltaPhiPos);
 
     const Hit& sdIn_r3 = (*innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr());
     const Hit& sdOut_r3 = (*outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr());
@@ -240,6 +304,8 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel
         passAlgo_ &= (0 << SDL::Default_TLAlgo);
         return;
     }
+    // Flag the pass bit
+    passBitsDefaultAlgo_ |= (1 << TrackletSelection::slope);
 
     const Hit& sdOut_mdRef_hit = (*outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr());
     const float sdIn_alpha = innerSegmentPtr()->getDeltaPhiChange();
@@ -266,6 +332,9 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel
     const float betaIn_cut = (-sdIn_dr * corrF + dr) * k2Rinv1GeVf / ptCut + (0.02f / sdIn_d);
     pass_betaIn_cut = std::abs(betaInRHmin) < betaIn_cut;
 
+    setBetaIn(betaInRHmin);
+    setBetaInCut(betaIn_cut);
+
     // Cut #6: first beta cut
     if (not (pass_betaIn_cut))
     {
@@ -277,6 +346,8 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel
         passAlgo_ &= (0 << SDL::Default_TLAlgo);
         return;
     }
+    // Flag the pass bit
+    passBitsDefaultAlgo_ |= (1 << TrackletSelection::dAlphaIn);
 
     //now the actual segment linking magic
     float betaAv = 0.5f * (betaIn + betaOut);
@@ -350,6 +421,10 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel
 
     const float betaOut_cut = std::asin(std::min(dr*k2Rinv1GeVf / ptCut, sinAlphaMax)) //FIXME: need faster version
         + (0.02f / sdOut_d) + sqrt(dBetaLum2 + dBetaMuls*dBetaMuls);
+    // const float betaOut_cut = std::min(0.01, std::asin(std::min(dr*k2Rinv1GeVf / ptCut, sinAlphaMax)) + (0.02f / sdOut_d) + sqrt(dBetaLum2 + dBetaMuls*dBetaMuls));
+
+    setBetaOut(betaOut);
+    setBetaOutCut(betaOut_cut);
 
     // Cut #7: The real beta cut
     if (not (std::abs(betaOut) < betaOut_cut))
@@ -362,6 +437,8 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel
         passAlgo_ &= (0 << SDL::Default_TLAlgo);
         return;
     }
+    // Flag the pass bit
+    passBitsDefaultAlgo_ |= (1 << TrackletSelection::dAlphaOut);
 
     float pt_betaIn = dr * k2Rinv1GeVf / sin(betaIn);
     const float pt_betaOut = dr * k2Rinv1GeVf / sin(betaOut);
@@ -736,6 +813,15 @@ bool SDL::Tracklet::isIdxMatched(const Tracklet& md) const
     if (not innerSegmentPtr_->isIdxMatched(*(md.innerSegmentPtr())))
         return false;
     if (not outerSegmentPtr_->isIdxMatched(*(md.outerSegmentPtr())))
+        return false;
+    return true;
+}
+
+bool SDL::Tracklet::isAnchorHitIdxMatched(const Tracklet& md) const
+{
+    if (not innerSegmentPtr_->isAnchorHitIdxMatched(*(md.innerSegmentPtr())))
+        return false;
+    if (not outerSegmentPtr_->isAnchorHitIdxMatched(*(md.outerSegmentPtr())))
         return false;
     return true;
 }

@@ -17,16 +17,16 @@ const std::vector<std::pair<std::pair<int, SDL::Layer::SubDet>, std::pair<int, S
     // {{4, SDL::Layer::Barrel},{1, SDL::Layer::Endcap}},
     // {{5, SDL::Layer::Barrel},{1, SDL::Layer::Endcap}}
     {{1, SDL::Layer::Barrel},{3, SDL::Layer::Barrel}},
-    {{1, SDL::Layer::Barrel},{4, SDL::Layer::Barrel}},
-    {{1, SDL::Layer::Barrel},{5, SDL::Layer::Barrel}},
-    {{2, SDL::Layer::Barrel},{4, SDL::Layer::Barrel}},
-    {{2, SDL::Layer::Barrel},{5, SDL::Layer::Barrel}},
-    {{3, SDL::Layer::Barrel},{5, SDL::Layer::Barrel}},
-    {{1, SDL::Layer::Barrel},{1, SDL::Layer::Endcap}},
-    {{2, SDL::Layer::Barrel},{1, SDL::Layer::Endcap}},
-    {{3, SDL::Layer::Barrel},{1, SDL::Layer::Endcap}},
-    {{4, SDL::Layer::Barrel},{1, SDL::Layer::Endcap}},
-    {{5, SDL::Layer::Barrel},{1, SDL::Layer::Endcap}},
+    // {{1, SDL::Layer::Barrel},{4, SDL::Layer::Barrel}},
+    // {{1, SDL::Layer::Barrel},{5, SDL::Layer::Barrel}},
+    // {{2, SDL::Layer::Barrel},{4, SDL::Layer::Barrel}},
+    // {{2, SDL::Layer::Barrel},{5, SDL::Layer::Barrel}},
+    // {{3, SDL::Layer::Barrel},{5, SDL::Layer::Barrel}},
+    // {{1, SDL::Layer::Barrel},{1, SDL::Layer::Endcap}},
+    // {{2, SDL::Layer::Barrel},{1, SDL::Layer::Endcap}},
+    // {{3, SDL::Layer::Barrel},{1, SDL::Layer::Endcap}},
+    // {{4, SDL::Layer::Barrel},{1, SDL::Layer::Endcap}},
+    // {{5, SDL::Layer::Barrel},{1, SDL::Layer::Endcap}},
 };
 
 SDL::Layer::Layer()

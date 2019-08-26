@@ -82,6 +82,7 @@ namespace SDL
             void runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel);
 
             bool isIdxMatched(const Segment&) const;
+            bool isAnchorHitIdxMatched(const Segment&) const;
 
             // The function to actually determine whether a pair of mini-doublets is a reco-ed segment or not
             static bool isMiniDoubletPairASegment(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);

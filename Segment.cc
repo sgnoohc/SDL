@@ -481,6 +481,15 @@ bool SDL::Segment::isIdxMatched(const Segment& md) const
     return true;
 }
 
+bool SDL::Segment::isAnchorHitIdxMatched(const Segment& md) const
+{
+    if (not innerMiniDoubletPtr_->isAnchorHitIdxMatched(*(md.innerMiniDoubletPtr())))
+        return false;
+    if (not outerMiniDoubletPtr_->isAnchorHitIdxMatched(*(md.outerMiniDoubletPtr())))
+        return false;
+    return true;
+}
+
 [[deprecated("SDL:: isMiniDoubletPairASegment() is deprecated")]]
 bool SDL::Segment::isMiniDoubletPairASegment(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel)
 {

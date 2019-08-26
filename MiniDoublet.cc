@@ -633,6 +633,13 @@ bool SDL::MiniDoublet::isIdxMatched(const MiniDoublet& md) const
     return true;
 }
 
+bool SDL::MiniDoublet::isAnchorHitIdxMatched(const MiniDoublet& md) const
+{
+    if (not anchorHitPtr_->isIdxMatched(*(md.anchorHitPtr())))
+        return false;
+    return true;
+}
+
 namespace SDL
 {
     std::ostream& operator<<(std::ostream& out, const MiniDoublet& md)

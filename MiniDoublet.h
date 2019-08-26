@@ -90,6 +90,7 @@ namespace SDL
             void runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel);
 
             bool isIdxMatched(const MiniDoublet&) const;
+            bool isAnchorHitIdxMatched(const MiniDoublet&) const;
 
             // cout printing
             friend std::ostream& operator<<(std::ostream& out, const MiniDoublet& md);

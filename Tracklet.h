@@ -57,7 +57,28 @@ namespace SDL
             // Bits to flag whether this tracklet passes some algorithm
             int passAlgo_;
 
+        public:
+            enum TrackletSelection
+            {
+                deltaZ = 0,
+                deltaZPointed = 1,
+                deltaPhiPos = 2,
+                slope=3,
+                dAlphaIn=4,
+                dAlphaOut=5,
+                dBeta=6,
+                nCut=7
+            };
+
+        private:
+            // Bits to flag whether this tracklet passes which cut of default algorithm
+            int passBitsDefaultAlgo_;
+
             // Some reco'ed quantities
+            float betaIn_;
+            float betaInCut_;
+            float betaOut_;
+            float betaOutCut_;
             float deltaBeta_;
             float deltaBetaCut_;
 
@@ -71,11 +92,20 @@ namespace SDL
             Segment* innerSegmentPtr() const;
             Segment* outerSegmentPtr() const;
             const int& getPassAlgo() const;
+            const int& getPassBitsDefaultAlgo() const;
             const float& getDeltaBeta() const;
             const float& getDeltaBetaCut() const;
+            const float& getBetaIn() const;
+            const float& getBetaInCut() const;
+            const float& getBetaOut() const;
+            const float& getBetaOutCut() const;
 
             void setDeltaBeta(float);
             void setDeltaBetaCut(float);
+            void setBetaIn(float);
+            void setBetaInCut(float);
+            void setBetaOut(float);
+            void setBetaOutCut(float);
 
             // return whether it passed the algorithm
             bool passesTrackletAlgo(TLAlgo algo) const;
@@ -95,6 +125,7 @@ namespace SDL
             void runTrackletDefaultAlgoEndcapEndcap(SDL::LogLevel logLevel);
 
             bool isIdxMatched(const Tracklet&) const;
+            bool isAnchorHitIdxMatched(const Tracklet&) const;
 
             // The function to actually determine whether a pair of mini-doublets is a reco-ed segment or not
             static bool isSegmentPairATracklet(const Segment& innerSegment, const Segment& outerSegment, TLAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
