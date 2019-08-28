@@ -686,7 +686,7 @@ float SDL::MiniDoublet::dPhiThreshold(const SDL::Hit& lowerHit, const SDL::Modul
     // =================================================================
     const float kRinv1GeVf = (2.99792458e-3 * 3.8);
     const float k2Rinv1GeVf = kRinv1GeVf / 2.;
-    const float ptCut = 1.0;
+    const float ptCut = PTCUT;
     const float sinAlphaMax = 0.95;
     // p2Sim.directionT-r2Sim.directionT smearing around the mean computed with ptSim,rSim
     // (1 sigma based on 95.45% = 2sigma at 2 GeV)

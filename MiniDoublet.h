@@ -4,6 +4,7 @@
 #include <array>
 #include <tuple>
 
+#include "Constants.h"
 #include "Algo.h"
 #include "PrintUtil.h"
 #include "MathUtil.h"
@@ -23,6 +24,8 @@ namespace SDL
     class MiniDoublet
     {
         private:
+
+            // TODO: Rename lower and upper as inner and outer
 
             // Lower is always the one closer to the beam position
             Hit* lowerHitPtr_;

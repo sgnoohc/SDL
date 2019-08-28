@@ -128,7 +128,7 @@ void SDL::Segment::runSegmentDefaultAlgoBarrel(SDL::LogLevel logLevel)
     // Constants
     const float kRinv1GeVf = (2.99792458e-3 * 3.8);
     const float k2Rinv1GeVf = kRinv1GeVf / 2.;
-    const float ptCut = 1.0;
+    const float ptCut = PTCUT;
     const float sinAlphaMax = 0.95;
     const float deltaZLum = 15.f;
     std::array<float, 6> miniMulsPtScaleBarrel {0.0052, 0.0038, 0.0034, 0.0034, 0.0032, 0.0034};
@@ -295,7 +295,7 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
     // Constants
     const float kRinv1GeVf = (2.99792458e-3 * 3.8);
     const float k2Rinv1GeVf = kRinv1GeVf / 2.;
-    const float ptCut = 1.0;
+    const float ptCut = PTCUT;
     const float sinAlphaMax = 0.95;
     const float deltaZLum = 15.f;
     // std::array<float, 6> miniMulsPtScaleBarrel {0.0052, 0.0038, 0.0034, 0.0034, 0.0032, 0.0034};
@@ -533,7 +533,7 @@ bool SDL::Segment::isMiniDoubletPairASegmentCandidateBarrel(const MiniDoublet& i
     // Constants
     const float kRinv1GeVf = (2.99792458e-3 * 3.8);
     const float k2Rinv1GeVf = kRinv1GeVf / 2.;
-    const float ptCut = 1.0;
+    const float ptCut = PTCUT;
     const float sinAlphaMax = 0.95;
     const float deltaZLum = 15.f;
     std::array<float, 6> miniMulsPtScaleBarrel {0.0052, 0.0038, 0.0034, 0.0034, 0.0032, 0.0034};
@@ -611,7 +611,7 @@ bool SDL::Segment::isMiniDoubletPairASegmentCandidateEndcap(const MiniDoublet& i
     // Constants
     const float kRinv1GeVf = (2.99792458e-3 * 3.8);
     const float k2Rinv1GeVf = kRinv1GeVf / 2.;
-    const float ptCut = 1.0;
+    const float ptCut = PTCUT;
     const float sinAlphaMax = 0.95;
     const float deltaZLum = 15.f;
     // std::array<float, 6> miniMulsPtScaleBarrel {0.0052, 0.0038, 0.0034, 0.0034, 0.0032, 0.0034};
