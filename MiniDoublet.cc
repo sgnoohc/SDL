@@ -335,8 +335,8 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
             // (i.e. the strip hit is shifted to be aligned in the line of sight from interaction point to pixel hit of PS module guaranteeing rt ordering)
             // But I still placed this check for safety. (TODO: After cheking explicitly if not needed remove later?)
             // setDeltaPhiChange(lowerHit.rt() < upperHitMod.rt() ? lowerHit.deltaPhiChange(upperHitMod) : upperHitMod.deltaPhiChange(lowerHit));
-            setDeltaPhiChange(lowerHit.rt() < getUpperShiftedHit().rt() ? lowerHit.deltaPhiChange(getUpperShiftedHit()) : getUpperShiftedHit().deltaPhiChange(lowerHit));
-            setDeltaPhiChangeNoShift(lowerHit.rt() < upperHit.rt() ? lowerHit.deltaPhiChange(upperHit) : upperHit.deltaPhiChange(lowerHit));
+            setDeltaPhiChange(((lowerHit.rt() < getUpperShiftedHit().rt()) ? lowerHit.deltaPhiChange(getUpperShiftedHit()) : getUpperShiftedHit().deltaPhiChange(lowerHit)));
+            setDeltaPhiChangeNoShift(((lowerHit.rt() < upperHit.rt()) ? lowerHit.deltaPhiChange(upperHit) : upperHit.deltaPhiChange(lowerHit)));
         }
         else
         {
@@ -347,8 +347,8 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
             // (i.e. the strip hit is shifted to be aligned in the line of sight from interaction point to pixel hit of PS module guaranteeing rt ordering)
             // But I still placed this check for safety. (TODO: After cheking explicitly if not needed remove later?)
             // setDeltaPhiChange(lowerHitMod.rt() < upperHit.rt() ? lowerHitMod.deltaPhiChange(upperHit) : upperHit.deltaPhiChange(lowerHitMod));
-            setDeltaPhiChange(getLowerShiftedHit().rt() < upperHit.rt() ? getLowerShiftedHit().deltaPhiChange(upperHit) : upperHit.deltaPhiChange(getLowerShiftedHit()));
-            setDeltaPhiChangeNoShift(lowerHit.rt() < upperHit.rt() ? lowerHit.deltaPhiChange(upperHit) : upperHit.deltaPhiChange(lowerHit));
+            setDeltaPhiChange(((getLowerShiftedHit().rt() < upperHit.rt()) ? getLowerShiftedHit().deltaPhiChange(upperHit) : upperHit.deltaPhiChange(getLowerShiftedHit())));
+            setDeltaPhiChangeNoShift(((lowerHit.rt() < upperHit.rt()) ? lowerHit.deltaPhiChange(upperHit) : upperHit.deltaPhiChange(lowerHit)));
         }
     }
     else
@@ -412,7 +412,7 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
     setDz(lowerHit.z() - upperHit.z());
     float dz = getDz(); // Not const since later it might change depending on the type of module
 
-    const float dzCut = lowerModule.side() == SDL::Module::Endcap ?  1.f : 10.f;
+    const float dzCut = ((lowerModule.side() == SDL::Module::Endcap) ?  1.f : 10.f);
     if (not (std::abs(dz) < dzCut)) // If cut fails continue
     {
         if (logLevel >= SDL::Log_Debug2)
@@ -704,15 +704,15 @@ float SDL::MiniDoublet::dPhiThreshold(const SDL::Hit& lowerHit, const SDL::Modul
     float rt = lowerHit.rt();
     unsigned int iL = module.layer() - 1;
     const float miniSlope = std::asin(std::min(rt * k2Rinv1GeVf / ptCut, sinAlphaMax));
-    const float rLayNominal = module.subdet() == SDL::Module::Barrel ? miniRminMeanBarrel[iL] : miniRminMeanEndcap[iL];
+    const float rLayNominal = ((module.subdet() == SDL::Module::Barrel) ? miniRminMeanBarrel[iL] : miniRminMeanEndcap[iL]);
     const float miniPVoff = 0.1 / rLayNominal;
-    const float miniMuls = module.subdet() == SDL::Module::Barrel ? miniMulsPtScaleBarrel[iL] * 3.f / ptCut : miniMulsPtScaleEndcap[iL] * 3.f / ptCut;
+    const float miniMuls = ((module.subdet() == SDL::Module::Barrel) ? miniMulsPtScaleBarrel[iL] * 3.f / ptCut : miniMulsPtScaleEndcap[iL] * 3.f / ptCut);
     const bool isTilted = module.subdet() == SDL::Module::Barrel and module.side() != SDL::Module::Center;
     const bool tiltedOT123 = true;
     const float pixelPSZpitch = 0.15;
-    const unsigned int detid = module.moduleLayerType() == SDL::Module::Pixel ?  module.partnerDetId() : module.detId();
+    const unsigned int detid = ((module.moduleLayerType() == SDL::Module::Pixel) ?  module.partnerDetId() : module.detId());
     const float drdz = tiltedGeometry.getDrDz(detid);
-    const float miniTilt = isTilted && tiltedOT123 ? 0.5f * pixelPSZpitch * drdz / sqrt(1.f + drdz * drdz) / miniDeltaTilted[iL] : 0;
+    const float miniTilt = ((isTilted && tiltedOT123) ? 0.5f * pixelPSZpitch * drdz / sqrt(1.f + drdz * drdz) / miniDeltaTilted[iL] : 0);
     // Compute luminous region requirement for endcap
     const float deltaZLum = 15.f;
     const float miniLum = deltaZLum / std::abs(lowerHit.z());
@@ -994,7 +994,7 @@ std::tuple<float, float, float> SDL::MiniDoublet::shiftStripHits(const SDL::Hit&
     angleA = fabs(std::atan(pixelHitPtr->rt() / pixelHitPtr->z())); // Shift by pi if the z is negative so that the value of the angleA stays between 0 to pi and not -pi/2 to pi/2
 
     // angleB = isEndcap ? M_PI / 2. : -std::atan(tiltedGeometry.getDrDz(detid) * (lowerModule.side() == SDL::Module::PosZ ? -1 : 1)); // The tilt module on the postive z-axis has negative drdz slope in r-z plane and vice versa
-    angleB = isEndcap ? M_PI / 2. : std::atan(tiltedGeometry.getDrDz(detid)); // The tilt module on the postive z-axis has negative drdz slope in r-z plane and vice versa
+    angleB = ((isEndcap) ? M_PI / 2. : std::atan(tiltedGeometry.getDrDz(detid))); // The tilt module on the postive z-axis has negative drdz slope in r-z plane and vice versa
 
     // https://iopscience.iop.org/article/10.1088/1748-0221/12/02/C02049/pdf says the PS modules have distances of 1.6mm 2.6mm or 4mm
     // The following verifies that the first layer has 0.26 spacing (the constants are from the fitted values, in order to rotate the module perfectly so that the distance can be read from the Scan output directly)
@@ -1010,7 +1010,7 @@ std::tuple<float, float, float> SDL::MiniDoublet::shiftStripHits(const SDL::Hit&
     // (i.e. if the pixel was the upper module, then the anchor points are going to shift inward in x-y plane wrt to pixel x-y point and vice versa.)
     // (cf. this should be taking care of the "rt" size comparison that would be done when calculating fabsdPhiChange variable.)
     if (lowerModule.moduleType() == SDL::Module::PS) // ensure this happens only for PS modules
-        moduleSeparation = (isEndcap ? 0.40 : 0.26) * (lowerModule.moduleLayerType() == SDL::Module::Pixel ? 1 : -1);
+        moduleSeparation = (isEndcap ? 0.40 : 0.26) * ((lowerModule.moduleLayerType() == SDL::Module::Pixel) ? 1 : -1);
     else
         moduleSeparation = (isEndcap ? 0.40 : 0.26);
 
@@ -1026,7 +1026,7 @@ std::tuple<float, float, float> SDL::MiniDoublet::shiftStripHits(const SDL::Hit&
     }
 
     // Compute arctan of the slope and take care of the slope = infinity case
-    absArctanSlope = slope != SDL_INF ? fabs(std::atan(slope)) : M_PI / 2; // Since C++ can't represent infinity, SDL_INF = 123456789 was used to represent infinity in the data table
+    absArctanSlope = ((slope != SDL_INF) ? fabs(std::atan(slope)) : M_PI / 2); // Since C++ can't represent infinity, SDL_INF = 123456789 was used to represent infinity in the data table
 
     // The pixel hit position
     xp = pixelHitPtr->x();
@@ -1092,7 +1092,7 @@ std::tuple<float, float, float> SDL::MiniDoublet::shiftStripHits(const SDL::Hit&
         abszn = fabs(pixelHitPtr->z()) - absdzprime;
     }
 
-    zn = abszn * (pixelHitPtr->z() > 0 ? 1 : -1); // Apply the sign of the zn
+    zn = abszn * ((pixelHitPtr->z() > 0) ? 1 : -1); // Apply the sign of the zn
 
     if (logLevel == SDL::Log_Debug3)
     {
@@ -1287,7 +1287,7 @@ bool SDL::MiniDoublet::isHitPairAMiniDoublet(const SDL::Hit& lowerHit, const SDL
                     // In principle, this kind of check rt_lower < rt_upper should not be necessary because the hit shifting should have taken care of this.
                     // (i.e. the strip hit is shifted to be aligned in the line of sight from interaction point to pixel hit of PS module guaranteeing rt ordering)
                     // But I still placed this check for safety. (TODO: After cheking explicitly if not needed remove later?)
-                    fabsdPhiChange = lowerHit.rt() < upperHitMod.rt() ? std::abs(lowerHit.deltaPhiChange(upperHitMod)) : std::abs(upperHitMod.deltaPhiChange(lowerHit));
+                    fabsdPhiChange = ((lowerHit.rt() < upperHitMod.rt()) ? std::abs(lowerHit.deltaPhiChange(upperHitMod)) : std::abs(upperHitMod.deltaPhiChange(lowerHit)));
                 }
                 else
                 {
@@ -1297,7 +1297,7 @@ bool SDL::MiniDoublet::isHitPairAMiniDoublet(const SDL::Hit& lowerHit, const SDL
                     // In principle, this kind of check rt_lower < rt_upper should not be necessary because the hit shifting should have taken care of this.
                     // (i.e. the strip hit is shifted to be aligned in the line of sight from interaction point to pixel hit of PS module guaranteeing rt ordering)
                     // But I still placed this check for safety. (TODO: After cheking explicitly if not needed remove later?)
-                    fabsdPhiChange = lowerHitMod.rt() < upperHit.rt() ? std::abs(lowerHitMod.deltaPhiChange(upperHit)) : std::abs(upperHit.deltaPhiChange(lowerHitMod));
+                    fabsdPhiChange = ((lowerHitMod.rt() < upperHit.rt()) ? std::abs(lowerHitMod.deltaPhiChange(upperHit)) : std::abs(upperHit.deltaPhiChange(lowerHitMod)));
                 }
             }
             else
@@ -1343,7 +1343,7 @@ bool SDL::MiniDoublet::isHitPairAMiniDoublet(const SDL::Hit& lowerHit, const SDL
             // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3093
             // For PS module in case when it is tilted a different dz (after the strip hit shift) is calculated later.
             // This is because the 10.f cut is meant more for sanity check (most will pass this cut anyway) (TODO: Maybe revisit this cut later?)
-            const float dzCut = lowerModule.side() == SDL::Module::Endcap ?  1.f : 10.f;
+            const float dzCut = ((lowerModule.side() == SDL::Module::Endcap) ?  1.f : 10.f);
             float dz = std::abs(lowerHit.z() - upperHit.z());
             if (not (dz < dzCut)) // If cut fails continue
             {

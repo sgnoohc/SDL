@@ -213,7 +213,7 @@ unsigned short SDL::Module::parseModule(unsigned int detId)
 
 unsigned short SDL::Module::parseIsLower(unsigned int detId)
 {
-    return parseIsInverted(detId) ? !(detId & 1) : (detId & 1);
+    return ((parseIsInverted(detId)) ? !(detId & 1) : (detId & 1));
 }
 
 bool SDL::Module::parseIsInverted(unsigned int detId)
@@ -283,7 +283,7 @@ bool SDL::Module::parseIsInverted(unsigned int detId)
 
 unsigned int SDL::Module::parsePartnerDetId(unsigned int detId)
 {
-    return parseIsInverted(detId) ? detId - 1 : detId + 1;
+    return ((parseIsInverted(detId)) ? detId - 1 : detId + 1);
 }
 
 SDL::Module::ModuleType SDL::Module::parseModuleType(unsigned int detId)

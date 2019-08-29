@@ -136,8 +136,8 @@ void SDL::Segment::runSegmentDefaultAlgoBarrel(SDL::LogLevel logLevel)
     const float sdMuls = miniMulsPtScaleBarrel[innerLowerModule.layer()] * 3.f / ptCut * 2.f;//will need a better guess than x2?
 
     // Get the relevant anchor hits
-    const Hit& innerMiniDoubletAnchorHit = innerLowerModule.moduleType() == SDL::Module::PS ? ( innerLowerModule.moduleLayerType() == SDL::Module::Pixel ? *innerMiniDoublet.lowerHitPtr() : *innerMiniDoublet.upperHitPtr()): *innerMiniDoublet.lowerHitPtr();
-    const Hit& outerMiniDoubletAnchorHit = outerLowerModule.moduleType() == SDL::Module::PS ? ( outerLowerModule.moduleLayerType() == SDL::Module::Pixel ? *outerMiniDoublet.lowerHitPtr() : *outerMiniDoublet.upperHitPtr()): *outerMiniDoublet.lowerHitPtr();
+    const Hit& innerMiniDoubletAnchorHit = (innerLowerModule.moduleType() == SDL::Module::PS) ? ( (innerLowerModule.moduleLayerType() == SDL::Module::Pixel) ? *innerMiniDoublet.lowerHitPtr() : *innerMiniDoublet.upperHitPtr()): *innerMiniDoublet.lowerHitPtr();
+    const Hit& outerMiniDoubletAnchorHit = (outerLowerModule.moduleType() == SDL::Module::PS) ? ( (outerLowerModule.moduleLayerType() == SDL::Module::Pixel) ? *outerMiniDoublet.lowerHitPtr() : *outerMiniDoublet.upperHitPtr()): *outerMiniDoublet.lowerHitPtr();
 
     // MiniDoublet information
     float innerMiniDoubletAnchorHitRt = innerMiniDoubletAnchorHit.rt();
@@ -155,7 +155,7 @@ void SDL::Segment::runSegmentDefaultAlgoBarrel(SDL::LogLevel logLevel)
     const float pixelPSZpitch = 0.15;
     const float strip2SZpitch = 5.0;
 
-    const float zGeom = innerLowerModule.layer() <= 2 ? 2.f * pixelPSZpitch : 2.f * strip2SZpitch; //twice the macro-pixel or strip size
+    const float zGeom = (innerLowerModule.layer() <= 2) ? (2.f * pixelPSZpitch) : (2.f * strip2SZpitch); //twice the macro-pixel or strip size
 
     float zLo = innerMiniDoubletAnchorHitZ + (innerMiniDoubletAnchorHitZ - deltaZLum) * (outerMiniDoubletAnchorHitRt / innerMiniDoubletAnchorHitRt - 1.f) * (innerMiniDoubletAnchorHitZ > 0.f ? 1.f : dzDrtScale) - zGeom; //slope-correction only on outer end
     float zHi = innerMiniDoubletAnchorHitZ + (innerMiniDoubletAnchorHitZ + deltaZLum) * (outerMiniDoubletAnchorHitRt / innerMiniDoubletAnchorHitRt - 1.f) * (innerMiniDoubletAnchorHitZ < 0.f ? 1.f : dzDrtScale) + zGeom;
@@ -213,16 +213,16 @@ void SDL::Segment::runSegmentDefaultAlgoBarrel(SDL::LogLevel logLevel)
 
     const bool isInnerTilted = innerLowerModule.subdet() == SDL::Module::Barrel and innerLowerModule.side() != SDL::Module::Center;
     const bool isOuterTilted = outerLowerModule.subdet() == SDL::Module::Barrel and outerLowerModule.side() != SDL::Module::Center;
-    const unsigned int innerdetid = innerLowerModule.moduleLayerType() == SDL::Module::Pixel ?  innerLowerModule.partnerDetId() : innerLowerModule.detId();
-    const unsigned int outerdetid = outerLowerModule.moduleLayerType() == SDL::Module::Pixel ?  outerLowerModule.partnerDetId() : outerLowerModule.detId();
+    const unsigned int innerdetid = (innerLowerModule.moduleLayerType() == SDL::Module::Pixel) ?  innerLowerModule.partnerDetId() : innerLowerModule.detId();
+    const unsigned int outerdetid = (outerLowerModule.moduleLayerType() == SDL::Module::Pixel) ?  outerLowerModule.partnerDetId() : outerLowerModule.detId();
     const float drdzinner = tiltedGeometry.getDrDz(innerdetid);
     const float drdzouter = tiltedGeometry.getDrDz(outerdetid);
-    const float innerminiTilt = isInnerTilted ? 0.5f * pixelPSZpitch * drdzinner / sqrt(1.f + drdzinner * drdzinner) / miniDeltaTilted[innerLowerModule.layer()-1] : 0;
-    const float outerminiTilt = isOuterTilted ? 0.5f * pixelPSZpitch * drdzouter / sqrt(1.f + drdzouter * drdzouter) / miniDeltaTilted[outerLowerModule.layer()-1] : 0;
+    const float innerminiTilt = isInnerTilted ? (0.5f * pixelPSZpitch * drdzinner / sqrt(1.f + drdzinner * drdzinner) / miniDeltaTilted[innerLowerModule.layer()-1]) : 0;
+    const float outerminiTilt = isOuterTilted ? (0.5f * pixelPSZpitch * drdzouter / sqrt(1.f + drdzouter * drdzouter) / miniDeltaTilted[outerLowerModule.layer()-1]) : 0;
 
-    float miniDelta = innerLowerModule.subdet() == SDL::Module::Barrel ? miniDeltaBarrel[innerLowerModule.layer()-1] : miniDeltaEndcap[innerLowerModule.layer()-1];
-    float sdLumForInnerMini = SDL::MiniDoublet::useBarrelLogic(innerLowerModule) ?  innerminiTilt * dAlpha_Bfield :  15.f / innerMiniDoubletAnchorHitZ;
-    float sdLumForOuterMini = SDL::MiniDoublet::useBarrelLogic(outerLowerModule) ?  outerminiTilt * dAlpha_Bfield :  15.f / outerMiniDoubletAnchorHitZ;
+    float miniDelta = (innerLowerModule.subdet() == SDL::Module::Barrel) ? (miniDeltaBarrel[innerLowerModule.layer()-1]) : (miniDeltaEndcap[innerLowerModule.layer()-1]);
+    float sdLumForInnerMini = (SDL::MiniDoublet::useBarrelLogic(innerLowerModule)) ?  (innerminiTilt * dAlpha_Bfield) :  (15.f / innerMiniDoubletAnchorHitZ);
+    float sdLumForOuterMini = (SDL::MiniDoublet::useBarrelLogic(outerLowerModule)) ?  (outerminiTilt * dAlpha_Bfield) :  (15.f / outerMiniDoubletAnchorHitZ);
 
     // float dAlpha_res = 0.04f / miniDelta * (innerLowerModule.subdet() == SDL::Module::Barrel ? 1.0f : std::abs(sdZ / sdRt)); //4-strip difference
     float dAlpha_res = 0.04f / miniDelta * (SDL::MiniDoublet::useBarrelLogic(innerLowerModule) ? 1.0f : std::abs(sdZ / sdRt)); //4-strip difference
@@ -303,8 +303,8 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
     const float sdMuls = miniMulsPtScaleEndcap[innerLowerModule.layer()] * 3.f / ptCut * 2.f;//will need a better guess than x2?
 
     // Get the relevant anchor hits
-    const Hit& innerMiniDoubletAnchorHit = innerLowerModule.moduleType() == SDL::Module::PS ? ( innerLowerModule.moduleLayerType() == SDL::Module::Pixel ? *innerMiniDoublet.lowerHitPtr() : *innerMiniDoublet.upperHitPtr()): *innerMiniDoublet.lowerHitPtr();
-    const Hit& outerMiniDoubletAnchorHit = outerLowerModule.moduleType() == SDL::Module::PS ? ( outerLowerModule.moduleLayerType() == SDL::Module::Pixel ? *outerMiniDoublet.lowerHitPtr() : *outerMiniDoublet.upperHitPtr()): *outerMiniDoublet.lowerHitPtr();
+    const Hit& innerMiniDoubletAnchorHit = (innerLowerModule.moduleType() == SDL::Module::PS) ? ( (innerLowerModule.moduleLayerType() == SDL::Module::Pixel) ? *innerMiniDoublet.lowerHitPtr() : *innerMiniDoublet.upperHitPtr()): *innerMiniDoublet.lowerHitPtr();
+    const Hit& outerMiniDoubletAnchorHit = (outerLowerModule.moduleType() == SDL::Module::PS) ? ( (outerLowerModule.moduleLayerType() == SDL::Module::Pixel) ? *outerMiniDoublet.lowerHitPtr() : *outerMiniDoublet.upperHitPtr()): *outerMiniDoublet.lowerHitPtr();
 
     // MiniDoublet information
     float innerMiniDoubletAnchorHitRt = innerMiniDoubletAnchorHit.rt();
@@ -325,9 +325,9 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
 
     // const float zGeom = innerLowerModule.layer() <= 2 ? 2.f * pixelPSZpitch : 2.f * strip2SZpitch; //twice the macro-pixel or strip size
 
-    const float rtGeom = (innerMiniDoubletAnchorHitRt < disks2SMinRadius && outerMiniDoubletAnchorHitRt < disks2SMinRadius ? 2.f * pixelPSZpitch
-            : (innerMiniDoubletAnchorHitRt < disks2SMinRadius || outerMiniDoubletAnchorHitRt < disks2SMinRadius) ? (pixelPSZpitch + strip2SZpitch)
-            : 2.f * strip2SZpitch);
+    const float rtGeom = ((innerMiniDoubletAnchorHitRt < disks2SMinRadius && outerMiniDoubletAnchorHitRt < disks2SMinRadius) ? (2.f * pixelPSZpitch)
+            : ((innerMiniDoubletAnchorHitRt < disks2SMinRadius || outerMiniDoubletAnchorHitRt < disks2SMinRadius) ? (pixelPSZpitch + strip2SZpitch)
+            : (2.f * strip2SZpitch)));
 
     // float zLo = innerMiniDoubletAnchorHitZ + (innerMiniDoubletAnchorHitZ - deltaZLum) * (outerMiniDoubletAnchorHitRt / innerMiniDoubletAnchorHitRt - 1.f) * (innerMiniDoubletAnchorHitZ > 0.f ? 1.f : dzDrtScale) - zGeom; //slope-correction only on outer end
     // float zHi = innerMiniDoubletAnchorHitZ + (innerMiniDoubletAnchorHitZ + deltaZLum) * (outerMiniDoubletAnchorHitRt / innerMiniDoubletAnchorHitRt - 1.f) * (innerMiniDoubletAnchorHitZ < 0.f ? 1.f : dzDrtScale) + zGeom;
@@ -541,8 +541,8 @@ bool SDL::Segment::isMiniDoubletPairASegmentCandidateBarrel(const MiniDoublet& i
     const float sdMuls = miniMulsPtScaleBarrel[innerLowerModule.layer()] * 3.f / ptCut * 2.f;//will need a better guess than x2?
 
     // Get the relevant anchor hits
-    const Hit& innerMiniDoubletAnchorHit = innerLowerModule.moduleType() == SDL::Module::PS ? ( innerLowerModule.moduleLayerType() == SDL::Module::Pixel ? *innerMiniDoublet.lowerHitPtr() : *innerMiniDoublet.upperHitPtr()): *innerMiniDoublet.lowerHitPtr();
-    const Hit& outerMiniDoubletAnchorHit = outerLowerModule.moduleType() == SDL::Module::PS ? ( outerLowerModule.moduleLayerType() == SDL::Module::Pixel ? *outerMiniDoublet.lowerHitPtr() : *outerMiniDoublet.upperHitPtr()): *outerMiniDoublet.lowerHitPtr();
+    const Hit& innerMiniDoubletAnchorHit = innerLowerModule.moduleType() == SDL::Module::PS ? ( (innerLowerModule.moduleLayerType() == SDL::Module::Pixel) ? *innerMiniDoublet.lowerHitPtr() : *innerMiniDoublet.upperHitPtr()): *innerMiniDoublet.lowerHitPtr();
+    const Hit& outerMiniDoubletAnchorHit = outerLowerModule.moduleType() == SDL::Module::PS ? ( (outerLowerModule.moduleLayerType() == SDL::Module::Pixel) ? *outerMiniDoublet.lowerHitPtr() : *outerMiniDoublet.upperHitPtr()): *outerMiniDoublet.lowerHitPtr();
 
     // MiniDoublet information
     float innerMiniDoubletAnchorHitRt = innerMiniDoubletAnchorHit.rt();
@@ -556,7 +556,7 @@ bool SDL::Segment::isMiniDoubletPairASegmentCandidateBarrel(const MiniDoublet& i
     const float pixelPSZpitch = 0.15;
     const float strip2SZpitch = 5.0;
 
-    const float zGeom = innerLowerModule.layer() <= 2 ? 2.f * pixelPSZpitch : 2.f * strip2SZpitch; //twice the macro-pixel or strip size
+    const float zGeom = (innerLowerModule.layer() <= 2) ? (2.f * pixelPSZpitch) : (2.f * strip2SZpitch); //twice the macro-pixel or strip size
 
     float zLo = innerMiniDoubletAnchorHitZ + (innerMiniDoubletAnchorHitZ - deltaZLum) * (outerMiniDoubletAnchorHitRt / innerMiniDoubletAnchorHitRt - 1.f) * (innerMiniDoubletAnchorHitZ > 0.f ? 1.f : dzDrtScale) - zGeom; //slope-correction only on outer end
     float zHi = innerMiniDoubletAnchorHitZ + (innerMiniDoubletAnchorHitZ + deltaZLum) * (outerMiniDoubletAnchorHitRt / innerMiniDoubletAnchorHitRt - 1.f) * (innerMiniDoubletAnchorHitZ < 0.f ? 1.f : dzDrtScale) + zGeom;
@@ -637,9 +637,9 @@ bool SDL::Segment::isMiniDoubletPairASegmentCandidateEndcap(const MiniDoublet& i
 
     // const float zGeom = innerLowerModule.layer() <= 2 ? 2.f * pixelPSZpitch : 2.f * strip2SZpitch; //twice the macro-pixel or strip size
 
-    const float rtGeom = (innerMiniDoubletAnchorHitRt < disks2SMinRadius && outerMiniDoubletAnchorHitRt < disks2SMinRadius ? 2.f * pixelPSZpitch
-            : (innerMiniDoubletAnchorHitRt < disks2SMinRadius || outerMiniDoubletAnchorHitRt < disks2SMinRadius) ? (pixelPSZpitch + strip2SZpitch)
-            : 2.f * strip2SZpitch);
+    const float rtGeom = ((innerMiniDoubletAnchorHitRt < disks2SMinRadius && outerMiniDoubletAnchorHitRt < disks2SMinRadius) ? (2.f * pixelPSZpitch)
+            : ((innerMiniDoubletAnchorHitRt < disks2SMinRadius || outerMiniDoubletAnchorHitRt < disks2SMinRadius) ? (pixelPSZpitch + strip2SZpitch)
+            : (2.f * strip2SZpitch)));
 
     // float zLo = innerMiniDoubletAnchorHitZ + (innerMiniDoubletAnchorHitZ - deltaZLum) * (outerMiniDoubletAnchorHitRt / innerMiniDoubletAnchorHitRt - 1.f) * (innerMiniDoubletAnchorHitZ > 0.f ? 1.f : dzDrtScale) - zGeom; //slope-correction only on outer end
     // float zHi = innerMiniDoubletAnchorHitZ + (innerMiniDoubletAnchorHitZ + deltaZLum) * (outerMiniDoubletAnchorHitRt / innerMiniDoubletAnchorHitRt - 1.f) * (innerMiniDoubletAnchorHitZ < 0.f ? 1.f : dzDrtScale) + zGeom;

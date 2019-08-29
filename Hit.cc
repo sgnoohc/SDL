@@ -155,12 +155,12 @@ bool SDL::Hit::isIdxMatched(const SDL::Hit& hit) const
 // operators
 bool SDL::Hit::operator !=(const Hit& hit) const
 {
-    return hit.x() != x_ or hit.y() != y_ or hit.z() != z_ ? true : false;
+    return ((hit.x() != x_ or hit.y() != y_ or hit.z() != z_) ? true : false);
 }
 
 bool SDL::Hit::operator ==(const Hit& hit) const
 {
-    return hit.x() == x_ and hit.y() == y_ and hit.z() == z_ ? true : false;
+    return ((hit.x() == x_ and hit.y() == y_ and hit.z() == z_) ? true : false);
 }
 
 SDL::Hit SDL::Hit::operator - (const Hit& hit) const

@@ -383,7 +383,7 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel
         const float pt_betaIn = dr * k2Rinv1GeVf / sin(betaIn);
         const float betaInUpd  = betaIn + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_betaIn), sinAlphaMax)), betaIn); //FIXME: need a faster version
         const float betaOutUpd = betaOut + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_betaIn), sinAlphaMax)), betaIn); //FIXME: need a faster version
-        betaAv = std::abs(betaOut) > 0.2f * std::abs(betaIn) ? 0.5f * (betaInUpd + betaOutUpd) : betaInUpd;
+        betaAv = (std::abs(betaOut) > 0.2f * std::abs(betaIn)) ? (0.5f * (betaInUpd + betaOutUpd)) : betaInUpd;
         pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
         betaIn  += copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
         betaOut += copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
@@ -393,8 +393,8 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel
     }
 
     //rescale the ranges proportionally
-    const float betaInMMSF = std::abs(betaInRHmin + betaInRHmax) > 0 ? 2.f * betaIn / std::abs(betaInRHmin + betaInRHmax) : 0.; //mean value of min,max is the old betaIn
-    const float betaOutMMSF = std::abs(betaOutRHmin + betaOutRHmax) > 0 ? 2.f * betaOut / std::abs(betaOutRHmin + betaOutRHmax) : 0.;
+    const float betaInMMSF = (std::abs(betaInRHmin + betaInRHmax) > 0) ? (2.f * betaIn / std::abs(betaInRHmin + betaInRHmax)) : 0.; //mean value of min,max is the old betaIn
+    const float betaOutMMSF = (std::abs(betaOutRHmin + betaOutRHmax) > 0) ? (2.f * betaOut / std::abs(betaOutRHmin + betaOutRHmax)) : 0.;
     betaInRHmin *= betaInMMSF;
     betaInRHmax *= betaInMMSF;
     betaOutRHmin *= betaOutMMSF;
@@ -490,7 +490,7 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelEndcapEndcap(SDL::LogLevel
     const float zGeom =
         ((innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).moduleType() == SDL::Module::PS ? pixelPSZpitch : strip2SZpitch)
         +
-        (outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).moduleType() == SDL::Module::PS ? pixelPSZpitch : strip2SZpitch;
+        ((outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).moduleType() == SDL::Module::PS ? pixelPSZpitch : strip2SZpitch);
     const float rtIn = innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->rt();
     const float rtOut = outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->rt();
     const float zIn = innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->z();
@@ -703,7 +703,7 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelEndcapEndcap(SDL::LogLevel
         const float pt_betaIn = dr * k2Rinv1GeVf / sin(betaIn);
         const float betaInUpd  = betaIn + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_betaIn), sinAlphaMax)), betaIn); //FIXME: need a faster version
         const float betaOutUpd = betaOut + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_betaIn), sinAlphaMax)), betaIn); //FIXME: need a faster version
-        betaAv = std::abs(betaOut) > 0.2f * std::abs(betaIn) ? 0.5f * (betaInUpd + betaOutUpd) : betaInUpd;
+        betaAv = (std::abs(betaOut) > 0.2f * std::abs(betaIn)) ? (0.5f * (betaInUpd + betaOutUpd)) : betaInUpd;
         pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
         betaIn  += copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
         betaOut += copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
@@ -713,8 +713,8 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelEndcapEndcap(SDL::LogLevel
     }
 
     //rescale the ranges proportionally
-    const float betaInMMSF = std::abs(betaInRHmin + betaInRHmax) > 0 ? 2.f * betaIn / std::abs(betaInRHmin + betaInRHmax) : 0.; //TODO-RH: the terneary operator should no be necessary once RHmin/max is propagatedmean value of min,max is the old betaIn
-    const float betaOutMMSF = std::abs(betaOutRHmin + betaOutRHmax) > 0 ? 2.f * betaOut / std::abs(betaOutRHmin + betaOutRHmax) : 0.;
+    const float betaInMMSF = (std::abs(betaInRHmin + betaInRHmax) > 0) ? 2.f * betaIn / std::abs(betaInRHmin + betaInRHmax) : 0.; //TODO-RH: the terneary operator should no be necessary once RHmin/max is propagatedmean value of min,max is the old betaIn
+    const float betaOutMMSF = (std::abs(betaOutRHmin + betaOutRHmax) > 0) ? 2.f * betaOut / std::abs(betaOutRHmin + betaOutRHmax) : 0.;
     betaInRHmin *= betaInMMSF;
     betaInRHmax *= betaInMMSF;
     betaOutRHmin *= betaOutMMSF;
