@@ -178,7 +178,7 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel
     const float zGeom =
         ((innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).moduleType() == SDL::Module::PS ? pixelPSZpitch : strip2SZpitch)
         +
-        (outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).moduleType() == SDL::Module::PS ? pixelPSZpitch : strip2SZpitch;
+        ((outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).moduleType() == SDL::Module::PS ? pixelPSZpitch : strip2SZpitch);
     const float rtIn = innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->rt();
     const float rtOut = outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->rt();
     const float zIn = innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->z();
