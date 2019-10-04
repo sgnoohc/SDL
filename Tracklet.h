@@ -128,6 +128,7 @@ namespace SDL
             void runTrackletDefaultAlgoBarrelEndcap(SDL::LogLevel logLevel);
             void runTrackletDefaultAlgoEndcapEndcap(SDL::LogLevel logLevel);
 
+            bool hasCommonSegment(const Tracklet&) const;
             bool isIdxMatched(const Tracklet&) const;
             bool isAnchorHitIdxMatched(const Tracklet&) const;
 

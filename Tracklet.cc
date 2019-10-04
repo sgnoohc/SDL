@@ -883,6 +883,13 @@ void SDL::Tracklet::runTrackletDefaultAlgoEndcapEndcap(SDL::LogLevel logLevel)
     return;
 }
 
+bool SDL::Tracklet::hasCommonSegment(const Tracklet& outer_tl) const
+{
+    if (outerSegmentPtr()->isIdxMatched(*(outer_tl.innerSegmentPtr())))
+        return true;
+    return false;
+}
+
 bool SDL::Tracklet::isIdxMatched(const Tracklet& md) const
 {
     if (not innerSegmentPtr_->isIdxMatched(*(md.innerSegmentPtr())))

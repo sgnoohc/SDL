@@ -58,7 +58,12 @@ const std::vector<SDL::Segment*>& SDL::Layer::getSegmentPtrs() const
 
 const std::vector<SDL::Tracklet*>& SDL::Layer::getTrackletPtrs() const
 {
-    return tracklets_;;
+    return tracklets_;
+}
+
+const std::vector<SDL::TrackCandidate*>& SDL::Layer::getTrackCandidatePtrs() const
+{
+    return trackcandidates_;
 }
 
 const std::vector<std::pair<std::pair<int, SDL::Layer::SubDet>, std::pair<int, SDL::Layer::SubDet>>>& SDL::Layer::getListOfTrackletCompatibleLayerPairs()
@@ -84,6 +89,11 @@ void SDL::Layer::addSegment(SDL::Segment* sg)
 void SDL::Layer::addTracklet(SDL::Tracklet* tl)
 {
     tracklets_.push_back(tl);
+}
+
+void SDL::Layer::addTrackCandidate(SDL::TrackCandidate* tc)
+{
+    trackcandidates_.push_back(tc);
 }
 
 namespace SDL
