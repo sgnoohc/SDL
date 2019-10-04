@@ -45,9 +45,9 @@ SDL::MiniDoublet::MiniDoublet(SDL::Hit* lowerHitPtr, SDL::Hit* upperHitPtr) : lo
                                                       ,dphichange_(0)
                                                       ,dphichange_noshift_(0),
                                                       dzCut_(-1),
-                                                      drtCut_(-1),
                                                       dphiCut_(-1),
-                                                      dphichangeCut_(-1)
+                                                      dphichangeCut_(-1),
+                                                      drtCut_(-1)
 {
     setAnchorHit();
 }

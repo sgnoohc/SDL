@@ -57,8 +57,8 @@ namespace SDL
             //cuts from outside
             float dzCut_;
             float dphiCut_;
-            float drtCut_;
             float dphichangeCut_;
+            float drtCut_;
 
         public:
             MiniDoublet();
