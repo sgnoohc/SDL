@@ -38,7 +38,7 @@ SDL::MiniDoublet::MiniDoublet(SDL::Hit* lowerHitPtr, SDL::Hit* upperHitPtr) : lo
                                                       passAlgoDPhi_(0),
                                                       passAlgoDrt_(0),
                                                       passAlgoDPhiChange_(0),
-                                                      ,dz_(0)
+                                                      dz_(0)
                                                       ,shiftedDz_(0)
                                                       ,dphi_(0)
                                                       ,dphi_noshift_(0)
@@ -100,7 +100,7 @@ const int& SDL::MiniDoublet::getPassAlgoDZ() const
     return passAlgoDZ_;
 }
 
-const int& SDL::getPassAlgoDrt() const
+const int& SDL::MiniDoublet::getPassAlgoDrt() const
 {
     return passAlgoDrt_;
 }
@@ -251,7 +251,7 @@ bool SDL::MiniDoublet::passesMiniDoubletAlgo_dZ(SDL::MDAlgo algo) const
 
 bool SDL::MiniDoublet::passesMiniDoubletAlgo_dPhi(SDL::MDAlgo algo) const
 {
-  return passAlgodPhi_ & (1 << algo);
+  return passAlgoDPhi_ & (2 << algo);
 }
 
 bool SDL::MiniDoublet::passesMiniDoubletAlgo_dPhiChange(SDL::MDAlgo algo) const
@@ -499,7 +499,7 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
     }
 
     // If all cut passed this pair is good, and make and add the mini-doublet
-    if(passesMiniDoubletAlgo_dZ() && passesMiniDoubletAlgo_dPhi() && passesMiniDoubletAlgo_dPhiChange())
+    if(passesMiniDoubletAlgo_dZ(SDL::Default_MDAlgo) && passesMiniDoubletAlgo_dPhi(SDL::Default_MDAlgo) && passesMiniDoubletAlgo_dPhiChange(SDL::Default_MDAlgo))
     {
         passAlgo_ = passAlgoOriginal_ | (1 << SDL::Default_MDAlgo);
     }
@@ -752,7 +752,7 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
     }
 
     // If all cut passed this pair is good, and make and add the mini-doublet
-    if(passesMiniDoubletAlgo_dZ() && passesMiniDoubletAlgo_dPhi() && passesMiniDoubletAlgo_dPhiChange() && passesMiniDoubletAlgo_drt())
+    if(passesMiniDoubletAlgo_dZ(SDL::Default_MDAlgo) && passesMiniDoubletAlgo_dPhi(SDL::Default_MDAlgo) && passesMiniDoubletAlgo_dPhiChange(SDL::Default_MDAlgo) && passesMiniDoubletAlgo_drt(SDL::Default_MDAlgo))
     {
         passAlgo_ = passAlgoOriginal_ | (1 << SDL::Default_MDAlgo);
     }
