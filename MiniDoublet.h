@@ -39,6 +39,11 @@ namespace SDL
             // Bits to flag whether this mini-doublet passes some algorithm
             int passAlgo_;
 
+            int passAlgoDZ_;
+            int passAlgoDPhi_;
+            int passAlgoDrt_;
+            int passAlgoDPhiChange_;
+
             // Some mini-doublet related reconstructon variables
             Hit lowerShiftedHit_;
             Hit upperShiftedHit_;
@@ -48,6 +53,12 @@ namespace SDL
             float dphi_noshift_;
             float dphichange_;
             float dphichange_noshift_;
+
+            //cuts from outside
+            float dzCut_;
+            float dphiCut_;
+            float drtCut_;
+            float dphichangeCut_;
 
         public:
             MiniDoublet();
@@ -59,6 +70,10 @@ namespace SDL
             Hit* upperHitPtr() const;
             Hit* anchorHitPtr() const;
             const int& getPassAlgo() const;
+            const int& getPassAlgoDZ() const;
+            const int& passAlgoDrt() const;
+            const int& getPassAlgoDPhi() const;
+            const int& getPassAlgoDPhiChange() const;
             const Hit& getLowerShiftedHit() const;
             const Hit& getUpperShiftedHit() const;
             const float& getDz() const;
@@ -78,6 +93,16 @@ namespace SDL
             void setDeltaPhiNoShift(float);
             void setDeltaPhiChangeNoShift(float);
 
+            const float& getdZCut() const;
+            const float& getdPhiCut() const;
+            const float& getdphichangeCut() const;
+            const float& getdrtCut() const;
+
+            void setdzCut(float);
+            void setdphiCut(float);
+            void setdphichangeCut(float);
+            void setdrtCut(float);
+        
             // return whether it passed the algorithm
             bool passesMiniDoubletAlgo(MDAlgo algo) const;
 
