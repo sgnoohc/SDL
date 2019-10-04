@@ -71,6 +71,7 @@ namespace SDL
             Hit* anchorHitPtr() const;
             const int& getPassAlgo() const;
             const int& getPassAlgoDZ() const;
+            const int& getPassAlgoDrt() const;
             const int& passAlgoDrt() const;
             const int& getPassAlgoDPhi() const;
             const int& getPassAlgoDPhiChange() const;
@@ -94,7 +95,7 @@ namespace SDL
             void setDeltaPhiChangeNoShift(float);
 
             const float& getdZCut() const;
-            const float& getdPhiCut() const;
+            const float& getdphiCut() const;
             const float& getdphichangeCut() const;
             const float& getdrtCut() const;
 
@@ -102,9 +103,13 @@ namespace SDL
             void setdphiCut(float);
             void setdphichangeCut(float);
             void setdrtCut(float);
-        
+
             // return whether it passed the algorithm
             bool passesMiniDoubletAlgo(MDAlgo algo) const;
+            bool passesMiniDoubletAlgo_dZ(MDAlgo algo) const;
+            bool passesMiniDoubletAlgo_drt(MDAlgo algo) const;
+            bool passesMiniDoubletAlgo_dPhi(MDAlgo algo) const;
+            bool passesMiniDoubletAlgo_dPhiChange(MDAlgo algo) const;
 
             // The function to run mini-doublet algorithm on a mini-doublet candidate
             void runMiniDoubletAlgo(MDAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);

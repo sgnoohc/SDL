@@ -16,7 +16,7 @@ SDL::MiniDoublet::MiniDoublet(const MiniDoublet& md): lowerHitPtr_(md.lowerHitPt
                                                       passAlgoDPhi_(md.getPassAlgoDPhi()),
                                                       passAlgoDrt_(md.getPassAlgoDrt()),
                                                       passAlgoDPhiChange_(md.getPassAlgoDPhiChange()),
-                                                      ,lowerShiftedHit_(md.getLowerShiftedHit())
+                                                      lowerShiftedHit_(md.getLowerShiftedHit())
                                                       ,upperShiftedHit_(md.getUpperShiftedHit())
                                                       ,dz_(md.getDz())
                                                       ,shiftedDz_(md.getShiftedDz())
@@ -27,7 +27,7 @@ SDL::MiniDoublet::MiniDoublet(const MiniDoublet& md): lowerHitPtr_(md.lowerHitPt
                                                       dzCut_(md.getdZCut()),
                                                       dphiCut_(md.getdphiCut()),
                                                       dphichangeCut_(md.getdphichangeCut()),
-                                                      drtcut_(md.getdrtCut())
+                                                      drtCut_(md.getdrtCut())
 {
     setAnchorHit();
 }
@@ -44,7 +44,7 @@ SDL::MiniDoublet::MiniDoublet(SDL::Hit* lowerHitPtr, SDL::Hit* upperHitPtr) : lo
                                                       ,dphi_noshift_(0)
                                                       ,dphichange_(0)
                                                       ,dphichange_noshift_(0),
-                                                      dzcut_(-1),
+                                                      dzCut_(-1),
                                                       drtCut_(-1),
                                                       dphiCut_(-1),
                                                       dphichangeCut_(-1)
@@ -146,7 +146,7 @@ const float& SDL::MiniDoublet::getDeltaPhiChange() const
 }
 
 
-const flot& SDL::MiniDoublet::getdZCut() const
+const float& SDL::MiniDoublet::getdZCut() const
 {
     return dzCut_;
 }
@@ -259,7 +259,7 @@ bool SDL::MiniDoublet::passesMiniDoubletAlgo_dPhiChange(SDL::MDAlgo algo) const
    return passAlgoDPhiChange_ & (1 << algo);
 }
 
-bool SDL::MiniDoublet::passesMiniDoubletAlgodrt(SDL::MDAlgo algo) const
+bool SDL::MiniDoublet::passesMiniDoubletAlgo_drt(SDL::MDAlgo algo) const
 {
     return passAlgoDrt_ & (1 << algo);
 }
@@ -480,7 +480,7 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
         }
 
         // did not pass default algo
-        passAlgoDphiChange_ &= (0 << SDL::Default_MDAlgo);
+        passAlgoDPhiChange_ &= (0 << SDL::Default_MDAlgo);
         passAlgo_ &= (0 << SDL::Default_MDAlgo);
 //        return;
     }
