@@ -23,6 +23,13 @@ namespace SDL
         Default_TLAlgo = 0,
         AllComb_TLAlgo
     };
+
+    // Tracklet algorithm enum
+    enum TCAlgo
+    {
+        Default_TCAlgo = 0,
+        AllComb_TCAlgo
+    };
 };
 
 #endif

@@ -45,10 +45,32 @@ namespace SDL
             // Bits to flag whether this segment passes some algorithm
             int passAlgo_;
 
+        public:
+            enum SegmentSelection
+            {
+                deltaZ = 0,
+                deltaPhiPos = 1,
+                slope=2,
+                alphaRef=3,
+                alphaOut=4,
+                alphaRefOut=5,
+                nCut=6
+            };
+
+        private:
+            // Bits to flag whether this segment passes which cut of default algorithm
+            int passBitsDefaultAlgo_;
+
             // Some reco'ed quantities
             float rtOut_; // Rt of the outer mini-doublet (anchor hit = pixel hit, if available)
             float rtIn_; // Rt of the inner mini-doublet (anchor hit = pixel hit, if available)
             float dphichange_;
+
+            float zOut_;
+            float zLo_; // z constraint boundary
+            float zHi_; // z constraint boundary
+
+            std::map<std::string, float> recovars_;
 
         public:
             Segment();
@@ -59,13 +81,23 @@ namespace SDL
             MiniDoublet* innerMiniDoubletPtr() const;
             MiniDoublet* outerMiniDoubletPtr() const;
             const int& getPassAlgo() const;
+            const int& getPassBitsDefaultAlgo() const;
             const float& getRtOut() const;
             const float& getRtIn() const;
             const float& getDeltaPhiChange() const;
+            const float& getZOut() const;
+            const float& getZLo() const;
+            const float& getZHi() const;
+            const std::map<std::string, float>& getRecoVars() const;
+            const float& getRecoVar(std::string) const;
 
             void setRtOut(float);
             void setRtIn(float);
             void setDeltaPhiChange(float);
+            void setZOut(float);
+            void setZLo(float);
+            void setZHi(float);
+            void setRecoVars(std::string, float);
 
             // return whether it passed the algorithm
             bool passesSegmentAlgo(SGAlgo algo) const;

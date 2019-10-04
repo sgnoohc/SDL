@@ -137,6 +137,15 @@ void SDL::Event::addTrackletToLowerLayer(SDL::Tracklet tl, int layerIdx, SDL::La
     getLayer(layerIdx, subdet).addTracklet(&(tracklets_.back()));
 }
 
+void SDL::Event::addTrackCandidateToLowerLayer(SDL::TrackCandidate tc, int layerIdx, SDL::Layer::SubDet subdet)
+{
+    // Add to global list of trackcandidates, where it will hold the object's instance
+    trackcandidates_.push_back(tc);
+
+    // And get the layer
+    getLayer(layerIdx, subdet).addTrackCandidate(&(trackcandidates_.back()));
+}
+
 void SDL::Event::createMiniDoublets(MDAlgo algo)
 {
     // Loop over lower modules
@@ -297,6 +306,50 @@ void SDL::Event::createTrackletsFromTwoLayers(int innerLayerIdx, SDL::Layer::Sub
             if (tlCand.passesTrackletAlgo(algo))
             {
                 addTrackletToLowerLayer(tlCand, innerLayerIdx, innerLayerSubDet);
+            }
+
+        }
+    }
+}
+
+void SDL::Event::createTrackCandidates(TCAlgo algo)
+{
+    // TODO Implement some structure for Track Candidates
+    // for (auto& trackCandidate_compatible_layer_pair : SDL::Layer::getListOfTrackCandidateCompatibleLayerPairs())
+    // {
+    //     int innerLayerIdx = trackCandidate_compatible_layer_pair.first.first;
+    //     SDL::Layer::SubDet innerLayerSubDet = trackCandidate_compatible_layer_pair.first.second;
+    //     int outerLayerIdx = trackCandidate_compatible_layer_pair.second.first;
+    //     SDL::Layer::SubDet outerLayerSubDet = trackCandidate_compatible_layer_pair.second.second;
+    //     createTrackCandidatesFromTwoLayers(innerLayerIdx, innerLayerSubDet, outerLayerIdx, outerLayerSubDet, algo);
+    // }
+
+    createTrackCandidatesFromTwoLayers(1, SDL::Layer::Barrel, 3, SDL::Layer::Barrel, algo);
+
+}
+
+// Create trackCandidates from two layers (inefficient way)
+void SDL::Event::createTrackCandidatesFromTwoLayers(int innerLayerIdx, SDL::Layer::SubDet innerLayerSubDet, int outerLayerIdx, SDL::Layer::SubDet outerLayerSubDet, TCAlgo algo)
+{
+    Layer& innerLayer = getLayer(innerLayerIdx, innerLayerSubDet);
+    Layer& outerLayer = getLayer(outerLayerIdx, outerLayerSubDet);
+
+    for (auto& innerTrackletPtr : innerLayer.getTrackletPtrs())
+    {
+        SDL::Tracklet& innerTracklet = *innerTrackletPtr;
+
+        for (auto& outerTrackletPtr : outerLayer.getTrackletPtrs())
+        {
+
+            SDL::Tracklet& outerTracklet = *outerTrackletPtr;
+
+            SDL::TrackCandidate tcCand(innerTrackletPtr, outerTrackletPtr);
+
+            tcCand.runTrackCandidateAlgo(algo, logLevel_);
+
+            if (tcCand.passesTrackCandidateAlgo(algo))
+            {
+                addTrackCandidateToLowerLayer(tcCand, innerLayerIdx, innerLayerSubDet);
             }
 
         }

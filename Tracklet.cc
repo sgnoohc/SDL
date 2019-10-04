@@ -18,7 +18,8 @@ SDL::Tracklet::Tracklet(const Tracklet& tl) :
     betaIn_(tl.getBetaIn()),
     betaInCut_(tl.getBetaInCut()),
     betaOut_(tl.getBetaOut()),
-    betaOutCut_(tl.getBetaOutCut())
+    betaOutCut_(tl.getBetaOutCut()),
+    recovars_(tl.getRecoVars())
 {
 }
 
@@ -114,6 +115,21 @@ const float& SDL::Tracklet::getBetaOutCut() const
 void SDL::Tracklet::setBetaOutCut(float betaOutCut)
 {
     betaOutCut_ = betaOutCut;
+}
+
+const std::map<std::string, float>& SDL::Tracklet::getRecoVars() const
+{
+    return recovars_;
+}
+
+const float& SDL::Tracklet::getRecoVar(std::string key) const
+{
+    return recovars_.at(key);
+}
+
+void SDL::Tracklet::setRecoVars(std::string key, float var)
+{
+    recovars_[key] = var;
 }
 
 bool SDL::Tracklet::passesTrackletAlgo(SDL::TLAlgo algo) const
@@ -320,6 +336,13 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel
     float betaOutRHmin = betaOut;
     float betaOutRHmax = betaOut;
 
+    setRecoVars("sdIn_alpha", sdIn_alpha);
+    setRecoVars("sdOut_alphaOut", sdOut_alphaOut);
+    setRecoVars("rawBetaInCorrection", sdIn_r3.deltaPhi(dr3));
+    setRecoVars("rawBetaOutCorrection", sdOut_mdOut_r3.deltaPhi(dr3));
+    setRecoVars("rawBetaIn", betaIn);
+    setRecoVars("rawBetaOut", betaOut);
+
     const Hit& sdIn_mdRef_hit = (*innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr());
 
     const float sdIn_dr = (sdIn_mdOut_hit - sdIn_mdRef_hit).rt();
@@ -360,6 +383,8 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel
     int lIn = 5;
     int lOut = 5;
 
+    int betacormode = 0;
+
     const float sdOut_dr = (sdOut_mdOut_hit - sdOut_mdRef_hit).rt();
     const float sdOut_d = sdOut_mdOut_hit.rt() - sdOut_mdRef_hit.rt();
     const float diffDr = std::abs(sdIn_dr - sdOut_dr) / std::abs(sdIn_dr + sdOut_dr);
@@ -368,6 +393,7 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel
             && (std::abs(pt_beta) < 4.f * pt_betaMax
                 || (lIn >= 11 && std::abs(pt_beta) < 8.f * pt_betaMax)))   //and the pt_beta is well-defined; less strict for endcap-endcap
     {
+        betacormode = 1;
         const float betaInUpd  = betaIn + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
         const float betaOutUpd = betaOut + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut); //FIXME: need a faster version
         betaAv = 0.5f * (betaInUpd + betaOutUpd);
@@ -380,6 +406,7 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel
     }
     else if (lIn < 11 && std::abs(betaOut) < 0.2 * std::abs(betaIn) && std::abs(pt_beta) < 12.f * pt_betaMax)   //use betaIn sign as ref
     {
+        betacormode = 2;
         const float pt_betaIn = dr * k2Rinv1GeVf / sin(betaIn);
         const float betaInUpd  = betaIn + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_betaIn), sinAlphaMax)), betaIn); //FIXME: need a faster version
         const float betaOutUpd = betaOut + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_betaIn), sinAlphaMax)), betaIn); //FIXME: need a faster version
@@ -448,6 +475,51 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel
     const float dBeta = betaIn - betaOut;
     // const float dZeta = sdIn.zeta - sdOut.zeta;
 
+    const float innerSgInnerMdDetId = (innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).detId();
+    const float outerSgInnerMdDetId = (outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).detId();
+    const float innerSgOuterMdDetId = (innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).detId();
+    const float outerSgOuterMdDetId = (outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).detId();
+
+    setRecoVars("sinAlphaMax", sinAlphaMax);
+    setRecoVars("betaIn", betaIn);
+    setRecoVars("betaInRHmax", betaInRHmax);
+    setRecoVars("betaInRHmin", betaInRHmin);
+    setRecoVars("betaOut", betaOut);
+    setRecoVars("betaOutRHmax", betaOutRHmax);
+    setRecoVars("betaOutRHmin", betaOutRHmin);
+    setRecoVars("dBeta", dBeta);
+    setRecoVars("dBetaCut2", dBetaCut2);
+    setRecoVars("dBetaLum2", dBetaLum2);
+    setRecoVars("dBetaMuls", dBetaMuls);
+    setRecoVars("dBetaRIn2", dBetaRIn2);
+    setRecoVars("dBetaROut2", dBetaROut2);
+    setRecoVars("dBetaRes", dBetaRes);
+    setRecoVars("deltaZLum", deltaZLum);
+    setRecoVars("dr", dr);
+    setRecoVars("dzDrtScale", dzDrtScale);
+    setRecoVars("innerSgInnerMdDetId", innerSgInnerMdDetId);
+    setRecoVars("innerSgOuterMdDetId", innerSgOuterMdDetId);
+    setRecoVars("k2Rinv1GeVf", k2Rinv1GeVf);
+    setRecoVars("kRinv1GeVf", kRinv1GeVf);
+    setRecoVars("outerSgInnerMdDetId", outerSgInnerMdDetId);
+    setRecoVars("outerSgOuterMdDetId", outerSgOuterMdDetId);
+    setRecoVars("pixelPSZpitch", pixelPSZpitch);
+    setRecoVars("ptCut", ptCut);
+    setRecoVars("pt_betaIn", pt_betaIn);
+    setRecoVars("pt_betaOut", pt_betaOut);
+    setRecoVars("rtIn", rtIn);
+    setRecoVars("rtOut", rtOut);
+    setRecoVars("rtOut_o_rtIn", rtOut_o_rtIn);
+    setRecoVars("sdIn_d", sdIn_d);
+    setRecoVars("sdOut_d", sdOut_d);
+    setRecoVars("sdlSlope", sdlSlope);
+    setRecoVars("strip2SZpitch", strip2SZpitch);
+    setRecoVars("zGeom", zGeom);
+    setRecoVars("zIn", zIn);
+    setRecoVars("zLo", zLo);
+    setRecoVars("zOut", zOut);
+    setRecoVars("betacormode", betacormode);
+
     setDeltaBeta(dBeta);
     setDeltaBetaCut(std::sqrt(dBetaCut2));
 
@@ -462,7 +534,8 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel
             SDL::cout <<  " betaInRHmin: " << betaInRHmin <<  " betaInRHmax: " << betaInRHmax <<  std::endl;
             SDL::cout <<  " betaOutRHmin: " << betaOutRHmin <<  " betaOutRHmax: " << betaOutRHmax <<  std::endl;
         }
-        passAlgo_ &= (0 << SDL::Default_TLAlgo);
+        // passAlgo_ &= (0 << SDL::Default_TLAlgo);
+        passAlgo_ |= (1 << SDL::Default_TLAlgo);
         return;
     }
     else if (logLevel >= SDL::Log_Debug3)
@@ -808,6 +881,13 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelEndcap(SDL::LogLevel logLevel)
 void SDL::Tracklet::runTrackletDefaultAlgoEndcapEndcap(SDL::LogLevel logLevel)
 {
     return;
+}
+
+bool SDL::Tracklet::hasCommonSegment(const Tracklet& outer_tl) const
+{
+    if (outerSegmentPtr()->isIdxMatched(*(outer_tl.innerSegmentPtr())))
+        return true;
+    return false;
 }
 
 bool SDL::Tracklet::isIdxMatched(const Tracklet& md) const

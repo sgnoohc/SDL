@@ -45,6 +45,9 @@ namespace SDL
             // list of Tracklets (this holds the actual instances)
             std::list<Tracklet> tracklets_;
 
+            // list of TrackCandidates (this holds the actual instances)
+            std::list<TrackCandidate> trackcandidates_;
+
             // list of module pointers (hold only the pointers to the actual instances)
             std::vector<Module*> modulePtrs_;
 
@@ -93,6 +96,9 @@ namespace SDL
             // Tracklet related functions
             void addTrackletToLowerLayer(Tracklet tl, int layerIdx, SDL::Layer::SubDet subdet);
 
+            // TrackCandidate related functions
+            void addTrackCandidateToLowerLayer(TrackCandidate tc, int layerIdx, SDL::Layer::SubDet subdet);
+
             // Create mini doublets
             void createMiniDoublets(MDAlgo algo=Default_MDAlgo);
 
@@ -110,6 +116,12 @@ namespace SDL
 
             // Create tracklets from two layers (inefficient way)
             void createTrackletsFromTwoLayers(int innerLayerIdx, SDL::Layer::SubDet innerLayerSubDet, int outerLayerIdx, SDL::Layer::SubDet outerLayerSubDet, TLAlgo algo=Default_TLAlgo);
+
+            // Create trackcandidates
+            void createTrackCandidates(TCAlgo algo=Default_TCAlgo);
+
+            // Create trackcandidates from two layers (inefficient way)
+            void createTrackCandidatesFromTwoLayers(int innerLayerIdx, SDL::Layer::SubDet innerLayerSubDet, int outerLayerIdx, SDL::Layer::SubDet outerLayerSubDet, TCAlgo algo=Default_TCAlgo);
 
             // cout printing
             friend std::ostream& operator<<(std::ostream& out, const Event& event);

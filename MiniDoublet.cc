@@ -320,6 +320,7 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
 
     const float dzCut = dzCut_ < 0 ? 10.f : dzCut_; // Could be tighter for PS modules
     if (not (std::abs(dz) < dzCut)) // If cut fails continue
+    // if (not (std::abs(dz) < dzCut and invertedcrossercut <= 0)) // Adding inverted crosser rejection
     {
         if (logLevel >= SDL::Log_Debug3)
         {

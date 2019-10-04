@@ -6,11 +6,12 @@
 
 #include "Segment.h"
 #include "Tracklet.h"
+#include "TrackCandidate.h"
 
 namespace SDL
 {
     class Segment;
-    class Tracklet;
+    class TrackCandidate;
 }
 
 namespace SDL
@@ -65,6 +66,9 @@ namespace SDL
             // vector of tracklets
             std::vector<Tracklet*> tracklets_;
 
+            // vector of trackcandidates
+            std::vector<TrackCandidate*> trackcandidates_;
+
         private:
 
             // Compatible layer information for Tracklet
@@ -83,6 +87,7 @@ namespace SDL
             const int& layerIdx() const;
             const std::vector<Segment*>& getSegmentPtrs() const;
             const std::vector<Tracklet*>& getTrackletPtrs() const;
+            const std::vector<TrackCandidate*>& getTrackCandidatePtrs() const;
             static const std::vector<std::pair<std::pair<int, SubDet>, std::pair<int, SubDet>>>& getListOfTrackletCompatibleLayerPairs();
 
             // modifier
@@ -90,6 +95,7 @@ namespace SDL
             void setSubDet(SubDet subdet);
             void addSegment(Segment* sg);
             void addTracklet(Tracklet* tl);
+            void addTrackCandidate(TrackCandidate* tl);
 
             // printing
             friend std::ostream& operator<<(std::ostream& os, const Layer& layer);

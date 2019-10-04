@@ -12,9 +12,14 @@ SDL::Segment::Segment(const Segment& sg) :
     innerMiniDoubletPtr_(sg.innerMiniDoubletPtr()),
     outerMiniDoubletPtr_(sg.outerMiniDoubletPtr()),
     passAlgo_(sg.getPassAlgo()),
+    passBitsDefaultAlgo_(sg.getPassBitsDefaultAlgo()),
     rtOut_(sg.getRtOut()),
     rtIn_(sg.getRtIn()),
-    dphichange_(sg.getDeltaPhiChange())
+    dphichange_(sg.getDeltaPhiChange()),
+    zOut_(sg.getZOut()),
+    zLo_(sg.getZLo()),
+    zHi_(sg.getZHi()),
+    recovars_(sg.getRecoVars())
 {
 }
 
@@ -22,9 +27,13 @@ SDL::Segment::Segment(SDL::MiniDoublet* innerMiniDoubletPtr, SDL::MiniDoublet* o
     innerMiniDoubletPtr_(innerMiniDoubletPtr),
     outerMiniDoubletPtr_(outerMiniDoubletPtr),
     passAlgo_(0),
+    passBitsDefaultAlgo_(0),
     rtOut_(0),
     rtIn_(0),
-    dphichange_(0)
+    dphichange_(0),
+    zOut_(0),
+    zLo_(0),
+    zHi_(0)
 {
 }
 
@@ -43,6 +52,11 @@ const int& SDL::Segment::getPassAlgo() const
     return passAlgo_;
 }
 
+const int& SDL::Segment::getPassBitsDefaultAlgo() const
+{
+    return passBitsDefaultAlgo_;
+}
+
 const float& SDL::Segment::getRtOut() const
 {
     return rtOut_;
@@ -58,6 +72,31 @@ const float& SDL::Segment::getDeltaPhiChange() const
     return dphichange_;
 }
 
+const float& SDL::Segment::getZOut() const
+{
+    return zOut_;
+}
+
+const float& SDL::Segment::getZLo() const
+{
+    return zLo_;
+}
+
+const float& SDL::Segment::getZHi() const
+{
+    return zHi_;
+}
+
+const std::map<std::string, float>& SDL::Segment::getRecoVars() const
+{
+    return recovars_;
+}
+
+const float& SDL::Segment::getRecoVar(std::string key) const
+{
+    return recovars_.at(key);
+}
+
 void SDL::Segment::setRtOut(float rt)
 {
     rtOut_ = rt;
@@ -71,6 +110,26 @@ void SDL::Segment::setRtIn(float rt)
 void SDL::Segment::setDeltaPhiChange(float dphichange)
 {
     dphichange_ = dphichange;
+}
+
+void SDL::Segment::setZOut(float zOut)
+{
+    zOut_ = zOut;
+}
+
+void SDL::Segment::setZLo(float zLo)
+{
+    zLo_ = zLo;
+}
+
+void SDL::Segment::setZHi(float zHi)
+{
+    zHi_ = zHi;
+}
+
+void SDL::Segment::setRecoVars(std::string key, float var)
+{
+    recovars_[key] = var;
 }
 
 bool SDL::Segment::passesSegmentAlgo(SDL::SGAlgo algo) const
@@ -160,6 +219,13 @@ void SDL::Segment::runSegmentDefaultAlgoBarrel(SDL::LogLevel logLevel)
     float zLo = innerMiniDoubletAnchorHitZ + (innerMiniDoubletAnchorHitZ - deltaZLum) * (outerMiniDoubletAnchorHitRt / innerMiniDoubletAnchorHitRt - 1.f) * (innerMiniDoubletAnchorHitZ > 0.f ? 1.f : dzDrtScale) - zGeom; //slope-correction only on outer end
     float zHi = innerMiniDoubletAnchorHitZ + (innerMiniDoubletAnchorHitZ + deltaZLum) * (outerMiniDoubletAnchorHitRt / innerMiniDoubletAnchorHitRt - 1.f) * (innerMiniDoubletAnchorHitZ < 0.f ? 1.f : dzDrtScale) + zGeom;
 
+    setZOut(outerMiniDoubletAnchorHitZ);
+    setZLo(zLo);
+    setZHi(zHi);
+
+    // Reset passBitsDefaultAlgo_;
+    passBitsDefaultAlgo_ = 0;
+
     // Cut #1: Z compatibility
     if (not (outerMiniDoubletAnchorHitZ >= zLo and outerMiniDoubletAnchorHitZ <= zHi))
     {
@@ -172,8 +238,17 @@ void SDL::Segment::runSegmentDefaultAlgoBarrel(SDL::LogLevel logLevel)
         return;
     }
 
+    // Flag the pass bit
+    passBitsDefaultAlgo_ |= (1 << SegmentSelection::deltaZ);
+
     const float sdCut = sdSlope + sqrt(sdMuls * sdMuls + sdPVoff * sdPVoff);
     const float deltaPhi = innerMiniDoubletAnchorHit.deltaPhi(outerMiniDoubletAnchorHit);
+
+    setRecoVars("sdCut", sdCut);
+    setRecoVars("sdSlope", sdSlope);
+    setRecoVars("sdMuls", sdMuls);
+    setRecoVars("sdPVoff", sdPVoff);
+    setRecoVars("deltaPhi", deltaPhi);
 
     // Cut #2: phi differences between the two minidoublets
     if (not (std::abs(deltaPhi) <= sdCut))
@@ -186,6 +261,9 @@ void SDL::Segment::runSegmentDefaultAlgoBarrel(SDL::LogLevel logLevel)
         passAlgo_ &= (0 << SDL::Default_SGAlgo);
         return;
     }
+
+    // Flag the pass bit
+    passBitsDefaultAlgo_ |= (1 << SegmentSelection::deltaPhiPos);
 
     setDeltaPhiChange(innerMiniDoubletAnchorHit.deltaPhiChange(outerMiniDoubletAnchorHit));
 
@@ -200,6 +278,9 @@ void SDL::Segment::runSegmentDefaultAlgoBarrel(SDL::LogLevel logLevel)
         passAlgo_ &= (0 << SDL::Default_SGAlgo);
         return;
     }
+
+    // Flag the pass bit
+    passBitsDefaultAlgo_ |= (1 << SegmentSelection::slope);
 
     float segmentDr = outerMiniDoubletAnchorHit.rt() - innerMiniDoubletAnchorHit.rt();
     float sdZ = innerMiniDoubletAnchorHit.z();
@@ -250,6 +331,9 @@ void SDL::Segment::runSegmentDefaultAlgoBarrel(SDL::LogLevel logLevel)
         return;
     }
 
+    // Flag the pass bit
+    passBitsDefaultAlgo_ |= (1 << SegmentSelection::alphaRef);
+
     // Cut #5: angle compatibility between mini-doublet and segment
     float dAlpha_outer_md_sg = outer_md_alpha - sg_alpha;
     if (not (std::abs(dAlpha_outer_md_sg) < dAlpha_compat_outer_vs_sg))
@@ -265,6 +349,9 @@ void SDL::Segment::runSegmentDefaultAlgoBarrel(SDL::LogLevel logLevel)
         return;
     }
 
+    // Flag the pass bit
+    passBitsDefaultAlgo_ |= (1 << SegmentSelection::alphaOut);
+
     // Cut #6: angle compatibility between mini-doublet mini-doublets
     float dAlpha_outer_md_inner_md = outer_md_alpha - inner_md_alpha;
     if (not (std::abs(dAlpha_outer_md_inner_md) < dAlpha_compat_inner_vs_outer))
@@ -279,6 +366,9 @@ void SDL::Segment::runSegmentDefaultAlgoBarrel(SDL::LogLevel logLevel)
         passAlgo_ &= (0 << SDL::Default_SGAlgo);
         return;
     }
+
+    // Flag the pass bit
+    passBitsDefaultAlgo_ |= (1 << SegmentSelection::alphaRefOut);
 
     passAlgo_ |= (1 << SDL::Default_SGAlgo);
     return;
