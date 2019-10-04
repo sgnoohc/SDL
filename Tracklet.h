@@ -82,6 +82,7 @@ namespace SDL
             float deltaBeta_;
             float deltaBetaCut_;
 
+            std::map<std::string, float> recovars_;
 
         public:
             Tracklet();
@@ -99,6 +100,8 @@ namespace SDL
             const float& getBetaInCut() const;
             const float& getBetaOut() const;
             const float& getBetaOutCut() const;
+            const std::map<std::string, float>& getRecoVars() const;
+            const float& getRecoVar(std::string) const;
 
             void setDeltaBeta(float);
             void setDeltaBetaCut(float);
@@ -106,6 +109,7 @@ namespace SDL
             void setBetaInCut(float);
             void setBetaOut(float);
             void setBetaOutCut(float);
+            void setRecoVars(std::string, float);
 
             // return whether it passed the algorithm
             bool passesTrackletAlgo(TLAlgo algo) const;
