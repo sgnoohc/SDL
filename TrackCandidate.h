@@ -6,6 +6,7 @@
 #include "Module.h"
 #include "Algo.h"
 #include "Tracklet.h"
+#include "MathUtil.h"
 #include "PrintUtil.h"
 
 namespace SDL
@@ -67,6 +68,7 @@ namespace SDL
             enum TrackCandidateSelection
             {
                 commonSegment = 0,
+                ptConsistency,
                 nCut
             };
 

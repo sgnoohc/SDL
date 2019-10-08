@@ -222,12 +222,20 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
     const float& dz = getDz();
 
     // const float dzCut = lowerModule.moduleType() == SDL::Module::PS ? 10.f : 1.5f; // Could be tighter for PS modules
+
+    //*
+    // const float dzCut = 10.f; // Could be tighter for PS modules
+    // if (not (std::abs(dz) < dzCut)) // If cut fails continue
+    //*
+
+    //*
     const float dzCut = 10.f; // Could be tighter for PS modules
-    // const bool isNotInvertedCrosser = lowerModule.moduleType() == SDL::Module::PS ? true : (lowerHit.z() * dz > 0);
-    // const float sign = ((dz > 0) - (dz < 0)) * ((lowerHit.z() > 0) - (lowerHit.z() < 0));
-    // const float invertedcrossercut = (abs(dz) > 2) * sign;
-    if (not (std::abs(dz) < dzCut)) // If cut fails continue
-    // if (not (std::abs(dz) < dzCut and invertedcrossercut <= 0)) // Adding inverted crosser rejection
+    const bool isNotInvertedCrosser = lowerModule.moduleType() == SDL::Module::PS ? true : (lowerHit.z() * dz > 0);
+    const float sign = ((dz > 0) - (dz < 0)) * ((lowerHit.z() > 0) - (lowerHit.z() < 0));
+    const float invertedcrossercut = (abs(dz) > 2) * sign;
+    if (not (std::abs(dz) < dzCut and invertedcrossercut <= 0)) // Adding inverted crosser rejection
+    //*
+
     {
         if (logLevel >= SDL::Log_Debug3)
         {
