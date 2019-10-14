@@ -519,6 +519,8 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel
     setRecoVars("zLo", zLo);
     setRecoVars("zOut", zOut);
     setRecoVars("betacormode", betacormode);
+    setRecoVars("pt_beta", pt_beta);
+    setRecoVars("betaAv", betaAv);
 
     setDeltaBeta(dBeta);
     setDeltaBetaCut(std::sqrt(dBetaCut2));

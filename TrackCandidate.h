@@ -68,6 +68,7 @@ namespace SDL
             enum TrackCandidateSelection
             {
                 commonSegment = 0,
+                ptBetaConsistency,
                 ptConsistency,
                 nCut
             };

@@ -116,6 +116,19 @@ void SDL::TrackCandidate::runTrackCandidateDefaultAlgo(SDL::LogLevel logLevel)
     // Flag the pass bit
     passBitsDefaultAlgo_ |= (1 << TrackCandidateSelection::commonSegment);
 
+    // if (not (innerTrackletPtr()->getRecoVar("pt_beta") - ))
+    // {
+    //     if (logLevel >= SDL::Log_Debug3)
+    //     {
+    //         SDL::cout << "Failed Cut #2 in " << __FUNCTION__ << std::endl;
+    //     }
+    //     passAlgo_ &= (0 << SDL::Default_TCAlgo);
+    //     // passAlgo_ |= (1 << SDL::Default_TCAlgo);
+    //     return;
+    // }
+    // // Flag the pass bit
+    // passBitsDefaultAlgo_ |= (1 << TrackCandidateSelection::ptBetaConsistency);
+
     SDL::Segment* innerInnerSegment = innerTrackletPtr()->innerSegmentPtr();
     SDL::Segment* innerOuterSegment = innerTrackletPtr()->outerSegmentPtr();
     SDL::Segment* outerInnerSegment = outerTrackletPtr()->innerSegmentPtr();
@@ -145,10 +158,10 @@ void SDL::TrackCandidate::runTrackCandidateDefaultAlgo(SDL::LogLevel logLevel)
     {
         if (logLevel >= SDL::Log_Debug3)
         {
-            SDL::cout << "Failed Cut #2 in " << __FUNCTION__ << std::endl;
+            SDL::cout << "Failed Cut #3 in " << __FUNCTION__ << std::endl;
         }
-        passAlgo_ &= (0 << SDL::Default_TCAlgo);
-        // passAlgo_ |= (1 << SDL::Default_TCAlgo);
+        // passAlgo_ &= (0 << SDL::Default_TCAlgo);
+        passAlgo_ |= (1 << SDL::Default_TCAlgo);
         return;
     }
     // Flag the pass bit
