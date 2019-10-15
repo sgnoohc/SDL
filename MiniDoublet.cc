@@ -251,7 +251,7 @@ bool SDL::MiniDoublet::passesMiniDoubletAlgo_dZ(SDL::MDAlgo algo) const
 
 bool SDL::MiniDoublet::passesMiniDoubletAlgo_dPhi(SDL::MDAlgo algo) const
 {
-  return passAlgoDPhi_ & (2 << algo);
+  return passAlgoDPhi_ & (1 << algo);
 }
 
 bool SDL::MiniDoublet::passesMiniDoubletAlgo_dPhiChange(SDL::MDAlgo algo) const
