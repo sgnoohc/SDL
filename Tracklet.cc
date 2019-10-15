@@ -534,8 +534,8 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel
             SDL::cout <<  " betaInRHmin: " << betaInRHmin <<  " betaInRHmax: " << betaInRHmax <<  std::endl;
             SDL::cout <<  " betaOutRHmin: " << betaOutRHmin <<  " betaOutRHmax: " << betaOutRHmax <<  std::endl;
         }
-        // passAlgo_ &= (0 << SDL::Default_TLAlgo);
-        passAlgo_ |= (1 << SDL::Default_TLAlgo);
+        passAlgo_ &= (0 << SDL::Default_TLAlgo);
+        // passAlgo_ |= (1 << SDL::Default_TLAlgo);
         return;
     }
     else if (logLevel >= SDL::Log_Debug3)
