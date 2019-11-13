@@ -22,6 +22,7 @@ namespace SDL
         float ptEstimateFromDeltaPhiChangeAndRt(float dphiChange, float rt);
         float dphiEstimateFromPtAndRt(float pt, float rt);
         SDL::Hit getCenterFromThreePoints(SDL::Hit& hit1, SDL::Hit& hit2, SDL::Hit& hit3);
+        float angleCorr(float dr, float pt, float angle);
 
     }
 }

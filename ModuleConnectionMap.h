@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 #include <sstream>
+#include <algorithm>
 
 namespace SDL
 {
@@ -21,9 +22,10 @@ namespace SDL
             ~ModuleConnectionMap();
 
             void load(std::string);
+            void add(std::string);
             void print();
 
-            std::vector<unsigned int> getConnectedModuleDetIds(unsigned int detid);
+            const std::vector<unsigned int>& getConnectedModuleDetIds(unsigned int detid);
 
     };
 
