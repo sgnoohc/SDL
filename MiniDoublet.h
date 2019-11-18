@@ -53,6 +53,7 @@ namespace SDL
             float dphi_noshift_;
             float dphichange_;
             float dphichange_noshift_;
+            float drt_;
 
             //cuts from outside
             float dzCut_;
@@ -78,6 +79,7 @@ namespace SDL
             const Hit& getLowerShiftedHit() const;
             const Hit& getUpperShiftedHit() const;
             const float& getDz() const;
+            const float& getDrt() const;
             const float& getShiftedDz() const;
             const float& getDeltaPhi() const;
             const float& getDeltaPhiChange() const;
@@ -88,6 +90,7 @@ namespace SDL
             void setLowerShiftedHit(float, float, float, int=-1);
             void setUpperShiftedHit(float, float, float, int=-1);
             void setDz(float);
+            void setDrt(float);
             void setShiftedDz(float);
             void setDeltaPhi(float);
             void setDeltaPhiChange(float);

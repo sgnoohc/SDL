@@ -19,6 +19,7 @@ SDL::MiniDoublet::MiniDoublet(const MiniDoublet& md): lowerHitPtr_(md.lowerHitPt
                                                       lowerShiftedHit_(md.getLowerShiftedHit())
                                                       ,upperShiftedHit_(md.getUpperShiftedHit())
                                                       ,dz_(md.getDz())
+                                                      ,drt_(md.getDrt())
                                                       ,shiftedDz_(md.getShiftedDz())
                                                       ,dphi_(md.getDeltaPhi())
                                                       ,dphi_noshift_(md.getDeltaPhiNoShift())
@@ -39,6 +40,7 @@ SDL::MiniDoublet::MiniDoublet(SDL::Hit* lowerHitPtr, SDL::Hit* upperHitPtr) : lo
                                                       passAlgoDrt_(0),
                                                       passAlgoDPhiChange_(0),
                                                       dz_(0)
+                                                      ,drt_(0)
                                                       ,shiftedDz_(0)
                                                       ,dphi_(0)
                                                       ,dphi_noshift_(0)
@@ -130,6 +132,11 @@ const float& SDL::MiniDoublet::getDz() const
     return dz_;
 }
 
+const float& SDL::MiniDoublet::getDrt() const
+{
+    return drt_;
+}
+
 const float& SDL::MiniDoublet::getShiftedDz() const
 {
     return shiftedDz_;
@@ -211,6 +218,11 @@ void SDL::MiniDoublet::setUpperShiftedHit(float x, float y, float z, int idx)
 void SDL::MiniDoublet::setDz(float dz)
 {
     dz_ = dz;
+}
+
+void SDL::MiniDoublet::setDrt(float drt)
+{
+    drt_ = drt;
 }
 
 void SDL::MiniDoublet::setShiftedDz(float shiftedDz)
@@ -565,6 +577,7 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
     // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3100
     const float drtCut = drtCut_ < 0 ? 10.f : drtCut_; // i.e. should be smaller than the module length. Could be tighter if PS modules
     float drt = std::abs(lowerHit.rt() - upperHit.rt());
+    setDrt(drt);
     if (not (drt < drtCut)) // If cut fails continue
     {
         if (logLevel >= SDL::Log_Debug2)
