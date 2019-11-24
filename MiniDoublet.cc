@@ -329,9 +329,24 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
 
     setDz(lowerHit.z() - upperHit.z());
     const float& dz = getDz();
-
-
-    const float dzCut = dzCut_ < 0 ? 10.f : dzCut_; // Could be tighter for PS modules
+    
+    float dzCut;
+    if(dzCut_ < 0)
+    {
+        //cut at dz = 2 for barrel PS modules
+        if(lowerModule.moduleLayerType() == SDL::Module::PS)
+        {
+            dzCut = 2.f;
+        }
+        else
+        {
+            dzCut = 10.f;
+        }
+    }
+    else
+    {
+        dzCut = dzCut_;
+    }
     if (not (std::abs(dz) < dzCut)) // If cut fails continue
     // if (not (std::abs(dz) < dzCut and invertedcrossercut <= 0)) // Adding inverted crosser rejection
     {
@@ -575,7 +590,22 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
 
     // Cut #2 : drt cut. The dz difference can't be larger than 1cm. (max separation is 4mm for modules in the endcap)
     // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3100
-    const float drtCut = drtCut_ < 0 ? 10.f : drtCut_; // i.e. should be smaller than the module length. Could be tighter if PS modules
+    float drtCut;
+    if(drtCut_ < 0)
+    {
+        if(lowerModule.moduleLayerType() == SDL::Module::PS)
+        {
+            drtCut = 2.f;
+        }
+        else
+        {
+            drtCut = 10.f;
+        }
+    }
+    else
+    {
+        drtCut = drtCut_;
+    }
     float drt = std::abs(lowerHit.rt() - upperHit.rt());
     setDrt(drt);
     if (not (drt < drtCut)) // If cut fails continue
