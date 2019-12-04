@@ -64,6 +64,9 @@ namespace SDL
             // Some reco'ed quantities
             float rtOut_; // Rt of the outer mini-doublet (anchor hit = pixel hit, if available)
             float rtIn_; // Rt of the inner mini-doublet (anchor hit = pixel hit, if available)
+            float rtLo_;
+            float rtHi_;
+
             float dphichange_;
 
             float zOut_;
@@ -84,6 +87,8 @@ namespace SDL
             const int& getPassBitsDefaultAlgo() const;
             const float& getRtOut() const;
             const float& getRtIn() const;
+            const float& getRtLo() const;
+            const float& getRtHi() const;
             const float& getDeltaPhiChange() const;
             const float& getZOut() const;
             const float& getZLo() const;
@@ -93,6 +98,8 @@ namespace SDL
 
             void setRtOut(float);
             void setRtIn(float);
+            void setRtLo(float);
+            void setRtHi(float);
             void setDeltaPhiChange(float);
             void setZOut(float);
             void setZLo(float);

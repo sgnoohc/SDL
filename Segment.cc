@@ -19,6 +19,8 @@ SDL::Segment::Segment(const Segment& sg) :
     zOut_(sg.getZOut()),
     zLo_(sg.getZLo()),
     zHi_(sg.getZHi()),
+    rtLo_(sg.getRtLo()),
+    rtHi_(sg.getRtHi()),
     recovars_(sg.getRecoVars())
 {
 }
@@ -33,7 +35,9 @@ SDL::Segment::Segment(SDL::MiniDoublet* innerMiniDoubletPtr, SDL::MiniDoublet* o
     dphichange_(0),
     zOut_(0),
     zLo_(0),
-    zHi_(0)
+    zHi_(0),
+    rtLo_(0),
+    rtHi_(0)
 {
 }
 
@@ -87,6 +91,16 @@ const float& SDL::Segment::getZHi() const
     return zHi_;
 }
 
+const float& SDL::Segment::getRtLo() const
+{
+    return rtLo_;
+}
+
+const float& SDL::Segment::getRtHi() const
+{
+    return rtHi_;
+}
+
 const std::map<std::string, float>& SDL::Segment::getRecoVars() const
 {
     return recovars_;
@@ -100,6 +114,16 @@ const float& SDL::Segment::getRecoVar(std::string key) const
 void SDL::Segment::setRtOut(float rt)
 {
     rtOut_ = rt;
+}
+
+void SDL::Segment::setRtLo(float rt)
+{
+    rtLo_ = rt;
+}
+
+void SDL::Segment::setRtHi(float rt)
+{
+    rtHi_ = rt;
 }
 
 void SDL::Segment::setRtIn(float rt)
@@ -406,6 +430,7 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
     setRtOut(outerMiniDoubletAnchorHitRt);
     setRtIn(innerMiniDoubletAnchorHitRt);
 
+
     const float sdSlope = std::asin(std::min(outerMiniDoubletAnchorHitRt * k2Rinv1GeVf / ptCut, sinAlphaMax));
     // const float sdPVoff = 0.1f / outerMiniDoubletAnchorHitRt;
     // const float dzDrtScale = std::tan(sdSlope) / sdSlope; //FIXME: need approximate value
@@ -441,6 +466,11 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
     const float drtDzScale = sdSlope / std::tan(sdSlope); //FIXME: need approximate value
     float rtLo = std::max(innerMiniDoubletAnchorHitRt * (1.f + dz / (innerMiniDoubletAnchorHitZ + dLum) * drtDzScale) - rtGeom, innerMiniDoubletAnchorHitRt - 0.5f * rtGeom); //rt should increase
     float rtHi = innerMiniDoubletAnchorHitRt * (outerMiniDoubletAnchorHitZ - dLum) / (innerMiniDoubletAnchorHitZ - dLum) + rtGeom; //dLum for luminous; rGeom for measurement size; no tanTheta_loc(pt) correction
+
+
+    setRtLo(rtLo);
+    setRtHi(rtHi);
+
     if (not (outerMiniDoubletAnchorHitRt >= rtLo and outerMiniDoubletAnchorHitRt <= rtHi))
     {
         if (logLevel >= SDL::Log_Debug3)
@@ -458,6 +488,9 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
     const float sdCut = sdSlope;
     // const float sdCut = sdSlope + sqrt(sdMuls * sdMuls + sdPVoff * sdPVoff);
     const float dPhiPos = innerMiniDoubletAnchorHit.deltaPhi(outerMiniDoubletAnchorHit);
+    setRecoVars("sdCut",sdCut);
+    setRecoVars("sdSlope",sdSlope);
+    setRecoVars("deltaPhi",dPhiPos);
     if (not (std::abs(dPhiPos) <= sdCut))
     {
         if (logLevel >= SDL::Log_Debug3)
