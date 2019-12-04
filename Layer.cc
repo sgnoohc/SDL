@@ -29,6 +29,27 @@ const std::vector<std::pair<std::pair<int, SDL::Layer::SubDet>, std::pair<int, S
     // {{5, SDL::Layer::Barrel},{1, SDL::Layer::Endcap}},
 };
 
+const std::vector<std::pair<std::pair<int, SDL::Layer::SubDet>, std::pair<int, SDL::Layer::SubDet>>> SDL::Layer::segment_compatible_layer_pairs_ =
+{
+    {{1, SDL::Layer::Barrel},{2, SDL::Layer::Barrel}},
+    {{2, SDL::Layer::Barrel},{3, SDL::Layer::Barrel}},
+    {{3, SDL::Layer::Barrel},{4, SDL::Layer::Barrel}},
+    {{4, SDL::Layer::Barrel},{5, SDL::Layer::Barrel}},
+    {{5, SDL::Layer::Barrel},{6, SDL::Layer::Barrel}},
+    {{1, SDL::Layer::Barrel},{1, SDL::Layer::Endcap}},
+    {{2, SDL::Layer::Barrel},{1, SDL::Layer::Endcap}},
+    {{3, SDL::Layer::Barrel},{1, SDL::Layer::Endcap}},
+    {{4, SDL::Layer::Barrel},{1, SDL::Layer::Endcap}},
+    {{5, SDL::Layer::Barrel},{1, SDL::Layer::Endcap}},
+    {{1, SDL::Layer::Endcap},{2, SDL::Layer::Endcap}},
+    {{2, SDL::Layer::Endcap},{3, SDL::Layer::Endcap}},
+    {{2, SDL::Layer::Endcap},{4, SDL::Layer::Endcap}},
+    {{2, SDL::Layer::Endcap},{5, SDL::Layer::Endcap}},
+    {{3, SDL::Layer::Endcap},{4, SDL::Layer::Endcap}},
+    {{4, SDL::Layer::Endcap},{5, SDL::Layer::Endcap}},
+};
+
+
 SDL::Layer::Layer()
 {
 }
@@ -51,6 +72,11 @@ const int& SDL::Layer::layerIdx() const
     return layer_idx_;
 }
 
+const std::vector<SDL::MiniDoublet*>& SDL::Layer::getMiniDoubletPtrs() const
+{
+    return minidoublets_;
+}
+
 const std::vector<SDL::Segment*>& SDL::Layer::getSegmentPtrs() const
 {
     return segments_;
@@ -71,6 +97,11 @@ const std::vector<std::pair<std::pair<int, SDL::Layer::SubDet>, std::pair<int, S
     return SDL::Layer::tracklet_compatible_layer_pairs_;
 }
 
+const std::vector<std::pair<std::pair<int, SDL::Layer::SubDet>, std::pair<int, SDL::Layer::SubDet>>>& SDL::Layer::getListOfSegmentCompatibleLayerPairs()
+{
+    return SDL::Layer::segment_compatible_layer_pairs_;
+}
+
 void SDL::Layer::setLayerIdx(int lidx)
 {
     layer_idx_ = lidx;
@@ -79,6 +110,11 @@ void SDL::Layer::setLayerIdx(int lidx)
 void SDL::Layer::setSubDet(SDL::Layer::SubDet subdet)
 {
     subdet_ = subdet;
+}
+
+void SDL::Layer::addMiniDoublet(SDL::MiniDoublet* md)
+{
+    minidoublets_.push_back(md);
 }
 
 void SDL::Layer::addSegment(SDL::Segment* sg)

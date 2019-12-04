@@ -101,6 +101,19 @@ void SDL::Event::addHitToModule(SDL::Hit hit, unsigned int detId)
     getModule(detId).addHit(&(hits_.back()));
 }
 
+void SDL::Event::addMiniDoubletToEvent(SDL::MiniDoublet md, unsigned int detId, int layerIdx, SDL::Layer::SubDet subdet)
+{
+    // Add to global list of mini doublets, where it will hold the object's instance
+    miniDoublets_.push_back(md);
+
+    // And get the module (if not exists, then create), and add the address to Module.hits_
+    getModule(detId).addMiniDoublet(&(miniDoublets_.back()));
+
+    // And get the layer
+    getLayer(layerIdx, subdet).addMiniDoublet(&(miniDoublets_.back()));
+}
+
+[[deprecated("SDL:: addMiniDoubletToLowerModule() is deprecated. Use addMiniDoubletToEvent")]]
 void SDL::Event::addMiniDoubletToLowerModule(SDL::MiniDoublet md, unsigned int detId)
 {
     // Add to global list of mini doublets, where it will hold the object's instance
@@ -110,6 +123,19 @@ void SDL::Event::addMiniDoubletToLowerModule(SDL::MiniDoublet md, unsigned int d
     getModule(detId).addMiniDoublet(&(miniDoublets_.back()));
 }
 
+void SDL::Event::addSegmentToEvent(SDL::Segment sg, unsigned int detId, int layerIdx, SDL::Layer::SubDet subdet)
+{
+    // Add to global list of segments, where it will hold the object's instance
+    segments_.push_back(sg);
+
+    // And get the module (if not exists, then create), and add the address to Module.hits_
+    getModule(detId).addSegment(&(segments_.back()));
+
+    // And get the layer andd the segment to it
+    getLayer(layerIdx, subdet).addSegment(&(segments_.back()));
+}
+
+[[deprecated("SDL:: addSegmentToLowerModule() is deprecated. Use addSegmentToEvent")]]
 void SDL::Event::addSegmentToLowerModule(SDL::Segment sg, unsigned int detId)
 {
     // Add to global list of segments, where it will hold the object's instance
@@ -119,6 +145,7 @@ void SDL::Event::addSegmentToLowerModule(SDL::Segment sg, unsigned int detId)
     getModule(detId).addSegment(&(segments_.back()));
 }
 
+[[deprecated("SDL:: addSegmentToLowerLayer() is deprecated. Use addSegmentToEvent")]]
 void SDL::Event::addSegmentToLowerLayer(SDL::Segment sg, int layerIdx, SDL::Layer::SubDet subdet)
 {
     // Add to global list of segments, where it will hold the object's instance
@@ -188,7 +215,12 @@ void SDL::Event::createMiniDoubletsFromLowerModule(unsigned int detId, SDL::MDAl
             mdCand.runMiniDoubletAlgo(algo, logLevel_);
 
             if (mdCand.passesMiniDoubletAlgo(algo))
-                addMiniDoubletToLowerModule(mdCand, lowerModule.detId());
+            {
+                if (lowerModule.subdet() == SDL::Module::Barrel)
+                    addMiniDoubletToEvent(mdCand, lowerModule.detId(), lowerModule.layer(), SDL::Layer::Barrel);
+                else
+                    addMiniDoubletToEvent(mdCand, lowerModule.detId(), lowerModule.layer(), SDL::Layer::Endcap);
+            }
 
         }
 
@@ -197,6 +229,19 @@ void SDL::Event::createMiniDoubletsFromLowerModule(unsigned int detId, SDL::MDAl
 }
 
 void SDL::Event::createSegments(SGAlgo algo)
+{
+
+    for (auto& segment_compatible_layer_pair : SDL::Layer::getListOfSegmentCompatibleLayerPairs())
+    {
+        int innerLayerIdx = segment_compatible_layer_pair.first.first;
+        SDL::Layer::SubDet innerLayerSubDet = segment_compatible_layer_pair.first.second;
+        int outerLayerIdx = segment_compatible_layer_pair.second.first;
+        SDL::Layer::SubDet outerLayerSubDet = segment_compatible_layer_pair.second.second;
+        createSegmentsFromTwoLayers(innerLayerIdx, innerLayerSubDet, outerLayerIdx, outerLayerSubDet, algo);
+    }
+}
+
+void SDL::Event::createSegmentsWithModuleMap(SGAlgo algo)
 {
     // Loop over lower modules
     for (auto& lowerModulePtr : getLowerModulePtrs())
@@ -230,7 +275,7 @@ void SDL::Event::createSegmentsFromInnerLowerModule(unsigned int detId, SDL::SGA
         SDL::MiniDoublet& innerMiniDoublet = *innerMiniDoubletPtr;
 
         // Get connected outer lower module detids
-        std::vector<unsigned int> connectedModuleDetIds = moduleConnectionMap.getConnectedModuleDetIds(detId);
+        const std::vector<unsigned int>& connectedModuleDetIds = moduleConnectionMap.getConnectedModuleDetIds(detId);
 
         // Loop over connected outer lower modules
         for (auto& outerLowerModuleDetId : connectedModuleDetIds)
@@ -257,11 +302,10 @@ void SDL::Event::createSegmentsFromInnerLowerModule(unsigned int detId, SDL::SGA
 
                 if (sgCand.passesSegmentAlgo(algo))
                 {
-                    addSegmentToLowerModule(sgCand, innerLowerModule.detId());
                     if (innerLowerModule.subdet() == SDL::Module::Barrel)
-                        addSegmentToLowerLayer(sgCand, innerLowerModule.layer(), SDL::Layer::Barrel);
+                        addSegmentToEvent(sgCand, innerLowerModule.detId(), innerLowerModule.layer(), SDL::Layer::Barrel);
                     else
-                        addSegmentToLowerLayer(sgCand, innerLowerModule.layer(), SDL::Layer::Endcap);
+                        addSegmentToEvent(sgCand, innerLowerModule.detId(), innerLowerModule.layer(), SDL::Layer::Endcap);
                 }
 
             }
@@ -306,6 +350,37 @@ void SDL::Event::createTrackletsFromTwoLayers(int innerLayerIdx, SDL::Layer::Sub
             if (tlCand.passesTrackletAlgo(algo))
             {
                 addTrackletToLowerLayer(tlCand, innerLayerIdx, innerLayerSubDet);
+            }
+
+        }
+    }
+}
+
+// Create segments from two layers (inefficient way)
+void SDL::Event::createSegmentsFromTwoLayers(int innerLayerIdx, SDL::Layer::SubDet innerLayerSubDet, int outerLayerIdx, SDL::Layer::SubDet outerLayerSubDet, SGAlgo algo)
+{
+    Layer& innerLayer = getLayer(innerLayerIdx, innerLayerSubDet);
+    Layer& outerLayer = getLayer(outerLayerIdx, outerLayerSubDet);
+
+    for (auto& innerMiniDoubletPtr : innerLayer.getMiniDoubletPtrs())
+    {
+        SDL::MiniDoublet& innerMiniDoublet = *innerMiniDoubletPtr;
+
+        for (auto& outerMiniDoubletPtr : outerLayer.getMiniDoubletPtrs())
+        {
+            SDL::MiniDoublet& outerMiniDoublet = *outerMiniDoubletPtr;
+
+            SDL::Segment sgCand(innerMiniDoubletPtr, outerMiniDoubletPtr);
+
+            sgCand.runSegmentAlgo(algo, logLevel_);
+
+            if (sgCand.passesSegmentAlgo(algo))
+            {
+                const SDL::Module& innerLowerModule = innerMiniDoubletPtr->lowerHitPtr()->getModule();
+                if (innerLowerModule.subdet() == SDL::Module::Barrel)
+                    addSegmentToEvent(sgCand, innerLowerModule.detId(), innerLowerModule.layer(), SDL::Layer::Barrel);
+                else
+                    addSegmentToEvent(sgCand, innerLowerModule.detId(), innerLowerModule.layer(), SDL::Layer::Endcap);
             }
 
         }

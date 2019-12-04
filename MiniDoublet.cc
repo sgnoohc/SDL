@@ -866,8 +866,19 @@ float SDL::MiniDoublet::dPhiThreshold(const SDL::Hit& lowerHit, const SDL::Modul
     // =================================================================
     const float kRinv1GeVf = (2.99792458e-3 * 3.8);
     const float k2Rinv1GeVf = kRinv1GeVf / 2.;
-    const float ptCut = PTCUT;
-    const float sinAlphaMax = 0.95;
+    // const float ptCut = PTCUT;
+    // const float sinAlphaMax = 0.95;
+    float ptCut = 1;
+    // std::cout <<  " module.layer(): " << module.layer() <<  std::endl;
+    // if (module.layer() == 6 or module.layer() == 5)
+    // {
+    //     ptCut = 0.96;
+    // }
+    float sinAlphaMax = 0.95;
+    // if (module.layer() == 6)
+    // {
+    //     sinAlphaMax = 2.95;
+    // }
     // p2Sim.directionT-r2Sim.directionT smearing around the mean computed with ptSim,rSim
     // (1 sigma based on 95.45% = 2sigma at 2 GeV)
     std::array<float, 6> miniMulsPtScaleBarrel {0.0052, 0.0038, 0.0034, 0.0034, 0.0032, 0.0034};

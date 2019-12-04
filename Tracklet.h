@@ -2,6 +2,7 @@
 #define Tracklet_h
 
 #include <iomanip>
+#include <functional>
 
 #include "Module.h"
 #include "Algo.h"

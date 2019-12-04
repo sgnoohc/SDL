@@ -5,6 +5,7 @@
 #include "TiltedGeometry.h"
 #include "Module.h"
 #include "Algo.h"
+#include "ModuleConnectionMap.h"
 
 namespace SDL
 {
@@ -48,13 +49,14 @@ namespace SDL
         public:
             enum SegmentSelection
             {
-                deltaZ = 0,
-                deltaPhiPos = 1,
-                slope=2,
-                alphaRef=3,
-                alphaOut=4,
-                alphaRefOut=5,
-                nCut=6
+                moduleCompatible = 0,
+                deltaZ = 1,
+                deltaPhiPos = 2,
+                slope=3,
+                alphaRef=4,
+                alphaOut=5,
+                alphaRefOut=6,
+                nCut=7
             };
 
         private:

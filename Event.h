@@ -85,7 +85,13 @@ namespace SDL
             void addHitToModule(Hit hit, unsigned int detId);
 
             // MiniDoublet related functions
+            void addMiniDoubletToEvent(SDL::MiniDoublet md, unsigned int detId, int layerIdx, SDL::Layer::SubDet subdet);
+
+            // MiniDoublet related functions
             void addMiniDoubletToLowerModule(MiniDoublet md, unsigned int detId);
+
+            // Segment related functions
+            void addSegmentToEvent(SDL::Segment sg, unsigned int detId, int layerIdx, SDL::Layer::SubDet subdet);
 
             // Segment related functions
             void addSegmentToLowerModule(Segment md, unsigned int detId);
@@ -110,6 +116,12 @@ namespace SDL
 
             // Create segments for a lower module
             void createSegmentsFromInnerLowerModule(unsigned int detId, SGAlgo algo=Default_SGAlgo);
+
+            // Create segments
+            void createSegmentsWithModuleMap(SGAlgo algo=Default_SGAlgo);
+
+            // Create segments
+            void createSegmentsFromTwoLayers(int innerLayerIdx, SDL::Layer::SubDet innerLayerSubDet, int outerLayerIdx, SDL::Layer::SubDet outerLayerSubDet, SGAlgo algo=Default_SGAlgo);
 
             // Create tracklets
             void createTracklets(TLAlgo algo=Default_TLAlgo);

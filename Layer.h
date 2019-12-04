@@ -4,12 +4,14 @@
 #include <vector>
 #include <tuple>
 
+#include "MiniDoublet.h"
 #include "Segment.h"
 #include "Tracklet.h"
 #include "TrackCandidate.h"
 
 namespace SDL
 {
+    class MiniDoublet;
     class Segment;
     class TrackCandidate;
 }
@@ -60,6 +62,9 @@ namespace SDL
             // whether it is barrel or endcap (this distinction was added as horizontal vs. vertical alignment is a pretty big geometrical difference.)
             unsigned short subdet_;
 
+            // vector of mini-doublets
+            std::vector<MiniDoublet*> minidoublets_;
+
             // vector of segments (This is used for the inefficient approach of looping over all segements in each layer)
             std::vector<Segment*> segments_;
 
@@ -74,6 +79,9 @@ namespace SDL
             // Compatible layer information for Tracklet
             static const std::vector<std::pair<std::pair<int, SubDet>, std::pair<int, SubDet>>> tracklet_compatible_layer_pairs_;
 
+            // Compatible layer information for Segments
+            static const std::vector<std::pair<std::pair<int, SubDet>, std::pair<int, SubDet>>> segment_compatible_layer_pairs_;
+
 
         public:
 
@@ -85,14 +93,17 @@ namespace SDL
             // accessor
             const unsigned short& subdet() const;
             const int& layerIdx() const;
+            const std::vector<MiniDoublet*>& getMiniDoubletPtrs() const;
             const std::vector<Segment*>& getSegmentPtrs() const;
             const std::vector<Tracklet*>& getTrackletPtrs() const;
             const std::vector<TrackCandidate*>& getTrackCandidatePtrs() const;
             static const std::vector<std::pair<std::pair<int, SubDet>, std::pair<int, SubDet>>>& getListOfTrackletCompatibleLayerPairs();
+            static const std::vector<std::pair<std::pair<int, SubDet>, std::pair<int, SubDet>>>& getListOfSegmentCompatibleLayerPairs();
 
             // modifier
             void setLayerIdx(int lidx);
             void setSubDet(SubDet subdet);
+            void addMiniDoublet(MiniDoublet* md);
             void addSegment(Segment* sg);
             void addTracklet(Tracklet* tl);
             void addTrackCandidate(TrackCandidate* tl);

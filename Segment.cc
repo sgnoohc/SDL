@@ -181,6 +181,25 @@ void SDL::Segment::runSegmentAlgo(SDL::SGAlgo algo, SDL::LogLevel logLevel)
 
 void SDL::Segment::runSegmentAllCombAlgo()
 {
+
+    passAlgo_ |= (1 << SDL::AllComb_SGAlgo);
+    // return;
+
+    const MiniDoublet& innerMiniDoublet = (*innerMiniDoubletPtr());
+    const MiniDoublet& outerMiniDoublet = (*outerMiniDoubletPtr());
+
+    const Hit& innerAnchorHit = (*innerMiniDoublet.anchorHitPtr());
+    const Hit& outerAnchorHit = (*outerMiniDoublet.anchorHitPtr());
+
+    float dr = outerAnchorHit.rt() - innerAnchorHit.rt();
+
+    // // Cut #0: Module compatibility
+    // if (not (dr < 35.))
+    // {
+    //     passAlgo_ &= (0 << SDL::AllComb_SGAlgo);
+    //     return;
+    // }
+
     passAlgo_ |= (1 << SDL::AllComb_SGAlgo);
 }
 
@@ -207,6 +226,41 @@ void SDL::Segment::runSegmentDefaultAlgoBarrel(SDL::LogLevel logLevel)
 
     const Module& innerLowerModule = innerMiniDoublet.lowerHitPtr()->getModule();
     const Module& outerLowerModule = outerMiniDoublet.lowerHitPtr()->getModule();
+
+    // Reset passBitsDefaultAlgo_;
+    passBitsDefaultAlgo_ = 0;
+
+    // Get connected outer lower module detids
+    const std::vector<unsigned int>& connectedModuleDetIds = moduleConnectionMap.getConnectedModuleDetIds(innerLowerModule.detId());
+
+    // Loop over connected outer lower modules
+    bool found = false;
+    for (auto& outerLowerModuleDetId : connectedModuleDetIds)
+    {
+        if (outerLowerModule.detId() == outerLowerModuleDetId)
+        {
+            found = true;
+            break;
+        }
+    }
+
+    // bool isOuterEndcap = (outerLowerModule.subdet() == SDL::Module::Endcap);
+    bool isOuterEndcap = false;
+
+    // Cut #0: Module compatibility
+    if (not (found or isOuterEndcap))
+    {
+        if (logLevel >= SDL::Log_Debug3)
+        {
+            SDL::cout << "Failed Cut #0 in " << __FUNCTION__ << std::endl;
+            SDL::cout <<  " innerLowerModule.detId(): " << innerLowerModule.detId() <<  " outerLowerModule.detId(): " << outerLowerModule.detId() << std::endl;
+        }
+        passAlgo_ &= (0 << SDL::Default_SGAlgo);
+        return;
+    }
+
+    // Flag the pass bit
+    passBitsDefaultAlgo_ |= (1 << SegmentSelection::moduleCompatible);
 
     // Constants
     const float kRinv1GeVf = (2.99792458e-3 * 3.8);
@@ -246,9 +300,6 @@ void SDL::Segment::runSegmentDefaultAlgoBarrel(SDL::LogLevel logLevel)
     setZOut(outerMiniDoubletAnchorHitZ);
     setZLo(zLo);
     setZHi(zHi);
-
-    // Reset passBitsDefaultAlgo_;
-    passBitsDefaultAlgo_ = 0;
 
     // Cut #1: Z compatibility
     if (not (outerMiniDoubletAnchorHitZ >= zLo and outerMiniDoubletAnchorHitZ <= zHi))
@@ -405,6 +456,40 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
 
     const Module& innerLowerModule = innerMiniDoublet.lowerHitPtr()->getModule();
     const Module& outerLowerModule = outerMiniDoublet.lowerHitPtr()->getModule();
+
+    // Reset passBitsDefaultAlgo_;
+    passBitsDefaultAlgo_ = 0;
+
+    // Get connected outer lower module detids
+    const std::vector<unsigned int>& connectedModuleDetIds = moduleConnectionMap.getConnectedModuleDetIds(innerLowerModule.detId());
+
+    // Loop over connected outer lower modules
+    bool found = false;
+    for (auto& outerLowerModuleDetId : connectedModuleDetIds)
+    {
+        if (outerLowerModule.detId() == outerLowerModuleDetId)
+        {
+            found = true;
+            break;
+        }
+    }
+
+    bool islayer2ring1or2or3 = (innerLowerModule.ring() == 1 or innerLowerModule.ring() == 2 or innerLowerModule.ring() == 3) and innerLowerModule.layer() == 2;
+
+    // Cut #0: Module compatibility
+    if (not (found or islayer2ring1or2or3))
+    {
+        if (logLevel >= SDL::Log_Debug3)
+        {
+            SDL::cout << "Failed Cut #0 in " << __FUNCTION__ << std::endl;
+            SDL::cout <<  " innerLowerModule.detId(): " << innerLowerModule.detId() <<  " outerLowerModule.detId(): " << outerLowerModule.detId() << std::endl;
+        }
+        passAlgo_ &= (0 << SDL::Default_SGAlgo);
+        return;
+    }
+
+    // Flag the pass bit
+    passBitsDefaultAlgo_ |= (1 << SegmentSelection::moduleCompatible);
 
     // Constants
     const float kRinv1GeVf = (2.99792458e-3 * 3.8);

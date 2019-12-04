@@ -100,3 +100,11 @@ SDL::Hit SDL::MathUtil::getCenterFromThreePoints(SDL::Hit& hitA, SDL::Hit& hitB,
     return SDL::Hit(x, y, 0);
 
 }
+
+float SDL::MathUtil::angleCorr(float dr, float pt, float angle)
+{
+    const float kRinv1GeVf = (2.99792458e-3 * 3.8);
+    const float k2Rinv1GeVf = kRinv1GeVf / 2.;
+    const float sinAlphaMax = 0.95;
+    return copysign(std::asin(std::min(dr * k2Rinv1GeVf / std::abs(pt), sinAlphaMax)), angle);
+}
