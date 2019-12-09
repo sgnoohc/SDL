@@ -11,6 +11,8 @@
 namespace SDL{
     class MiniDoublet;
     class Segment;
+    class Triplet;
+    class Tracklet;
     class Hit;
 }
 
@@ -239,6 +241,12 @@ namespace SDL
             // vector of segment pointers
             std::vector<Segment*> segments_;
 
+            // vector of triplet pointers
+            std::vector<Triplet*> triplets_;
+
+            // vector of tracklet pointers
+            std::vector<Tracklet*> tracklets_;
+
             void setDerivedQuantities();
 
         public:
@@ -265,12 +273,16 @@ namespace SDL
             const std::vector<Hit*>& getHitPtrs() const;
             const std::vector<MiniDoublet*>& getMiniDoubletPtrs() const;
             const std::vector<Segment*>& getSegmentPtrs() const;
+            const std::vector<Triplet*>& getTripletPtrs() const;
+            const std::vector<Tracklet*>& getTrackletPtrs() const;
 
             // modifying the class content
             void setDetId(unsigned int);
             void addHit(Hit* hit);
             void addMiniDoublet(MiniDoublet* md);
             void addSegment(Segment* sg);
+            void addTriplet(Triplet* tp);
+            void addTracklet(Tracklet* tp);
 
             // static functions to parse detId
             static unsigned short parseSubdet(unsigned int);

@@ -647,20 +647,27 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
     return;
 }
 
-bool SDL::Segment::isIdxMatched(const Segment& md) const
+bool SDL::Segment::hasCommonMiniDoublet(const Segment& outer_sg) const
 {
-    if (not innerMiniDoubletPtr_->isIdxMatched(*(md.innerMiniDoubletPtr())))
-        return false;
-    if (not outerMiniDoubletPtr_->isIdxMatched(*(md.outerMiniDoubletPtr())))
+    if (not outerMiniDoubletPtr()->isIdxMatched(*(outer_sg.innerMiniDoubletPtr())))
         return false;
     return true;
 }
 
-bool SDL::Segment::isAnchorHitIdxMatched(const Segment& md) const
+bool SDL::Segment::isIdxMatched(const Segment& sg) const
 {
-    if (not innerMiniDoubletPtr_->isAnchorHitIdxMatched(*(md.innerMiniDoubletPtr())))
+    if (not innerMiniDoubletPtr_->isIdxMatched(*(sg.innerMiniDoubletPtr())))
         return false;
-    if (not outerMiniDoubletPtr_->isAnchorHitIdxMatched(*(md.outerMiniDoubletPtr())))
+    if (not outerMiniDoubletPtr_->isIdxMatched(*(sg.outerMiniDoubletPtr())))
+        return false;
+    return true;
+}
+
+bool SDL::Segment::isAnchorHitIdxMatched(const Segment& sg) const
+{
+    if (not innerMiniDoubletPtr_->isAnchorHitIdxMatched(*(sg.innerMiniDoubletPtr())))
+        return false;
+    if (not outerMiniDoubletPtr_->isAnchorHitIdxMatched(*(sg.outerMiniDoubletPtr())))
         return false;
     return true;
 }

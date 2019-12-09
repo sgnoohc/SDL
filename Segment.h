@@ -115,6 +115,7 @@ namespace SDL
             void runSegmentDefaultAlgoBarrel(SDL::LogLevel logLevel);
             void runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel);
 
+            bool hasCommonMiniDoublet(const Segment&) const;
             bool isIdxMatched(const Segment&) const;
             bool isAnchorHitIdxMatched(const Segment&) const;
 

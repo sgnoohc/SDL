@@ -82,6 +82,11 @@ const std::vector<SDL::Segment*>& SDL::Layer::getSegmentPtrs() const
     return segments_;
 }
 
+const std::vector<SDL::Triplet*>& SDL::Layer::getTripletPtrs() const
+{
+    return triplets_;
+}
+
 const std::vector<SDL::Tracklet*>& SDL::Layer::getTrackletPtrs() const
 {
     return tracklets_;
@@ -120,6 +125,11 @@ void SDL::Layer::addMiniDoublet(SDL::MiniDoublet* md)
 void SDL::Layer::addSegment(SDL::Segment* sg)
 {
     segments_.push_back(sg);
+}
+
+void SDL::Layer::addTriplet(SDL::Triplet* tp)
+{
+    triplets_.push_back(tp);
 }
 
 void SDL::Layer::addTracklet(SDL::Tracklet* tl)

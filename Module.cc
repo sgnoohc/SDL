@@ -94,6 +94,16 @@ const std::vector<SDL::Segment*>& SDL::Module::getSegmentPtrs() const
     return segments_;
 }
 
+const std::vector<SDL::Triplet*>& SDL::Module::getTripletPtrs() const
+{
+    return triplets_;
+}
+
+const std::vector<SDL::Tracklet*>& SDL::Module::getTrackletPtrs() const
+{
+    return tracklets_;
+}
+
 void SDL::Module::setDetId(unsigned int detId)
 {
     detId_ = detId;
@@ -134,6 +144,16 @@ void SDL::Module::addMiniDoublet(SDL::MiniDoublet* md)
 void SDL::Module::addSegment(SDL::Segment* sg)
 {
     segments_.push_back(sg);
+}
+
+void SDL::Module::addTriplet(SDL::Triplet* tp)
+{
+    triplets_.push_back(tp);
+}
+
+void SDL::Module::addTracklet(SDL::Tracklet* tp)
+{
+    tracklets_.push_back(tp);
 }
 
 unsigned short SDL::Module::parseSubdet(unsigned int detId)
