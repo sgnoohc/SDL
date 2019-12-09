@@ -9,15 +9,15 @@ SDL::TrackCandidate::~TrackCandidate()
 }
 
 SDL::TrackCandidate::TrackCandidate(const TrackCandidate& tl) :
-    innerTrackletPtr_(tl.innerTrackletPtr()),
-    outerTrackletPtr_(tl.outerTrackletPtr()),
+    innerTrackletPtr_(tl.innerTrackletBasePtr()),
+    outerTrackletPtr_(tl.outerTrackletBasePtr()),
     passAlgo_(tl.getPassAlgo()),
     passBitsDefaultAlgo_(tl.getPassBitsDefaultAlgo()),
     recovars_(tl.getRecoVars())
 {
 }
 
-SDL::TrackCandidate::TrackCandidate(SDL::Tracklet* innerTrackletPtr, SDL::Tracklet* outerTrackletPtr) :
+SDL::TrackCandidate::TrackCandidate(SDL::TrackletBase* innerTrackletPtr, SDL::TrackletBase* outerTrackletPtr) :
     innerTrackletPtr_(innerTrackletPtr),
     outerTrackletPtr_(outerTrackletPtr),
     passAlgo_(0),
@@ -25,14 +25,66 @@ SDL::TrackCandidate::TrackCandidate(SDL::Tracklet* innerTrackletPtr, SDL::Trackl
 {
 }
 
-SDL::Tracklet* SDL::TrackCandidate::innerTrackletPtr() const
+SDL::TrackletBase* SDL::TrackCandidate::innerTrackletBasePtr() const
 {
     return innerTrackletPtr_;
 }
 
-SDL::Tracklet* SDL::TrackCandidate::outerTrackletPtr() const
+SDL::TrackletBase* SDL::TrackCandidate::outerTrackletBasePtr() const
 {
     return outerTrackletPtr_;
+}
+
+SDL::Tracklet* SDL::TrackCandidate::innerTrackletPtr() const
+{
+    if (dynamic_cast<Tracklet*>(innerTrackletPtr_))
+    {
+        return dynamic_cast<Tracklet*>(innerTrackletPtr_);
+    }
+    else
+    {
+        SDL::cout << "TrackCandidate::innerTrackletPtr() ERROR - asked for innerTracklet when this TrackCandidate doesn't have one. (maybe it has triplets?)" << std::endl;
+        throw std::logic_error("");
+    }
+}
+
+SDL::Tracklet* SDL::TrackCandidate::outerTrackletPtr() const
+{
+    if (dynamic_cast<Tracklet*>(outerTrackletPtr_))
+    {
+        return dynamic_cast<Tracklet*>(outerTrackletPtr_);
+    }
+    else
+    {
+        SDL::cout << "TrackCandidate::outerTrackletPtr() ERROR - asked for outerTracklet when this TrackCandidate doesn't have one. (maybe it has triplets?)" << std::endl;
+        throw std::logic_error("");
+    }
+}
+
+SDL::Triplet* SDL::TrackCandidate::innerTripletPtr() const
+{
+    if (dynamic_cast<Triplet*>(innerTrackletPtr_))
+    {
+        return dynamic_cast<Triplet*>(innerTrackletPtr_);
+    }
+    else
+    {
+        SDL::cout << "TrackCandidate::innerTripletPtr() ERROR - asked for innerTriplet when this TrackCandidate doesn't have one. (maybe it has tracklets?)" << std::endl;
+        throw std::logic_error("");
+    }
+}
+
+SDL::Triplet* SDL::TrackCandidate::outerTripletPtr() const
+{
+    if (dynamic_cast<Triplet*>(outerTrackletPtr_))
+    {
+        return dynamic_cast<Triplet*>(outerTrackletPtr_);
+    }
+    else
+    {
+        SDL::cout << "TrackCandidate::outerTripletPtr() ERROR - asked for outerTriplet when this TrackCandidate doesn't have one. (maybe it has tracklets?)" << std::endl;
+        throw std::logic_error("");
+    }
 }
 
 const int& SDL::TrackCandidate::getPassAlgo() const
@@ -103,7 +155,10 @@ void SDL::TrackCandidate::runTrackCandidateDefaultAlgo(SDL::LogLevel logLevel)
     // passAlgo_ |= (1 << SDL::Default_TCAlgo);
     // return;
 
-    if (not (innerTrackletPtr()->hasCommonSegment(*(outerTrackletPtr()))))
+    const SDL::Tracklet& innerTracklet = (*innerTrackletPtr());
+    const SDL::Tracklet& outerTracklet = (*outerTrackletPtr());
+
+    if (not (innerTracklet.hasCommonSegment(outerTracklet)))
     {
         if (logLevel >= SDL::Log_Debug3)
         {
@@ -186,24 +241,6 @@ bool SDL::TrackCandidate::isAnchorHitIdxMatched(const TrackCandidate& tc) const
     if (not outerTrackletPtr()->isAnchorHitIdxMatched(*(tc.outerTrackletPtr())))
         return false;
     return true;
-}
-
-bool SDL::TrackCandidate::isTrackletPairATrackCandidate(const Tracklet& innerTracklet, const Tracklet& outerTracklet, TCAlgo algo, SDL::LogLevel logLevel)
-{
-    // If the algorithm is "do all combination" (e.g. used for efficiency calculation)
-    if (algo == SDL::AllComb_TCAlgo)
-    {
-        return true;
-    }
-    else if (algo == SDL::Default_TCAlgo)
-    {
-        return false;
-    }
-    else
-    {
-        SDL::cout << "Warning: Unrecognized track candidate algorithm!" << algo << std::endl;
-        return false;
-    }
 }
 
 namespace SDL

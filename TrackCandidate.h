@@ -2,10 +2,13 @@
 #define TrackCandidate_h
 
 #include <iomanip>
+#include <stdexcept>
 
 #include "Module.h"
 #include "Algo.h"
+#include "TrackletBase.h"
 #include "Tracklet.h"
+#include "Triplet.h"
 #include "MathUtil.h"
 #include "PrintUtil.h"
 
@@ -56,10 +59,10 @@ namespace SDL
         private:
 
             // Inner Tracklet (inner means one closer to the beam position, i.e. lower "layer")
-            Tracklet* innerTrackletPtr_;
+            TrackletBase* innerTrackletPtr_;
 
             // Outer Tracklet (outer means one further away from the beam position, i.e. upper "layer")
-            Tracklet* outerTrackletPtr_;
+            TrackletBase* outerTrackletPtr_;
 
             // Bits to flag whether this tracklet passes some algorithm
             int passAlgo_;
@@ -82,11 +85,15 @@ namespace SDL
         public:
             TrackCandidate();
             TrackCandidate(const TrackCandidate&);
-            TrackCandidate(Tracklet* innerTrackletPtr, Tracklet* outerTrackletPtr);
+            TrackCandidate(TrackletBase* innerTrackletPtr, TrackletBase* outerTrackletPtr);
             ~TrackCandidate();
 
+            TrackletBase* innerTrackletBasePtr() const;
+            TrackletBase* outerTrackletBasePtr() const;
             Tracklet* innerTrackletPtr() const;
             Tracklet* outerTrackletPtr() const;
+            Triplet* innerTripletPtr() const;
+            Triplet* outerTripletPtr() const;
             const int& getPassAlgo() const;
             const int& getPassBitsDefaultAlgo() const;
             const std::map<std::string, float>& getRecoVars() const;
@@ -106,14 +113,8 @@ namespace SDL
             // The default algorithms
             void runTrackCandidateDefaultAlgo(SDL::LogLevel logLevel);
 
-            // hass common segment
-            bool hasCommonSegment(const TrackCandidate&) const;
-
             bool isIdxMatched(const TrackCandidate&) const;
             bool isAnchorHitIdxMatched(const TrackCandidate&) const;
-
-            // The function to actually determine whether a pair of mini-doublets is a reco-ed track candidate or not
-            static bool isTrackletPairATrackCandidate(const Tracklet& innerTracklet, const Tracklet& outerTracklet, TCAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
 
             // cout printing
             friend std::ostream& operator<<(std::ostream& out, const TrackCandidate& tc);

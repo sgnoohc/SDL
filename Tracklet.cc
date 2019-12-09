@@ -9,25 +9,18 @@ SDL::Tracklet::~Tracklet()
 }
 
 SDL::Tracklet::Tracklet(const Tracklet& tl) :
-    innerSegmentPtr_(tl.innerSegmentPtr()),
-    outerSegmentPtr_(tl.outerSegmentPtr()),
-    passAlgo_(tl.getPassAlgo()),
-    passBitsDefaultAlgo_(tl.getPassBitsDefaultAlgo()),
+    TrackletBase(tl),
     deltaBeta_(tl.getDeltaBeta()),
     deltaBetaCut_(tl.getDeltaBetaCut()),
     betaIn_(tl.getBetaIn()),
     betaInCut_(tl.getBetaInCut()),
     betaOut_(tl.getBetaOut()),
-    betaOutCut_(tl.getBetaOutCut()),
-    recovars_(tl.getRecoVars())
+    betaOutCut_(tl.getBetaOutCut())
 {
 }
 
 SDL::Tracklet::Tracklet(SDL::Segment* innerSegmentPtr, SDL::Segment* outerSegmentPtr) :
-    innerSegmentPtr_(innerSegmentPtr),
-    outerSegmentPtr_(outerSegmentPtr),
-    passAlgo_(0),
-    passBitsDefaultAlgo_(0),
+    TrackletBase(innerSegmentPtr, outerSegmentPtr),
     deltaBeta_(0),
     deltaBetaCut_(0),
     betaIn_(0),
@@ -35,26 +28,6 @@ SDL::Tracklet::Tracklet(SDL::Segment* innerSegmentPtr, SDL::Segment* outerSegmen
     betaOut_(0),
     betaOutCut_(0)
 {
-}
-
-SDL::Segment* SDL::Tracklet::innerSegmentPtr() const
-{
-    return innerSegmentPtr_;
-}
-
-SDL::Segment* SDL::Tracklet::outerSegmentPtr() const
-{
-    return outerSegmentPtr_;
-}
-
-const int& SDL::Tracklet::getPassAlgo() const
-{
-    return passAlgo_;
-}
-
-const int& SDL::Tracklet::getPassBitsDefaultAlgo() const
-{
-    return passBitsDefaultAlgo_;
 }
 
 const float& SDL::Tracklet::getDeltaBeta() const
@@ -115,21 +88,6 @@ const float& SDL::Tracklet::getBetaOutCut() const
 void SDL::Tracklet::setBetaOutCut(float betaOutCut)
 {
     betaOutCut_ = betaOutCut;
-}
-
-const std::map<std::string, float>& SDL::Tracklet::getRecoVars() const
-{
-    return recovars_;
-}
-
-const float& SDL::Tracklet::getRecoVar(std::string key) const
-{
-    return recovars_.at(key);
-}
-
-void SDL::Tracklet::setRecoVars(std::string key, float var)
-{
-    recovars_[key] = var;
 }
 
 bool SDL::Tracklet::passesTrackletAlgo(SDL::TLAlgo algo) const
@@ -652,7 +610,8 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel
     setDeltaBeta(dBeta);
     setDeltaBetaCut(std::sqrt(dBetaCut2));
 
-    if (not (dBeta * dBeta <= dBetaCut2))
+    // if (not (dBeta * dBeta <= dBetaCut2))
+    if (not (dBeta * dBeta <= 0.004*0.004))
     {
         if (logLevel >= SDL::Log_Debug3)
         {
@@ -663,8 +622,8 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel
             SDL::cout <<  " betaInRHmin: " << betaInRHmin <<  " betaInRHmax: " << betaInRHmax <<  std::endl;
             SDL::cout <<  " betaOutRHmin: " << betaOutRHmin <<  " betaOutRHmax: " << betaOutRHmax <<  std::endl;
         }
-        // passAlgo_ &= (0 << SDL::Default_TLAlgo);
-        passAlgo_ |= (1 << SDL::Default_TLAlgo);
+        passAlgo_ &= (0 << SDL::Default_TLAlgo);
+        // passAlgo_ |= (1 << SDL::Default_TLAlgo);
         return;
     }
     else if (logLevel >= SDL::Log_Debug3)
@@ -997,6 +956,503 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelEndcapEndcap(SDL::LogLevel
     return;
 }
 
+void SDL::Tracklet::runTrackletDefaultAlgoDeltaBetaOnlyBarrelBarrelBarrelBarrel(SDL::LogLevel logLevel)
+{
+    const float deltaZLum = 15.f;
+    const float pixelPSZpitch = 0.15;
+    const float strip2SZpitch = 5.0;
+    const float zGeom =
+        ((innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).moduleType() == SDL::Module::PS ? pixelPSZpitch : strip2SZpitch)
+        +
+        ((outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).moduleType() == SDL::Module::PS ? pixelPSZpitch : strip2SZpitch);
+    const float rtIn = innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->rt();
+    const float rtOut = outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->rt();
+    const float zIn = innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->z();
+    const float zOut = outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->z();
+    const float rtOut_o_rtIn = rtOut / rtIn;
+    const float kRinv1GeVf = (2.99792458e-3 * 3.8);
+    const float k2Rinv1GeVf = kRinv1GeVf / 2.;
+    const float ptCut = PTCUT;
+    const float sinAlphaMax = 0.95;
+    const float sdlSlope = std::asin(std::min(rtOut * k2Rinv1GeVf / ptCut, sinAlphaMax));
+    const float dzDrtScale = tan(sdlSlope) / sdlSlope;//FIXME: need approximate value
+    const float zLo = zIn + (zIn - deltaZLum) * (rtOut_o_rtIn - 1.f) * (zIn > 0.f ? 1.f : dzDrtScale) - zGeom; //slope-correction only on outer end
+
+    // Reset passBitsDefaultAlgo_;
+    passBitsDefaultAlgo_ = 0;
+
+    // Cut #1: Z compatibility
+    if (not (zOut >= zLo))
+    {
+        if (logLevel >= SDL::Log_Debug3)
+        {
+            SDL::cout << "Failed Cut #1 in " << __FUNCTION__ << std::endl;
+            SDL::cout <<  " zLo: " << zLo <<  " zOut: " << zOut <<  std::endl;
+            SDL::cout <<  " zIn: " << zIn <<  std::endl;
+            SDL::cout <<  " deltaZLum: " << deltaZLum <<  std::endl;
+            SDL::cout <<  " rtOut_o_rtIn: " << rtOut_o_rtIn <<  std::endl;
+            SDL::cout <<  " dzDrtScale: " << dzDrtScale <<  std::endl;
+            SDL::cout <<  " zGeom: " << zGeom <<  std::endl;
+        }
+        // passAlgo_ &= (0 << SDL::Default_TLAlgo);
+        // return;
+    }
+
+    const float zHi = zIn + (zIn + deltaZLum) * (rtOut_o_rtIn - 1.f) * (zIn < 0.f ? 1.f : dzDrtScale) + zGeom;
+
+    // Cut #2: Z compatibility
+    if (not (zOut >= zLo and zOut <= zHi))
+    {
+        if (logLevel >= SDL::Log_Debug3)
+        {
+            SDL::cout << "Failed Cut #2 in " << __FUNCTION__ << std::endl;
+            SDL::cout <<  " zLo: " << zLo <<  " zOut: " << zOut <<  " zHi: " << zHi <<  std::endl;
+        }
+        // passAlgo_ &= (0 << SDL::Default_TLAlgo);
+        // return;
+    }
+    // Flag the pass bit
+    passBitsDefaultAlgo_ |= (1 << TrackletSelection::deltaZ);
+
+    const float drOutIn = (rtOut - rtIn);
+
+    const float rtInvIn = 1. / rtIn;
+    // const float ptIn = sdIn.p3.Pt(); // For Pixel Seeds
+    const float rIn = sqrt(zIn*zIn + rtIn*rtIn);
+    const float drtSDIn = innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->rt() - innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->rt();
+    const float dzSDIn = innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->z() - innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->z();
+    const float dr3SDIn = innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->r3() - innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->r3();
+
+    const float coshEta = dr3SDIn / drtSDIn; //direction estimate
+    float dzErr = zGeom * zGeom * 2.f; //both sides contribute to direction uncertainty
+    //FIXME (later) more realistic accounting of material effects is needed
+    const float sdlThetaMulsF = 0.015f * sqrt(0.1f + 0.2 * (rtOut - rtIn) / 50.f) * sqrt(rIn / rtIn);
+    const float sdlMuls = sdlThetaMulsF * 3.f / ptCut * 4.f; //will need a better guess than x4?
+    dzErr += sdlMuls * sdlMuls * drOutIn * drOutIn / 3.f * coshEta * coshEta; //sloppy
+    dzErr = sqrt(dzErr);
+    const float dzMean = dzSDIn / drtSDIn * drOutIn;
+    const float zWindow = dzErr / drtSDIn * drOutIn + zGeom; //FIXME for ptCut lower than ~0.8 need to add curv path correction
+    const float zLoPointed = zIn + dzMean * (zIn > 0.f ? 1.f : dzDrtScale) - zWindow;
+    const float zHiPointed = zIn + dzMean * (zIn < 0.f ? 1.f : dzDrtScale) + zWindow;
+
+    // Cut #3: Pointed Z
+    if (not (zOut >= zLoPointed and zOut <= zHiPointed))
+    {
+        if (logLevel >= SDL::Log_Debug3)
+        {
+            SDL::cout << "Failed Cut #3 in " << __FUNCTION__ << std::endl;
+            SDL::cout <<  " zLoPointed: " << zLoPointed <<  " zOut: " << zOut <<  " zHiPointed: " << zHiPointed <<  std::endl;
+        }
+        // passAlgo_ &= (0 << SDL::Default_TLAlgo);
+        // return;
+    }
+    // Flag the pass bit
+    passBitsDefaultAlgo_ |= (1 << TrackletSelection::deltaZPointed);
+
+    const float sdlPVoff = 0.1f / rtOut;
+    const float sdlCut = sdlSlope + sqrt(sdlMuls * sdlMuls + sdlPVoff*sdlPVoff);
+    const MiniDoublet& sdIn_mdOut = (*innerSegmentPtr()->outerMiniDoubletPtr());
+    const MiniDoublet& sdOut_mdOut = (*outerSegmentPtr()->outerMiniDoubletPtr());
+    const Hit& sdIn_mdOut_hit = (*innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr());
+    const Hit& sdOut_mdOut_hit = (*outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr());
+
+    // Cut #4: deltaPhiPos can be tighter
+    float deltaPhiPos = sdIn_mdOut_hit.deltaPhi(sdOut_mdOut_hit);
+    if (not (std::abs(deltaPhiPos) <= sdlCut) )
+    {
+        if (logLevel >= SDL::Log_Debug3)
+        {
+            SDL::cout << "Failed Cut #4 in " << __FUNCTION__ << std::endl;
+            SDL::cout <<  " deltaPhiPos: " << deltaPhiPos <<  " sdlCut: " << sdlCut <<  std::endl;
+        }
+        // passAlgo_ &= (0 << SDL::Default_TLAlgo);
+        // return;
+    }
+    // Flag the pass bit
+    passBitsDefaultAlgo_ |= (1 << TrackletSelection::deltaPhiPos);
+
+    const Hit& sdIn_r3 = (*innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr());
+    const Hit& sdOut_r3 = (*outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr());
+    Hit midR3;
+    midR3 += sdIn_r3;
+    midR3 += sdOut_r3;
+    midR3 /= 2;
+    const float dPhi = midR3.deltaPhi(sdOut_r3 - sdIn_r3);
+
+    // Cut #5: deltaPhiChange
+    if (not (std::abs(dPhi) <= sdlCut))
+    {
+        if (logLevel >= SDL::Log_Debug3)
+        {
+            SDL::cout << "Failed Cut #5 in " << __FUNCTION__ << std::endl;
+            SDL::cout <<  " dPhi: " << dPhi <<  " sdlCut: " << sdlCut <<  std::endl;
+        }
+        // passAlgo_ &= (0 << SDL::Default_TLAlgo);
+        // return;
+    }
+    // Flag the pass bit
+    passBitsDefaultAlgo_ |= (1 << TrackletSelection::slope);
+
+    const Hit& sdOut_mdRef_hit = (*outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr());
+    const float sdIn_alpha = innerSegmentPtr()->getDeltaPhiChange();
+    const float sdOut_alpha = innerSegmentPtr()->getDeltaPhiChange();
+    const float sdOut_alphaOut = sdOut_mdOut_hit.deltaPhi(sdOut_mdOut_hit  - sdOut_mdRef_hit);
+    const Hit& sdOut_mdOut_r3 = (*outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr());
+    const Hit dr3 = sdOut_mdOut_r3 - sdIn_r3;
+    float betaIn  = sdIn_alpha - sdIn_r3.deltaPhi(dr3);
+    float betaOut = -sdOut_alphaOut + sdOut_mdOut_r3.deltaPhi(dr3);
+    float betaInRHmin = betaIn;
+    float betaInRHmax = betaIn;
+    float betaOutRHmin = betaOut;
+    float betaOutRHmax = betaOut;
+
+    setRecoVars("sdIn_alpha", sdIn_alpha);
+    setRecoVars("sdOut_alphaOut", sdOut_alphaOut);
+    setRecoVars("rawBetaInCorrection", sdIn_r3.deltaPhi(dr3));
+    setRecoVars("rawBetaOutCorrection", sdOut_mdOut_r3.deltaPhi(dr3));
+    setRecoVars("rawBetaIn", betaIn);
+    setRecoVars("rawBetaOut", betaOut);
+
+    const Hit& sdIn_mdRef_hit = (*innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr());
+
+    const float sdIn_dr = (sdIn_mdOut_hit - sdIn_mdRef_hit).rt();
+    const float sdIn_d = sdIn_mdOut_hit.rt() - sdIn_mdRef_hit.rt();
+
+    const float dr = dr3.rt();
+    //beta upper cuts: 2-strip difference for direction resolution
+    const float corrF = 1.f;
+    bool pass_betaIn_cut = false;//pixel seeds were already selected
+    const float betaIn_cut = (-sdIn_dr * corrF + dr) * k2Rinv1GeVf / ptCut + (0.02f / sdIn_d);
+    // const float betaIn_cut = std::asin((-sdIn_dr * corrF + dr) * k2Rinv1GeVf / ptCut) + (0.02f / sdIn_d);
+    pass_betaIn_cut = std::abs(betaInRHmin) < betaIn_cut;
+
+    setBetaIn(betaInRHmin);
+    setBetaInCut(betaIn_cut);
+
+    // Cut #6: first beta cut
+    if (not (pass_betaIn_cut))
+    {
+        if (logLevel >= SDL::Log_Debug3)
+        {
+            SDL::cout << "Failed Cut #6 in " << __FUNCTION__ << std::endl;
+            SDL::cout <<  " betaInRHmin: " << betaInRHmin <<  " betaIn_cut: " << betaIn_cut <<  std::endl;
+        }
+        // passAlgo_ &= (0 << SDL::Default_TLAlgo);
+        // return;
+    }
+    // Flag the pass bit
+    passBitsDefaultAlgo_ |= (1 << TrackletSelection::dAlphaIn);
+
+    //now the actual segment linking magic
+    float betaAv = 0.5f * (betaIn + betaOut);
+    //pt/k2Rinv1GeVf/2. = R
+    //R*sin(betaAv) = pt/k2Rinv1GeVf/2*sin(betaAv) = dr/2 => pt = dr*k2Rinv1GeVf/sin(betaAv);
+    float pt_beta = dr * k2Rinv1GeVf / sin(betaAv);
+
+    const float pt_betaMax = 7.0f;
+
+    int lIn = 5;
+    int lOut = 5;
+
+    int betacormode = 0;
+
+    setRecoVars("betaIn_0th", -999);
+    setRecoVars("betaOut_0th", -999);
+    setRecoVars("betaAv_0th", -999);
+    setRecoVars("betaPt_0th", -999);
+    setRecoVars("betaIn_1stCorr", -999);
+    setRecoVars("betaOut_1stCorr", -999);
+    setRecoVars("dBeta_0th", -999);
+    setRecoVars("betaIn_1st", -999);
+    setRecoVars("betaOut_1st", -999);
+    setRecoVars("betaAv_1st", -999);
+    setRecoVars("betaPt_1st", -999);
+    setRecoVars("betaIn_2ndCorr", -999);
+    setRecoVars("betaOut_2ndCorr", -999);
+    setRecoVars("dBeta_1st", -999);
+    setRecoVars("betaIn_2nd", -999);
+    setRecoVars("betaOut_2nd", -999);
+    setRecoVars("betaAv_2nd", -999);
+    setRecoVars("betaPt_2nd", -999);
+    setRecoVars("betaIn_3rdCorr", -999);
+    setRecoVars("betaOut_3rdCorr", -999);
+    setRecoVars("dBeta_2nd", -999);
+    setRecoVars("betaIn_3rd", -999);
+    setRecoVars("betaOut_3rd", -999);
+    setRecoVars("betaAv_3rd", -999);
+    setRecoVars("betaPt_3rd", -999);
+    setRecoVars("dBeta_3rd", -999);
+    setRecoVars("betaIn_4th", -999);
+    setRecoVars("betaOut_4th", -999);
+    setRecoVars("betaAv_4th", -999);
+    setRecoVars("betaPt_4th", -999);
+    setRecoVars("dBeta_4th", -999);
+
+    const float sdOut_dr = (sdOut_mdOut_hit - sdOut_mdRef_hit).rt();
+    const float sdOut_d = sdOut_mdOut_hit.rt() - sdOut_mdRef_hit.rt();
+    const float diffDr = std::abs(sdIn_dr - sdOut_dr) / std::abs(sdIn_dr + sdOut_dr);
+    if (true //do it for all//diffDr > 0.05 //only if segment length is different significantly
+            && betaIn * betaOut > 0.f
+            && (std::abs(pt_beta) < 4.f * pt_betaMax
+                || (lIn >= 11 && std::abs(pt_beta) < 8.f * pt_betaMax)))   //and the pt_beta is well-defined; less strict for endcap-endcap
+    {
+        betacormode = 1;
+
+        setRecoVars("betaIn_0th", betaIn);
+        setRecoVars("betaOut_0th", betaOut);
+        setRecoVars("betaAv_0th", betaAv);
+        setRecoVars("betaPt_0th", pt_beta);
+        setRecoVars("betaIn_1stCorr", copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
+        setRecoVars("betaOut_1stCorr", copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
+        setRecoVars("dBeta_0th", betaIn - betaOut);
+
+        const float betaInUpd  = betaIn + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
+        const float betaOutUpd = betaOut + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut); //FIXME: need a faster version
+        betaAv = 0.5f * (betaInUpd + betaOutUpd);
+        pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
+
+        setRecoVars("betaIn_1st", betaInUpd);
+        setRecoVars("betaOut_1st", betaOutUpd);
+        setRecoVars("betaAv_1st", betaAv);
+        setRecoVars("betaPt_1st", pt_beta);
+        setRecoVars("betaIn_2ndCorr", copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
+        setRecoVars("betaOut_2ndCorr", copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
+        setRecoVars("dBeta_1st", betaInUpd - betaOutUpd);
+
+        betaIn  += copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
+        betaOut += copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut); //FIXME: need a faster version
+        //update the av and pt
+        betaAv = 0.5f * (betaIn + betaOut);
+        pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
+
+        setRecoVars("betaIn_2nd", betaIn);
+        setRecoVars("betaOut_2nd", betaOut);
+        setRecoVars("betaAv_2nd", betaAv);
+        setRecoVars("betaPt_2nd", pt_beta);
+        setRecoVars("betaIn_3rdCorr", copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
+        setRecoVars("betaOut_3rdCorr", copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
+        setRecoVars("dBeta_2nd", betaIn - betaOut);
+
+        setRecoVars("betaIn_3rd", getRecoVar("rawBetaIn") + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
+        setRecoVars("betaOut_3rd", getRecoVar("rawBetaOut") + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
+        setRecoVars("betaAv_3rd", 0.5f * (getRecoVar("betaIn_3rd") + getRecoVar("betaOut_3rd")));
+        setRecoVars("betaPt_3rd", dr * k2Rinv1GeVf / sin(getRecoVar("betaAv_3rd")));
+        setRecoVars("dBeta_3rd", getRecoVar("betaIn_3rd") - getRecoVar("betaOut_3rd"));
+
+        setRecoVars("betaIn_4th", getRecoVar("rawBetaIn") + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(getRecoVar("betaPt_3rd")), sinAlphaMax)), getRecoVar("betaIn_3rd")));
+        setRecoVars("betaOut_4th", getRecoVar("rawBetaOut") + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(getRecoVar("betaPt_3rd")), sinAlphaMax)), getRecoVar("betaOut_3rd")));
+        setRecoVars("betaAv_4th", 0.5f * (getRecoVar("betaIn_4th") + getRecoVar("betaOut_4th")));
+        setRecoVars("betaPt_4th", dr * k2Rinv1GeVf / sin(getRecoVar("betaAv_4th")));
+        setRecoVars("dBeta_4th", getRecoVar("betaIn_4th") - getRecoVar("betaOut_4th"));
+
+    }
+    else if (lIn < 11 && std::abs(betaOut) < 0.2 * std::abs(betaIn) && std::abs(pt_beta) < 12.f * pt_betaMax)   //use betaIn sign as ref
+    {
+        betacormode = 2;
+        const float pt_betaIn = dr * k2Rinv1GeVf / sin(betaIn);
+        const float betaInUpd  = betaIn + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_betaIn), sinAlphaMax)), betaIn); //FIXME: need a faster version
+        const float betaOutUpd = betaOut + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_betaIn), sinAlphaMax)), betaIn); //FIXME: need a faster version
+        betaAv = (std::abs(betaOut) > 0.2f * std::abs(betaIn)) ? (0.5f * (betaInUpd + betaOutUpd)) : betaInUpd;
+        pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
+        betaIn  += copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
+        betaOut += copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
+        //update the av and pt
+        betaAv = 0.5f * (betaIn + betaOut);
+        pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
+
+    }
+    else
+    {
+        betacormode = 3;
+    }
+
+    //rescale the ranges proportionally
+    const float betaInMMSF = (std::abs(betaInRHmin + betaInRHmax) > 0) ? (2.f * betaIn / std::abs(betaInRHmin + betaInRHmax)) : 0.; //mean value of min,max is the old betaIn
+    const float betaOutMMSF = (std::abs(betaOutRHmin + betaOutRHmax) > 0) ? (2.f * betaOut / std::abs(betaOutRHmin + betaOutRHmax)) : 0.;
+    betaInRHmin *= betaInMMSF;
+    betaInRHmax *= betaInMMSF;
+    betaOutRHmin *= betaOutMMSF;
+    betaOutRHmax *= betaOutMMSF;
+
+    const float dBetaMuls = sdlThetaMulsF * 4.f / std::min(std::abs(pt_beta), pt_betaMax); //need to confirm the range-out value of 7 GeV
+
+    //regularize to alpha of pt_betaMax .. review may want to add resolution
+    const float sdIn_rt = sdIn_mdRef_hit.rt();
+    const float sdOut_rt = sdOut_mdRef_hit.rt();
+    const float sdIn_z = sdIn_mdRef_hit.z();
+    const float sdOut_z = sdOut_mdRef_hit.z();
+    const float alphaInAbsReg = std::max(std::abs(sdIn_alpha), std::asin(std::min(sdIn_rt * k2Rinv1GeVf / 3.0f, sinAlphaMax)));
+    const float alphaOutAbsReg = std::max(std::abs(sdOut_alpha), std::asin(std::min(sdOut_rt * k2Rinv1GeVf / 3.0f, sinAlphaMax)));
+    const float dBetaInLum = lIn < 11 ? 0.0f : std::abs(alphaInAbsReg*deltaZLum / sdIn_z);
+    const float dBetaOutLum = lOut < 11 ? 0.0f : std::abs(alphaOutAbsReg*deltaZLum / sdOut_z);
+    const float dBetaLum2 = (dBetaInLum + dBetaOutLum) * (dBetaInLum + dBetaOutLum);
+
+    const float sinDPhi = std::sin(dPhi);
+    // const float dBetaRIn2 = std::pow((sdIn.mdRef.rtRHout - sdIn.mdRef.rtRHin) * sinDPhi / dr, 2); //TODO-RH: Ask Slava about this rtRHout? rtRHin?
+    // const float dBetaROut2 = std::pow((sdOut.mdOut.rtRHout - sdOut.mdOut.rtRHin) * sinDPhi / dr, 2); //TODO-RH
+    const float dBetaRIn2 = 0; // TODO-RH
+    const float dBetaROut2 = 0; // TODO-RH
+
+    const float betaOut_cut = std::asin(std::min(dr*k2Rinv1GeVf / ptCut, sinAlphaMax)) //FIXME: need faster version
+        + (0.02f / sdOut_d) + sqrt(dBetaLum2 + dBetaMuls*dBetaMuls);
+    // const float betaOut_cut = std::min(0.01, std::asin(std::min(dr*k2Rinv1GeVf / ptCut, sinAlphaMax)) + (0.02f / sdOut_d) + sqrt(dBetaLum2 + dBetaMuls*dBetaMuls));
+
+    setBetaOut(betaOut);
+    setBetaOutCut(betaOut_cut);
+
+    // Cut #7: The real beta cut
+    if (not (std::abs(betaOut) < betaOut_cut))
+    {
+        if (logLevel >= SDL::Log_Debug3)
+        {
+            SDL::cout << "Failed Cut #7 in " << __FUNCTION__ << std::endl;
+            SDL::cout <<  " betaOut: " << betaOut <<  " betaOut_cut: " << betaOut_cut <<  std::endl;
+        }
+        // passAlgo_ &= (0 << SDL::Default_TLAlgo);
+        // return;
+    }
+    // Flag the pass bit
+    passBitsDefaultAlgo_ |= (1 << TrackletSelection::dAlphaOut);
+
+    float pt_betaIn = dr * k2Rinv1GeVf / sin(betaIn);
+    const float pt_betaOut = dr * k2Rinv1GeVf / sin(betaOut);
+    const float dBetaRes = 0.02f / std::min(sdOut_d, sdIn_d);
+    const float dBetaCut2 = (dBetaRes*dBetaRes * 2.0f + dBetaMuls * dBetaMuls + dBetaLum2 + dBetaRIn2 + dBetaROut2
+            + 0.25 * std::pow(std::abs(betaInRHmin - betaInRHmax) + std::abs(betaOutRHmin - betaOutRHmax), 2));
+    float dBeta = betaIn - betaOut;
+    // const float dZeta = sdIn.zeta - sdOut.zeta;
+
+    const float innerSgInnerMdDetId = (innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).detId();
+    const float outerSgInnerMdDetId = (outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).detId();
+    const float innerSgOuterMdDetId = (innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).detId();
+    const float outerSgOuterMdDetId = (outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).detId();
+
+    setRecoVars("hit1_x", innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->x());
+    setRecoVars("hit1_y", innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->y());
+    setRecoVars("hit2_x", innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->x());
+    setRecoVars("hit2_y", innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->y());
+    setRecoVars("hit3_x", outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->x());
+    setRecoVars("hit3_y", outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->y());
+    setRecoVars("hit4_x", outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->x());
+    setRecoVars("hit4_y", outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->y());
+
+
+    std::function<float()> dBeta_midPoint = [&]()
+        {
+
+            float hit1_x = innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->x();
+            float hit1_y = innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->y();
+            float hit2_x = innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->x();
+            float hit2_y = innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->y();
+            float hit3_x = outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->x();
+            float hit3_y = outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->y();
+            float hit4_x = outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->x();
+            float hit4_y = outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->y();
+
+            float innerSgMidX = (hit1_x + hit2_x) / 2.;
+            float innerSgMidY = (hit1_y + hit2_y) / 2.;
+            float outerSgMidX = (hit3_x + hit4_x) / 2.;
+            float outerSgMidY = (hit3_y + hit4_y) / 2.;
+
+            float vecA_x = hit2_x - innerSgMidX;
+            float vecA_y = hit2_y - innerSgMidY;
+            float vecB_x = outerSgMidX - innerSgMidX;
+            float vecB_y = outerSgMidY - innerSgMidY;
+            float vecC_x = hit4_x - outerSgMidX;
+            float vecC_y = hit4_y - outerSgMidY;
+            float vecA_mag = sqrt(vecA_x * vecA_x + vecA_y * vecA_y);
+            float vecB_mag = sqrt(vecB_x * vecB_x + vecB_y * vecB_y);
+            float vecC_mag = sqrt(vecC_x * vecC_x + vecC_y * vecC_y);
+
+            float vecA_dot_vecB = vecA_x * vecB_x + vecA_y * vecB_y;
+            float vecB_dot_vecC = vecB_x * vecC_x + vecB_y * vecC_y;
+
+            float angle_AB = std::acos(vecA_dot_vecB / vecA_mag / vecB_mag);
+            float angle_BC = std::acos(vecB_dot_vecC / vecB_mag / vecC_mag);
+
+            return angle_AB - angle_BC;
+
+        };
+
+    setRecoVars("sinAlphaMax", sinAlphaMax);
+    setRecoVars("betaIn", betaIn);
+    setRecoVars("betaInRHmax", betaInRHmax);
+    setRecoVars("betaInRHmin", betaInRHmin);
+    setRecoVars("betaOut", betaOut);
+    setRecoVars("betaOutRHmax", betaOutRHmax);
+    setRecoVars("betaOutRHmin", betaOutRHmin);
+    setRecoVars("dBeta", dBeta);
+    setRecoVars("dBetaCut2", dBetaCut2);
+    setRecoVars("dBetaLum2", dBetaLum2);
+    setRecoVars("dBetaMuls", dBetaMuls);
+    setRecoVars("dBetaRIn2", dBetaRIn2);
+    setRecoVars("dBetaROut2", dBetaROut2);
+    setRecoVars("dBetaRes", dBetaRes);
+    setRecoVars("deltaZLum", deltaZLum);
+    setRecoVars("dr", dr);
+    setRecoVars("dzDrtScale", dzDrtScale);
+    setRecoVars("innerSgInnerMdDetId", innerSgInnerMdDetId);
+    setRecoVars("innerSgOuterMdDetId", innerSgOuterMdDetId);
+    setRecoVars("k2Rinv1GeVf", k2Rinv1GeVf);
+    setRecoVars("kRinv1GeVf", kRinv1GeVf);
+    setRecoVars("outerSgInnerMdDetId", outerSgInnerMdDetId);
+    setRecoVars("outerSgOuterMdDetId", outerSgOuterMdDetId);
+    setRecoVars("pixelPSZpitch", pixelPSZpitch);
+    setRecoVars("ptCut", ptCut);
+    setRecoVars("pt_betaIn", pt_betaIn);
+    setRecoVars("pt_betaOut", pt_betaOut);
+    setRecoVars("rtIn", rtIn);
+    setRecoVars("rtOut", rtOut);
+    setRecoVars("rtOut_o_rtIn", rtOut_o_rtIn);
+    setRecoVars("sdIn_d", sdIn_d);
+    setRecoVars("sdOut_d", sdOut_d);
+    setRecoVars("sdlSlope", sdlSlope);
+    setRecoVars("strip2SZpitch", strip2SZpitch);
+    setRecoVars("zGeom", zGeom);
+    setRecoVars("zIn", zIn);
+    setRecoVars("zLo", zLo);
+    setRecoVars("zOut", zOut);
+    setRecoVars("betacormode", betacormode);
+    setRecoVars("pt_beta", pt_beta);
+    setRecoVars("betaAv", betaAv);
+    setRecoVars("dBeta_midPoint", dBeta_midPoint());
+
+    // dBeta = getRecoVar("dBeta_4th");
+
+    setDeltaBeta(dBeta);
+    setDeltaBetaCut(std::sqrt(dBetaCut2));
+
+    if (not (dBeta * dBeta <= dBetaCut2))
+    {
+        if (logLevel >= SDL::Log_Debug3)
+        {
+            SDL::cout << "Failed Cut #8 in " << __FUNCTION__ << std::endl;
+            SDL::cout <<  " dBeta*dBeta: " << dBeta*dBeta <<  " dBetaCut2: " << dBetaCut2 <<  std::endl;
+            SDL::cout <<  " dBetaRes: " << dBetaRes <<  " dBetaMuls: " << dBetaMuls <<  " dBetaLum2: " << dBetaLum2 <<  std::endl;
+            SDL::cout <<  " dBetaRIn2: " << dBetaRIn2 <<  " dBetaROut2: " << dBetaROut2 <<  std::endl;
+            SDL::cout <<  " betaInRHmin: " << betaInRHmin <<  " betaInRHmax: " << betaInRHmax <<  std::endl;
+            SDL::cout <<  " betaOutRHmin: " << betaOutRHmin <<  " betaOutRHmax: " << betaOutRHmax <<  std::endl;
+        }
+        // passAlgo_ &= (0 << SDL::Default_TLAlgo);
+        // // passAlgo_ |= (1 << SDL::Default_TLAlgo);
+        // return;
+    }
+    else if (logLevel >= SDL::Log_Debug3)
+    {
+        SDL::cout << "Passed Cut #8 in " << __FUNCTION__ << std::endl;
+        SDL::cout <<  " dBeta*dBeta: " << dBeta*dBeta <<  " dBetaCut2: " << dBetaCut2 <<  std::endl;
+        SDL::cout <<  " dBetaRes: " << dBetaRes <<  " dBetaMuls: " << dBetaMuls <<  " dBetaLum2: " << dBetaLum2 <<  std::endl;
+        SDL::cout <<  " dBetaRIn2: " << dBetaRIn2 <<  " dBetaROut2: " << dBetaROut2 <<  std::endl;
+        SDL::cout <<  " betaInRHmin: " << betaInRHmin <<  " betaInRHmax: " << betaInRHmax <<  std::endl;
+        SDL::cout <<  " betaOutRHmin: " << betaOutRHmin <<  " betaOutRHmax: " << betaOutRHmax <<  std::endl;
+    }
+    // Flag the pass bit
+    passBitsDefaultAlgo_ |= (1 << TrackletSelection::dBeta);
+
+    passAlgo_ |= (1 << SDL::Default_TLAlgo);
+    return;
+}
+
 void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrel(SDL::LogLevel logLevel)
 {
     return;
@@ -1019,24 +1475,7 @@ bool SDL::Tracklet::hasCommonSegment(const Tracklet& outer_tl) const
     return false;
 }
 
-bool SDL::Tracklet::isIdxMatched(const Tracklet& md) const
-{
-    if (not innerSegmentPtr_->isIdxMatched(*(md.innerSegmentPtr())))
-        return false;
-    if (not outerSegmentPtr_->isIdxMatched(*(md.outerSegmentPtr())))
-        return false;
-    return true;
-}
-
-bool SDL::Tracklet::isAnchorHitIdxMatched(const Tracklet& md) const
-{
-    if (not innerSegmentPtr_->isAnchorHitIdxMatched(*(md.innerSegmentPtr())))
-        return false;
-    if (not outerSegmentPtr_->isAnchorHitIdxMatched(*(md.outerSegmentPtr())))
-        return false;
-    return true;
-}
-
+[[deprecated("SDL:: isSegmentPairATracklet() is deprecated")]]
 bool SDL::Tracklet::isSegmentPairATracklet(const Segment& innerSegment, const Segment& outerSegment, TLAlgo algo, SDL::LogLevel logLevel)
 {
     // If the algorithm is "do all combination" (e.g. used for efficiency calculation)
@@ -1063,36 +1502,5 @@ bool SDL::Tracklet::isSegmentPairATrackletBarrel(const Segment& innerSegment, co
 bool SDL::Tracklet::isSegmentPairATrackletEndcap(const Segment& innerSegment, const Segment& outerSegment, TLAlgo algo, SDL::LogLevel logLevel)
 {
     return false;
-}
-
-namespace SDL
-{
-    std::ostream& operator<<(std::ostream& out, const Tracklet& tl)
-    {
-        out << "Tracklet" << std::endl;
-        out << "------------------------------" << std::endl;
-        {
-            IndentingOStreambuf indent(out);
-            out << "Inner Segment" << std::endl;
-            out << "------------------------------" << std::endl;
-            {
-                IndentingOStreambuf indent(out);
-                out << tl.innerSegmentPtr_ << std::endl;
-            }
-            out << "Outer Segment" << std::endl;
-            out << "------------------------------" << std::endl;
-            {
-                IndentingOStreambuf indent(out);
-                out << tl.outerSegmentPtr_;
-            }
-        }
-        return out;
-    }
-
-    std::ostream& operator<<(std::ostream& out, const Tracklet* tl)
-    {
-        out << *tl;
-        return out;
-    }
 }
 

@@ -806,9 +806,9 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
 
 bool SDL::MiniDoublet::isIdxMatched(const MiniDoublet& md) const
 {
-    if (not lowerHitPtr_->isIdxMatched(*(md.lowerHitPtr())))
+    if (not (lowerHitPtr()->isIdxMatched(*(md.lowerHitPtr()))))
         return false;
-    if (not upperHitPtr_->isIdxMatched(*(md.upperHitPtr())))
+    if (not (upperHitPtr()->isIdxMatched(*(md.upperHitPtr()))))
         return false;
     return true;
 }

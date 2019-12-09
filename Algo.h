@@ -24,11 +24,26 @@ namespace SDL
         AllComb_TLAlgo
     };
 
-    // Tracklet algorithm enum
+    // Triplet algorithm enum
+    enum TPAlgo
+    {
+        Default_TPAlgo = 0,
+        AllComb_TPAlgo
+    };
+
+    // Track candidate algorithm enum
     enum TCAlgo
     {
         Default_TCAlgo = 0,
         AllComb_TCAlgo
+    };
+
+    // SDL processing enum
+    enum SDLMode
+    {
+        All_SDLAlgo = 0,
+        Tracklet_SDLAlgo,
+        Triplet_SDLAlgo
     };
 };
 
