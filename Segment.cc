@@ -464,9 +464,17 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
     const float ptCut = PTCUT;
     const float sinAlphaMax = 0.95;
     const float deltaZLum = 15.f;
-    // std::array<float, 6> miniMulsPtScaleBarrel {0.0052, 0.0038, 0.0034, 0.0034, 0.0032, 0.0034};
+    std::array<float, 6> miniMulsPtScaleBarrel {0.0052, 0.0038, 0.0034, 0.0034, 0.0032, 0.0034};
     std::array<float, 5> miniMulsPtScaleEndcap {0.006, 0.006, 0.006, 0.006, 0.006}; //inter/extra-polated from L11 and L13 both roughly 0.006 [larger R have smaller value by ~50%]
-    const float sdMuls = miniMulsPtScaleEndcap[innerLowerModule.layer()] * 3.f / ptCut * 2.f;//will need a better guess than x2?
+    float sdMuls;
+    if(innerLowerModule.subdet() == SDL::Module::Endcap)
+    {
+        sdMuls = miniMulsPtScaleEndcap[innerLowerModule.layer()] * 3.f / ptCut * 2.f;//will need a better guess than x2?
+    }
+    else
+    {
+        sdMuls = miniMulsPtScaleBarrel[innerLowerModule.layer()] * 3.f / ptCut * 2.f;
+    }
 
     // Get the relevant anchor hits
     const Hit& innerMiniDoubletAnchorHit = (innerLowerModule.moduleType() == SDL::Module::PS) ? ( (innerLowerModule.moduleLayerType() == SDL::Module::Pixel) ? *innerMiniDoublet.lowerHitPtr() : *innerMiniDoublet.upperHitPtr()): *innerMiniDoublet.lowerHitPtr();
@@ -587,14 +595,16 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
 
     const bool isInnerTilted = innerLowerModule.subdet() == SDL::Module::Barrel and innerLowerModule.side() != SDL::Module::Center;
     const bool isOuterTilted = outerLowerModule.subdet() == SDL::Module::Barrel and outerLowerModule.side() != SDL::Module::Center;
-    const unsigned int innerdetid = (innerLowerModule.moduleLayerType() == SDL::Module::Pixel) ?  innerLowerModule.partnerDetId() : innerLowerModule.detId();
-    const unsigned int outerdetid = (outerLowerModule.moduleLayerType() == SDL::Module::Pixel) ?  outerLowerModule.partnerDetId() : outerLowerModule.detId();
+    const unsigned int innerdetid = (innerLowerModule.subdet() == SDL::Module::Barrel and innerLowerModule.moduleLayerType() == SDL::Module::Pixel) ?  innerLowerModule.partnerDetId() : innerLowerModule.detId();
+    const unsigned int outerdetid = (outerLowerModule.subdet() == SDL::Module::Barrel and outerLowerModule.moduleLayerType() == SDL::Module::Pixel) ?  outerLowerModule.partnerDetId() : outerLowerModule.detId();
     const float drdzinner = tiltedGeometry.getDrDz(innerdetid);
     const float drdzouter = tiltedGeometry.getDrDz(outerdetid);
     const float innerminiTilt = isInnerTilted ? (0.5f * pixelPSZpitch * drdzinner / sqrt(1.f + drdzinner * drdzinner) / miniDeltaTilted[innerLowerModule.layer()-1]) : 0;
     const float outerminiTilt = isOuterTilted ? (0.5f * pixelPSZpitch * drdzouter / sqrt(1.f + drdzouter * drdzouter) / miniDeltaTilted[outerLowerModule.layer()-1]) : 0;
 
     float miniDelta = (innerLowerModule.subdet() == SDL::Module::Barrel) ? (miniDeltaBarrel[innerLowerModule.layer()-1]) : (miniDeltaEndcap[innerLowerModule.layer()-1]);
+
+    //The above variable values don't matter for endcap->endcap
     float sdLumForInnerMini = (SDL::MiniDoublet::useBarrelLogic(innerLowerModule)) ?  (innerminiTilt * dAlpha_Bfield) :  (15.f / innerMiniDoubletAnchorHitZ);
     float sdLumForOuterMini = (SDL::MiniDoublet::useBarrelLogic(outerLowerModule)) ?  (outerminiTilt * dAlpha_Bfield) :  (15.f / outerMiniDoubletAnchorHitZ);
 
