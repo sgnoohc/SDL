@@ -8,6 +8,7 @@
 #include "Algo.h"
 #include "Segment.h"
 #include "Tracklet.h"
+#include "MathUtil.h"
 #include "PrintUtil.h"
 #include "TrackletBase.h"
 

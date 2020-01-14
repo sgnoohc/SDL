@@ -64,30 +64,59 @@ void SDL::Triplet::runTripletDefaultAlgo(SDL::LogLevel logLevel)
     // Flag the pass bit
     passBitsDefaultAlgo_ |= (1 << TripletSelection::commonSegment);
 
-    // Check tracklet algo on triplet
-    tlCand = SDL::Tracklet(innerSegmentPtr(), outerSegmentPtr());
-
-    // Run tracklet algo
-    tlCand.runTrackletDefaultAlgoDeltaBetaOnlyBarrelBarrelBarrelBarrel(SDL::Log_Nothing);
-
-    if (not (tlCand.passesTrackletAlgo(SDL::Default_TLAlgo)))
+    //====================================================
+    //
+    // Running Tracklet algo within triplet
+    //
+    if (false)
     {
-        if (logLevel >= SDL::Log_Debug3)
-        {
-            SDL::cout << "Failed Cut #2 in " << __FUNCTION__ << std::endl;
-        }
-        passAlgo_ &= (0 << SDL::Default_TPAlgo);
-        return;
-    }
-    // Flag the pass bit
-    passBitsDefaultAlgo_ |= (1 << TripletSelection::tracklet);
+        // Check tracklet algo on triplet
+        tlCand = SDL::Tracklet(innerSegmentPtr(), outerSegmentPtr());
 
-    // const std::map<std::string, float>& recovars = tlCand.getRecoVars();
-    // for (auto& key : recovars)
-    // {
-    //     std::cout <<  " key.first: " << key.first <<  std::endl;
-    //     std::cout <<  " key.second: " << key.second <<  std::endl;
-    // }
+        // Run tracklet algo
+        tlCand.runTrackletDefaultAlgoDeltaBetaOnlyBarrelBarrelBarrelBarrel(SDL::Log_Nothing);
+
+        if (not (tlCand.passesTrackletAlgo(SDL::Default_TLAlgo)))
+        {
+            if (logLevel >= SDL::Log_Debug3)
+            {
+                SDL::cout << "Failed Cut #2 in " << __FUNCTION__ << std::endl;
+            }
+            passAlgo_ &= (0 << SDL::Default_TPAlgo);
+            return;
+        }
+        // Flag the pass bit
+        passBitsDefaultAlgo_ |= (1 << TripletSelection::tracklet);
+    }
+    //
+    //====================================================
+
+    //====================================================
+    //
+    // Compute momentum of Triplet
+    //
+    if (false)
+    {
+        SDL::Hit& HitA = (*innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr());
+        SDL::Hit& HitB = (*innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr());
+        SDL::Hit& HitC = (*outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr());
+        SDL::Hit center = SDL::MathUtil::getCenterFromThreePoints(HitA, HitB, HitC);
+        float ptEst = SDL::MathUtil::ptEstimateFromRadius((HitA - center).rt());
+
+        if (not (ptEst > 1.))
+        {
+            if (logLevel >= SDL::Log_Debug3)
+            {
+                SDL::cout << "Failed Cut #2 in " << __FUNCTION__ << std::endl;
+            }
+            passAlgo_ &= (0 << SDL::Default_TPAlgo);
+            return;
+        }
+        // Flag the pass bit
+        passBitsDefaultAlgo_ |= (1 << TripletSelection::tracklet);
+    }
+    //
+    //====================================================
 
     passAlgo_ |= (1 << SDL::Default_TPAlgo);
 }

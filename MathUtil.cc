@@ -31,6 +31,11 @@ float SDL::MathUtil::ptEstimateFromDeltaPhiChangeAndRt(float dPhiChange, float r
     return rt * 2.99792458e-3 * 3.8 / 2. / std::sin(dPhiChange);
 }
 
+float SDL::MathUtil::ptEstimateFromRadius(float radius)
+{
+    return 2.99792458e-3 * 3.8 * radius;
+}
+
 float SDL::MathUtil::dphiEstimateFromPtAndRt(float pt, float rt)
 {
     return std::asin(rt / (2 * pt / (2.99792458e-3 * 3.8)));

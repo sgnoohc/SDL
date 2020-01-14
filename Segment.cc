@@ -21,6 +21,7 @@ SDL::Segment::Segment(const Segment& sg) :
     zHi_(sg.getZHi()),
     recovars_(sg.getRecoVars())
 {
+    // addSelfPtrToMiniDoublets();
 }
 
 SDL::Segment::Segment(SDL::MiniDoublet* innerMiniDoubletPtr, SDL::MiniDoublet* outerMiniDoubletPtr) :
@@ -35,6 +36,33 @@ SDL::Segment::Segment(SDL::MiniDoublet* innerMiniDoubletPtr, SDL::MiniDoublet* o
     zLo_(0),
     zHi_(0)
 {
+    // addSelfPtrToMiniDoublets();
+}
+
+void SDL::Segment::addSelfPtrToMiniDoublets()
+{
+    innerMiniDoubletPtr_->addOutwardSegmentPtr(this);
+    outerMiniDoubletPtr_->addInwardSegmentPtr(this);
+}
+
+const std::vector<SDL::Tracklet*>& SDL::Segment::getListOfOutwardTrackletPtrs()
+{
+    return outwardTrackletPtrs;
+}
+
+const std::vector<SDL::Tracklet*>& SDL::Segment::getListOfInwardTrackletPtrs()
+{
+    return inwardTrackletPtrs;
+}
+
+void SDL::Segment::addOutwardTrackletPtr(SDL::Tracklet* tl)
+{
+    outwardTrackletPtrs.push_back(tl);
+}
+
+void SDL::Segment::addInwardTrackletPtr(SDL::Tracklet* tl)
+{
+    inwardTrackletPtrs.push_back(tl);
 }
 
 SDL::MiniDoublet* SDL::Segment::innerMiniDoubletPtr() const

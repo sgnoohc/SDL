@@ -46,6 +46,12 @@ namespace SDL
             // Bits to flag whether this segment passes some algorithm
             int passAlgo_;
 
+            // Pointers of tracklets containing this segment as inner segment
+            std::vector<Tracklet*> outwardTrackletPtrs;
+
+            // Pointers of tracklets containing this segment as outer segment
+            std::vector<Tracklet*> inwardTrackletPtrs;
+
         public:
             enum SegmentSelection
             {
@@ -79,6 +85,14 @@ namespace SDL
             Segment(const Segment&);
             Segment(MiniDoublet* innerMiniDoubletPtr, MiniDoublet* outerMiniDoubletPtr);
             ~Segment();
+
+            void addSelfPtrToMiniDoublets();
+
+            const std::vector<Tracklet*>& getListOfOutwardTrackletPtrs();
+            const std::vector<Tracklet*>& getListOfInwardTrackletPtrs();
+
+            void addOutwardTrackletPtr(Tracklet* tl);
+            void addInwardTrackletPtr(Tracklet* tl);
 
             MiniDoublet* innerMiniDoubletPtr() const;
             MiniDoublet* outerMiniDoubletPtr() const;
