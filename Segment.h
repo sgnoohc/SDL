@@ -6,6 +6,7 @@
 #include "Module.h"
 #include "Algo.h"
 #include "ModuleConnectionMap.h"
+#include <unordered_map>
 
 namespace SDL
 {
@@ -128,6 +129,8 @@ namespace SDL
             bool hasCommonMiniDoublet(const Segment&) const;
             bool isIdxMatched(const Segment&) const;
             bool isAnchorHitIdxMatched(const Segment&) const;
+
+            std::unordered_map<std::string,float> dAlphaThreshold(const SDL::MiniDoublet&, const SDL::MiniDoublet&);
 
             // The function to actually determine whether a pair of mini-doublets is a reco-ed segment or not
             static bool isMiniDoubletPairASegment(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);

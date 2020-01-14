@@ -303,7 +303,8 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgo(SDL::LogLevel logLevel)
     // Retreived the lower module object
     const SDL::Module& lowerModule = lowerHitPtr_->getModule();
 
-    if (useBarrelLogic(lowerModule))
+    //if (useBarrelLogic(lowerModule))
+    if(lowerModule.subdet() == SDL::Module::Barrel)
     {
         runMiniDoubletDefaultAlgoBarrel(logLevel);
     }
@@ -888,6 +889,7 @@ float SDL::MiniDoublet::dPhiThreshold(const SDL::Hit& lowerHit, const SDL::Modul
     std::array<float, 5> miniRminMeanEndcap {131.4, 156.2, 185.6, 220.3, 261.5};// use z for endcaps // TODO: Update this with newest geometry
 
     std::array<float, 6> miniDeltaTilted {0.26, 0.26, 0.26, 0.4, 0.4, 0.4}; // Used only for tilted modules (i.e. first 3 numbers only matter)
+    std::array<float,6> miniDeltaEndcap {0.4, 0.4, 0.4, 0.4, 0.4, 0.4}; //Endcap like tilted
 
     // =================================================================
     // Computing some components that make up the cut threshold
@@ -903,7 +905,22 @@ float SDL::MiniDoublet::dPhiThreshold(const SDL::Hit& lowerHit, const SDL::Modul
     const float pixelPSZpitch = 0.15;
     const unsigned int detid = ((module.moduleLayerType() == SDL::Module::Pixel) ?  module.partnerDetId() : module.detId());
     const float drdz = tiltedGeometry.getDrDz(detid);
-    const float miniTilt = ((isTilted && tiltedOT123) ? 0.5f * pixelPSZpitch * drdz / sqrt(1.f + drdz * drdz) / miniDeltaTilted[iL] : 0);
+//    const float miniTilt = ((isTilted && tiltedOT123) ? 0.5f * pixelPSZpitch * drdz / sqrt(1.f + drdz * drdz) / miniDeltaTilted[iL] : 0);
+    float miniTilt = 0;
+    if(module.subdet() == SDL::Module::Barrel)
+    {
+        if(isTilted && tiltedOT123)
+        {
+            if(isNormalTiltedModules(module))
+            {
+                miniTilt = 0.5f * pixelPSZpitch * drdz/sqrt(1.f + drdz * drdz) / miniDeltaTilted[iL];
+            }
+            else
+            {
+                miniTilt = 0.5f * pixelPSZpitch * drdz/sqrt(1.f + drdz * drdz) / miniDeltaEndcap[iL];
+            }
+        }
+    }
     // Compute luminous region requirement for endcap
     const float deltaZLum = 15.f;
     const float miniLum = deltaZLum / std::abs(lowerHit.z());
@@ -912,17 +929,17 @@ float SDL::MiniDoublet::dPhiThreshold(const SDL::Hit& lowerHit, const SDL::Modul
     // Return the threshold value
     // =================================================================
     // Following condition is met if the module is central and flatly lying
-    if (module.subdet() == SDL::Module::Barrel and module.side() == SDL::Module::Center)
+    if (module.subdet() == SDL::Module::Barrel)     
     {
-        return miniSlope + sqrt(pow(miniMuls, 2) + pow(miniPVoff, 2));
+        if(module.side() == SDL::Module::Center)
+        {
+            return miniSlope + sqrt(pow(miniMuls, 2) + pow(miniPVoff, 2));
+        }
+        else if (isTilted)
+        {
+            return miniSlope + sqrt(pow(miniMuls, 2) + pow(miniPVoff, 2) + pow(miniTilt * miniSlope, 2));
+        }
     }
-    // Following condition is met if the module is central and tilted
-    // else if (module.subdet() == SDL::Module::Barrel and module.side() != SDL::Module::Center and not isNormalTiltedModules(module))
-    else if (isNormalTiltedModules(module))
-    {
-        return miniSlope + sqrt(pow(miniMuls, 2) + pow(miniPVoff, 2) + pow(miniTilt * miniSlope, 2));
-    }
-    // If not barrel, it is Endcap
     else
     {
         return miniSlope + sqrt(pow(miniMuls, 2) + pow(miniPVoff, 2) + pow(miniLum, 2));
@@ -1327,7 +1344,7 @@ bool SDL::MiniDoublet::useBarrelLogic(const SDL::Module& lowerModule)
     // or if it is a "normal" tilted modules (ones that are not too steeply tilted)
     // then use barrel logic
 
-    if ( (lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() == SDL::Module::Center) or isNormalTiltedModules(lowerModule))
+    if ( ((lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() == SDL::Module::Center)) or isNormalTiltedModules(lowerModule))
         return true;
     else
         return false;
