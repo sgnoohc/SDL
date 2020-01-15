@@ -40,11 +40,6 @@ namespace SDL
             // Bits to flag whether this mini-doublet passes some algorithm
             int passAlgo_;
 
-            int passAlgoDZ_;
-            int passAlgoDPhi_;
-            int passAlgoDrt_;
-            int passAlgoDPhiChange_;
-
             // Some mini-doublet related reconstructon variables
             Hit lowerShiftedHit_;
             Hit upperShiftedHit_;
@@ -54,13 +49,6 @@ namespace SDL
             float dphi_noshift_;
             float dphichange_;
             float dphichange_noshift_;
-            float drt_;
-
-            //cuts from outside
-            float dzCut_;
-            float dphiCut_;
-            float dphichangeCut_;
-            float drtCut_;
 
             // Pointers of segments containing this Mini-doublet as inner mini doublet
             std::vector<Segment*> outwardSegmentPtrs;
@@ -86,15 +74,9 @@ namespace SDL
             Hit* upperHitPtr() const;
             Hit* anchorHitPtr() const;
             const int& getPassAlgo() const;
-            const int& getPassAlgoDZ() const;
-            const int& getPassAlgoDrt() const;
-            const int& passAlgoDrt() const;
-            const int& getPassAlgoDPhi() const;
-            const int& getPassAlgoDPhiChange() const;
             const Hit& getLowerShiftedHit() const;
             const Hit& getUpperShiftedHit() const;
             const float& getDz() const;
-            const float& getDrt() const;
             const float& getShiftedDz() const;
             const float& getDeltaPhi() const;
             const float& getDeltaPhiChange() const;
@@ -107,7 +89,6 @@ namespace SDL
             void setLowerShiftedHit(float, float, float, int=-1);
             void setUpperShiftedHit(float, float, float, int=-1);
             void setDz(float);
-            void setDrt(float);
             void setShiftedDz(float);
             void setDeltaPhi(float);
             void setDeltaPhiChange(float);
@@ -115,22 +96,8 @@ namespace SDL
             void setDeltaPhiChangeNoShift(float);
             void setRecoVars(std::string, float);
 
-            const float& getdZCut() const;
-            const float& getdphiCut() const;
-            const float& getdphichangeCut() const;
-            const float& getdrtCut() const;
-
-            void setdzCut(float);
-            void setdphiCut(float);
-            void setdphichangeCut(float);
-            void setdrtCut(float);
-
             // return whether it passed the algorithm
             bool passesMiniDoubletAlgo(MDAlgo algo) const;
-            bool passesMiniDoubletAlgo_dZ(MDAlgo algo) const;
-            bool passesMiniDoubletAlgo_drt(MDAlgo algo) const;
-            bool passesMiniDoubletAlgo_dPhi(MDAlgo algo) const;
-            bool passesMiniDoubletAlgo_dPhiChange(MDAlgo algo) const;
 
             // The function to run mini-doublet algorithm on a mini-doublet candidate
             void runMiniDoubletAlgo(MDAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
