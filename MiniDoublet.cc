@@ -11,14 +11,23 @@ SDL::MiniDoublet::~MiniDoublet()
 }
 
 SDL::MiniDoublet::MiniDoublet(const MiniDoublet& md): lowerHitPtr_(md.lowerHitPtr()), upperHitPtr_(md.upperHitPtr())
-                                                      ,passAlgo_(md.getPassAlgo())
-                                                      ,lowerShiftedHit_(md.getLowerShiftedHit())
+                                                      ,passAlgo_(md.getPassAlgo()),
+                                                      passAlgoDZ_(md.getPassAlgoDZ()),
+                                                      passAlgoDPhi_(md.getPassAlgoDPhi()),
+                                                      passAlgoDrt_(md.getPassAlgoDrt()),
+                                                      passAlgoDPhiChange_(md.getPassAlgoDPhiChange()),
+                                                      lowerShiftedHit_(md.getLowerShiftedHit())
                                                       ,upperShiftedHit_(md.getUpperShiftedHit())
                                                       ,dz_(md.getDz())
+                                                      ,drt_(md.getDrt())
                                                       ,shiftedDz_(md.getShiftedDz())
                                                       ,dphi_(md.getDeltaPhi())
                                                       ,dphi_noshift_(md.getDeltaPhiNoShift())
                                                       ,dphichange_(md.getDeltaPhiChange())
+                                                      ,dzCut_(md.getdZCut()),
+                                                      dphiCut_(md.getdphiCut()),
+                                                      dphichangeCut_(md.getdphichangeCut()),
+                                                      drtCut_(md.getdrtCut())
                                                       ,dphichange_noshift_(md.getDeltaPhiChangeNoShift())
                                                       ,recovars_(md.getRecoVars())
 {
@@ -26,13 +35,22 @@ SDL::MiniDoublet::MiniDoublet(const MiniDoublet& md): lowerHitPtr_(md.lowerHitPt
 }
 
 SDL::MiniDoublet::MiniDoublet(SDL::Hit* lowerHitPtr, SDL::Hit* upperHitPtr) : lowerHitPtr_(lowerHitPtr), upperHitPtr_(upperHitPtr)
-                                                      ,passAlgo_(0)
-                                                      ,dz_(0)
+                                                      ,passAlgo_(0),
+                                                      passAlgoDZ_(0),
+                                                      passAlgoDPhi_(0),
+                                                      passAlgoDrt_(0),
+                                                      passAlgoDPhiChange_(0),
+                                                      dz_(0)
+                                                      ,drt_(0)
                                                       ,shiftedDz_(0)
                                                       ,dphi_(0)
                                                       ,dphi_noshift_(0)
                                                       ,dphichange_(0)
-                                                      ,dphichange_noshift_(0)
+                                                      ,dphichange_noshift_(0),
+                                                      dzCut_(-1),
+                                                      dphiCut_(-1),
+                                                      dphichangeCut_(-1),
+                                                      drtCut_(-1)
 {
     setAnchorHit();
 }
@@ -100,6 +118,26 @@ const int& SDL::MiniDoublet::getPassAlgo() const
     return passAlgo_;
 }
 
+const int& SDL::MiniDoublet::getPassAlgoDZ() const
+{
+    return passAlgoDZ_;
+}
+
+const int& SDL::MiniDoublet::getPassAlgoDrt() const
+{
+    return passAlgoDrt_;
+}
+
+const int& SDL::MiniDoublet::getPassAlgoDPhi() const
+{
+    return passAlgoDPhi_;
+}
+
+const int& SDL::MiniDoublet::getPassAlgoDPhiChange() const
+{
+    return passAlgoDPhiChange_;
+}
+
 const SDL::Hit& SDL::MiniDoublet::getLowerShiftedHit() const
 {
     return lowerShiftedHit_;
@@ -115,6 +153,11 @@ const float& SDL::MiniDoublet::getDz() const
     return dz_;
 }
 
+const float& SDL::MiniDoublet::getDrt() const
+{
+    return drt_;
+}
+
 const float& SDL::MiniDoublet::getShiftedDz() const
 {
     return shiftedDz_;
@@ -128,6 +171,47 @@ const float& SDL::MiniDoublet::getDeltaPhi() const
 const float& SDL::MiniDoublet::getDeltaPhiChange() const
 {
     return dphichange_;
+}
+
+
+const float& SDL::MiniDoublet::getdZCut() const
+{
+    return dzCut_;
+}
+
+void SDL::MiniDoublet::setdzCut(float dzCut)
+{
+  dzCut_ = dzCut;
+}
+
+void SDL::MiniDoublet::setdphiCut(float dphiCut)
+{
+  dphiCut_ = dphiCut;
+}
+
+void SDL::MiniDoublet::setdphichangeCut(float dphichangeCut)
+{
+  dphichangeCut_ = dphichangeCut;
+}
+
+void SDL::MiniDoublet::setdrtCut(float drtCut)
+{
+  drtCut_ = drtCut;
+}
+
+const float& SDL::MiniDoublet::getdphiCut() const
+{
+    return dphiCut_;
+}
+
+const float& SDL::MiniDoublet::getdphichangeCut() const
+{
+    return dphichangeCut_;
+}
+
+const float& SDL::MiniDoublet::getdrtCut() const
+{
+  return drtCut_;
 }
 
 const float& SDL::MiniDoublet::getDeltaPhiNoShift() const
@@ -167,6 +251,11 @@ void SDL::MiniDoublet::setDz(float dz)
     dz_ = dz;
 }
 
+void SDL::MiniDoublet::setDrt(float drt)
+{
+    drt_ = drt;
+}
+
 void SDL::MiniDoublet::setShiftedDz(float shiftedDz)
 {
     shiftedDz_ = shiftedDz;
@@ -203,6 +292,26 @@ bool SDL::MiniDoublet::passesMiniDoubletAlgo(SDL::MDAlgo algo) const
     return passAlgo_ & (1 << algo);
 }
 
+bool SDL::MiniDoublet::passesMiniDoubletAlgo_dZ(SDL::MDAlgo algo) const
+{
+    return passAlgoDZ_ & (1 << algo);
+}
+
+bool SDL::MiniDoublet::passesMiniDoubletAlgo_dPhi(SDL::MDAlgo algo) const
+{
+  return passAlgoDPhi_ & (1 << algo);
+}
+
+bool SDL::MiniDoublet::passesMiniDoubletAlgo_dPhiChange(SDL::MDAlgo algo) const
+{
+   return passAlgoDPhiChange_ & (1 << algo);
+}
+
+bool SDL::MiniDoublet::passesMiniDoubletAlgo_drt(SDL::MDAlgo algo) const
+{
+    return passAlgoDrt_ & (1 << algo);
+}
+
 void SDL::MiniDoublet::runMiniDoubletAlgo(SDL::MDAlgo algo, SDL::LogLevel logLevel)
 {
     if (algo == SDL::AllComb_MDAlgo)
@@ -230,7 +339,8 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgo(SDL::LogLevel logLevel)
     // Retreived the lower module object
     const SDL::Module& lowerModule = lowerHitPtr_->getModule();
 
-    if (useBarrelLogic(lowerModule))
+    //if (useBarrelLogic(lowerModule))
+    if(lowerModule.subdet() == SDL::Module::Barrel)
     {
         runMiniDoubletDefaultAlgoBarrel(logLevel);
     }
@@ -245,7 +355,7 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
     // First get the object that the pointer points to
     const SDL::Hit& lowerHit = (*lowerHitPtr_);
     const SDL::Hit& upperHit = (*upperHitPtr_);
-
+    int passAlgoOriginal_ = passAlgo_;
     // Retreived the lower module object
     const SDL::Module& lowerModule = lowerHitPtr_->getModule();
 
@@ -258,22 +368,26 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
 
     setDz(lowerHit.z() - upperHit.z());
     const float& dz = getDz();
-
-    // const float dzCut = lowerModule.moduleType() == SDL::Module::PS ? 10.f : 1.5f; // Could be tighter for PS modules
-
-    //*
-    // const float dzCut = 10.f; // Could be tighter for PS modules
-    // if (not (std::abs(dz) < dzCut)) // If cut fails continue
-    //*
-
-    //*
-    const float dzCut = 10.f; // Could be tighter for PS modules
-    const bool isNotInvertedCrosser = lowerModule.moduleType() == SDL::Module::PS ? true : (lowerHit.z() * dz > 0);
-    const float sign = ((dz > 0) - (dz < 0)) * ((lowerHit.z() > 0) - (lowerHit.z() < 0));
-    const float invertedcrossercut = (abs(dz) > 2) * sign;
-    if (not (std::abs(dz) < dzCut and invertedcrossercut <= 0)) // Adding inverted crosser rejection
-    //*
-
+    
+    float dzCut;
+    if(dzCut_ < 0)
+    {
+        //cut at dz = 2 for barrel PS modules
+        if(lowerModule.moduleLayerType() == SDL::Module::PS)
+        {
+            dzCut = 2.f;
+        }
+        else
+        {
+            dzCut = 10.f;
+        }
+    }
+    else
+    {
+        dzCut = dzCut_;
+    }
+    if (not (std::abs(dz) < dzCut)) // If cut fails continue
+    // if (not (std::abs(dz) < dzCut and invertedcrossercut <= 0)) // Adding inverted crosser rejection
     {
         if (logLevel >= SDL::Log_Debug3)
         {
@@ -286,8 +400,9 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
         }
 
         // did not pass default algo
+        passAlgoDZ_ &= (0 << SDL::Default_MDAlgo);
         passAlgo_ &= (0 << SDL::Default_MDAlgo);
-        return;
+//        return;
     }
     else
     {
@@ -300,14 +415,22 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
             SDL::cout << "dz : " << dz << std::endl;
             SDL::cout << "dzCut : " << dzCut << std::endl;
         }
+        passAlgoDZ_ |= (1 << SDL::Default_MDAlgo);
     }
 
     // Calculate the cut thresholds for the selection
     float miniCut = 0;
-    if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
-        miniCut = MiniDoublet::dPhiThreshold(lowerHit, lowerModule);
+    if(dphiCut_ < 0)
+    {
+      if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
+          miniCut = MiniDoublet::dPhiThreshold(lowerHit, lowerModule);
+      else
+          miniCut = MiniDoublet::dPhiThreshold(upperHit, lowerModule);
+    }
     else
-        miniCut = MiniDoublet::dPhiThreshold(upperHit, lowerModule);
+    {
+        miniCut = dphiCut_;
+    }
 
     // Cut #2: dphi difference
     // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3085
@@ -358,8 +481,9 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
         }
 
         // did not pass default algo
+        passAlgoDPhi_ &= (0 << SDL::Default_MDAlgo);
         passAlgo_ &= (0 << SDL::Default_MDAlgo);
-        return;
+//        return;
     }
     else
     {
@@ -372,6 +496,7 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
             SDL::cout << "fabsdPhi : " << getDeltaPhi() << std::endl;
             SDL::cout << "miniCut : " << miniCut << std::endl;
         }
+        passAlgoDPhi_ |= (1 << SDL::Default_MDAlgo);
     }
 
     // Cut #3: The dphi change going from lower Hit to upper Hit
@@ -424,8 +549,9 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
         }
 
         // did not pass default algo
+        passAlgoDPhiChange_ &= (0 << SDL::Default_MDAlgo);
         passAlgo_ &= (0 << SDL::Default_MDAlgo);
-        return;
+//        return;
     }
     else
     {
@@ -438,10 +564,15 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
             SDL::cout << "fabsdPhiChange : " << getDeltaPhiChange() << std::endl;
             SDL::cout << "miniCut : " << miniCut << std::endl;
         }
+        passAlgoDPhiChange_ |= (1 << SDL::Default_MDAlgo);
     }
 
     // If all cut passed this pair is good, and make and add the mini-doublet
-    passAlgo_ |= (1 << SDL::Default_MDAlgo);
+    if(passesMiniDoubletAlgo_dZ(SDL::Default_MDAlgo) && passesMiniDoubletAlgo_dPhi(SDL::Default_MDAlgo) && passesMiniDoubletAlgo_dPhiChange(SDL::Default_MDAlgo))
+    {
+        passAlgo_ = passAlgoOriginal_ | (1 << SDL::Default_MDAlgo);
+    }
+    //passAlgo_ |= (1 << SDL::Default_MDAlgo);
     return;
 
 }
@@ -451,7 +582,7 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
     // First get the object that the pointer points to
     const SDL::Hit& lowerHit = (*lowerHitPtr_);
     const SDL::Hit& upperHit = (*upperHitPtr_);
-
+    int passAlgoOriginal_ = passAlgo_;
     // Retreived the lower module object
     const SDL::Module& lowerModule = lowerHitPtr_->getModule();
 
@@ -467,7 +598,7 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
     setDz(lowerHit.z() - upperHit.z());
     float dz = getDz(); // Not const since later it might change depending on the type of module
 
-    const float dzCut = ((lowerModule.side() == SDL::Module::Endcap) ?  1.f : 10.f);
+    const float dzCut = dzCut_ >= 0 ? dzCut_ : ((lowerModule.side() == SDL::Module::Endcap) ?  1.f : 10.f);
     if (not (std::abs(dz) < dzCut)) // If cut fails continue
     {
         if (logLevel >= SDL::Log_Debug2)
@@ -481,8 +612,9 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
         }
 
         // did not pass default algo
+        passAlgoDZ_ &= (0 << SDL::Default_MDAlgo);
         passAlgo_ &= (0 << SDL::Default_MDAlgo);
-        return;
+        //return;
     }
     else
     {
@@ -495,12 +627,30 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
             SDL::cout << "dz : " << dz << std::endl;
             SDL::cout << "dzCut : " << dzCut << std::endl;
         }
+
+        passAlgoDZ_ |= (1 << SDL::Default_MDAlgo);
     }
 
     // Cut #2 : drt cut. The dz difference can't be larger than 1cm. (max separation is 4mm for modules in the endcap)
     // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3100
-    const float drtCut = 10.f; // i.e. should be smaller than the module length. Could be tighter if PS modules
+    float drtCut;
+    if(drtCut_ < 0)
+    {
+        if(lowerModule.moduleLayerType() == SDL::Module::PS)
+        {
+            drtCut = 2.f;
+        }
+        else
+        {
+            drtCut = 10.f;
+        }
+    }
+    else
+    {
+        drtCut = drtCut_;
+    }
     float drt = std::abs(lowerHit.rt() - upperHit.rt());
+    setDrt(drt);
     if (not (drt < drtCut)) // If cut fails continue
     {
         if (logLevel >= SDL::Log_Debug2)
@@ -514,8 +664,9 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
         }
 
         // did not pass default algo
+        passAlgoDrt_ &= (0 << SDL::Default_MDAlgo);
         passAlgo_ &= (0 << SDL::Default_MDAlgo);
-        return;
+        //return;
     }
     else
     {
@@ -528,14 +679,22 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
             SDL::cout << "drt : " << drt << std::endl;
             SDL::cout << "drtCut : " << drtCut << std::endl;
         }
+        passAlgoDrt_ |= (1 << SDL::Default_MDAlgo);
     }
 
     // Calculate the cut thresholds for the selection
     float miniCut = 0;
-    if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
-        miniCut = MiniDoublet::dPhiThreshold(lowerHit, lowerModule);
+    if(dphiCut_ < 0)
+    {
+        if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
+            miniCut = MiniDoublet::dPhiThreshold(lowerHit, lowerModule);
+        else
+            miniCut = MiniDoublet::dPhiThreshold(upperHit, lowerModule);
+    }
     else
-        miniCut = MiniDoublet::dPhiThreshold(upperHit, lowerModule);
+    {
+        miniCut = dphiCut_;
+    }
 
     // Cut #3: dphi difference
     // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3111
@@ -601,8 +760,9 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
         }
 
         // did not pass default algo
+        passAlgoDPhi_ &= (0 << SDL::Default_MDAlgo);
         passAlgo_ &= (0 << SDL::Default_MDAlgo);
-        return;
+        //return;
     }
     else
     {
@@ -615,6 +775,7 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
             SDL::cout << "fabsdPhi : " << getDeltaPhi() << std::endl;
             SDL::cout << "miniCut : " << miniCut << std::endl;
         }
+        passAlgoDPhi_ |= (1 << SDL::Default_MDAlgo);
     }
 
     // Cut #4: Another cut on the dphi after some modification
@@ -655,8 +816,9 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
         }
 
         // did not pass default algo
+        passAlgoDPhiChange_ &= (0 << SDL::Default_MDAlgo);
         passAlgo_ &= (0 << SDL::Default_MDAlgo);
-        return;
+        //return;
     }
     else
     {
@@ -672,10 +834,16 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
             SDL::cout << "fabsdPhiMod : " << getDeltaPhiChange() << std::endl;
             SDL::cout << "miniCut : " << miniCut << std::endl;
         }
+
+        passAlgoDPhiChange_ |= (1 << SDL::Default_MDAlgo);
     }
 
     // If all cut passed this pair is good, and make and add the mini-doublet
-    passAlgo_ |= (1 << SDL::Default_MDAlgo);
+    if(passesMiniDoubletAlgo_dZ(SDL::Default_MDAlgo) && passesMiniDoubletAlgo_dPhi(SDL::Default_MDAlgo) && passesMiniDoubletAlgo_dPhiChange(SDL::Default_MDAlgo) && passesMiniDoubletAlgo_drt(SDL::Default_MDAlgo))
+    {
+        passAlgo_ = passAlgoOriginal_ | (1 << SDL::Default_MDAlgo);
+    }
+    //passAlgo_ |= (1 << SDL::Default_MDAlgo);
     return;
 }
 
@@ -763,6 +931,7 @@ float SDL::MiniDoublet::dPhiThreshold(const SDL::Hit& lowerHit, const SDL::Modul
     std::array<float, 5> miniRminMeanEndcap {131.4, 156.2, 185.6, 220.3, 261.5};// use z for endcaps // TODO: Update this with newest geometry
 
     std::array<float, 6> miniDeltaTilted {0.26, 0.26, 0.26, 0.4, 0.4, 0.4}; // Used only for tilted modules (i.e. first 3 numbers only matter)
+    std::array<float,6> miniDeltaEndcap {0.4, 0.4, 0.4, 0.4, 0.4, 0.4}; //Endcap like tilted
 
     // =================================================================
     // Computing some components that make up the cut threshold
@@ -778,7 +947,22 @@ float SDL::MiniDoublet::dPhiThreshold(const SDL::Hit& lowerHit, const SDL::Modul
     const float pixelPSZpitch = 0.15;
     const unsigned int detid = ((module.moduleLayerType() == SDL::Module::Pixel) ?  module.partnerDetId() : module.detId());
     const float drdz = tiltedGeometry.getDrDz(detid);
-    const float miniTilt = ((isTilted && tiltedOT123) ? 0.5f * pixelPSZpitch * drdz / sqrt(1.f + drdz * drdz) / miniDeltaTilted[iL] : 0);
+//    const float miniTilt = ((isTilted && tiltedOT123) ? 0.5f * pixelPSZpitch * drdz / sqrt(1.f + drdz * drdz) / miniDeltaTilted[iL] : 0);
+    float miniTilt = 0;
+    if(module.subdet() == SDL::Module::Barrel)
+    {
+        if(isTilted && tiltedOT123)
+        {
+            if(isNormalTiltedModules(module))
+            {
+                miniTilt = 0.5f * pixelPSZpitch * drdz/sqrt(1.f + drdz * drdz) / miniDeltaTilted[iL];
+            }
+            else
+            {
+                miniTilt = 0.5f * pixelPSZpitch * drdz/sqrt(1.f + drdz * drdz) / miniDeltaEndcap[iL];
+            }
+        }
+    }
     // Compute luminous region requirement for endcap
     const float deltaZLum = 15.f;
     const float miniLum = deltaZLum / std::abs(lowerHit.z());
@@ -787,17 +971,17 @@ float SDL::MiniDoublet::dPhiThreshold(const SDL::Hit& lowerHit, const SDL::Modul
     // Return the threshold value
     // =================================================================
     // Following condition is met if the module is central and flatly lying
-    if (module.subdet() == SDL::Module::Barrel and module.side() == SDL::Module::Center)
+    if (module.subdet() == SDL::Module::Barrel)     
     {
-        return miniSlope + sqrt(pow(miniMuls, 2) + pow(miniPVoff, 2));
+        if(module.side() == SDL::Module::Center)
+        {
+            return miniSlope + sqrt(pow(miniMuls, 2) + pow(miniPVoff, 2));
+        }
+        else if (isTilted)
+        {
+            return miniSlope + sqrt(pow(miniMuls, 2) + pow(miniPVoff, 2) + pow(miniTilt * miniSlope, 2));
+        }
     }
-    // Following condition is met if the module is central and tilted
-    // else if (module.subdet() == SDL::Module::Barrel and module.side() != SDL::Module::Center and not isNormalTiltedModules(module))
-    else if (isNormalTiltedModules(module))
-    {
-        return miniSlope + sqrt(pow(miniMuls, 2) + pow(miniPVoff, 2) + pow(miniTilt * miniSlope, 2));
-    }
-    // If not barrel, it is Endcap
     else
     {
         return miniSlope + sqrt(pow(miniMuls, 2) + pow(miniPVoff, 2) + pow(miniLum, 2));
@@ -1202,7 +1386,7 @@ bool SDL::MiniDoublet::useBarrelLogic(const SDL::Module& lowerModule)
     // or if it is a "normal" tilted modules (ones that are not too steeply tilted)
     // then use barrel logic
 
-    if ( (lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() == SDL::Module::Center) or isNormalTiltedModules(lowerModule))
+    if ( ((lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() == SDL::Module::Center)) or isNormalTiltedModules(lowerModule))
         return true;
     else
         return false;
