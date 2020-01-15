@@ -24,11 +24,12 @@ SDL::MiniDoublet::MiniDoublet(const MiniDoublet& md): lowerHitPtr_(md.lowerHitPt
                                                       ,dphi_(md.getDeltaPhi())
                                                       ,dphi_noshift_(md.getDeltaPhiNoShift())
                                                       ,dphichange_(md.getDeltaPhiChange())
-                                                      ,dphichange_noshift_(md.getDeltaPhiChangeNoShift()),
-                                                      dzCut_(md.getdZCut()),
+                                                      ,dzCut_(md.getdZCut()),
                                                       dphiCut_(md.getdphiCut()),
                                                       dphichangeCut_(md.getdphichangeCut()),
                                                       drtCut_(md.getdrtCut())
+                                                      ,dphichange_noshift_(md.getDeltaPhiChangeNoShift())
+                                                      ,recovars_(md.getRecoVars())
 {
     setAnchorHit();
 }
@@ -52,6 +53,26 @@ SDL::MiniDoublet::MiniDoublet(SDL::Hit* lowerHitPtr, SDL::Hit* upperHitPtr) : lo
                                                       drtCut_(-1)
 {
     setAnchorHit();
+}
+
+const std::vector<SDL::Segment*>& SDL::MiniDoublet::getListOfOutwardSegmentPtrs()
+{
+    return outwardSegmentPtrs;
+}
+
+const std::vector<SDL::Segment*>& SDL::MiniDoublet::getListOfInwardSegmentPtrs()
+{
+    return inwardSegmentPtrs;
+}
+
+void SDL::MiniDoublet::addOutwardSegmentPtr(SDL::Segment* sg)
+{
+    outwardSegmentPtrs.push_back(sg);
+}
+
+void SDL::MiniDoublet::addInwardSegmentPtr(SDL::Segment* sg)
+{
+    inwardSegmentPtrs.push_back(sg);
 }
 
 void SDL::MiniDoublet::setAnchorHit()
@@ -203,6 +224,16 @@ const float& SDL::MiniDoublet::getDeltaPhiChangeNoShift() const
     return dphichange_noshift_;
 }
 
+const std::map<std::string, float>& SDL::MiniDoublet::getRecoVars() const
+{
+    return recovars_;
+}
+
+const float& SDL::MiniDoublet::getRecoVar(std::string key) const
+{
+    return recovars_.at(key);
+}
+
 void SDL::MiniDoublet::setLowerShiftedHit(float x, float y, float z, int idx)
 {
     lowerShiftedHit_.setXYZ(x, y, z);
@@ -248,6 +279,11 @@ void SDL::MiniDoublet::setDeltaPhiNoShift(float dphi)
 void SDL::MiniDoublet::setDeltaPhiChangeNoShift(float dphichange)
 {
     dphichange_noshift_ = dphichange;
+}
+
+void SDL::MiniDoublet::setRecoVars(std::string key, float var)
+{
+    recovars_[key] = var;
 }
 
 bool SDL::MiniDoublet::passesMiniDoubletAlgo(SDL::MDAlgo algo) const
@@ -322,6 +358,8 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
     int passAlgoOriginal_ = passAlgo_;
     // Retreived the lower module object
     const SDL::Module& lowerModule = lowerHitPtr_->getModule();
+
+    setRecoVars("miniCut", -999);
 
     // There are series of cuts that applies to mini-doublet in a "barrel" region
 
@@ -427,6 +465,8 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
         setDeltaPhi(lowerHit.deltaPhi(upperHit));
         setDeltaPhiNoShift(lowerHit.deltaPhi(upperHit));
     }
+
+    setRecoVars("miniCut", miniCut);
 
     if (not (std::abs(getDeltaPhi()) < miniCut)) // If cut fails continue
     {
@@ -545,6 +585,8 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
     int passAlgoOriginal_ = passAlgo_;
     // Retreived the lower module object
     const SDL::Module& lowerModule = lowerHitPtr_->getModule();
+
+    setRecoVars("miniCut", -999);
 
     // There are series of cuts that applies to mini-doublet in a "endcap" region
 

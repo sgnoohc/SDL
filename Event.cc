@@ -3,6 +3,10 @@
 SDL::Event::Event() : logLevel_(SDL::Log_Nothing)
 {
     createLayers();
+    n_hits_by_layer_barrel_.fill(0);
+    n_hits_by_layer_endcap_.fill(0);
+    n_hits_by_layer_barrel_upper_.fill(0);
+    n_hits_by_layer_endcap_upper_.fill(0);
     n_miniDoublet_candidates_by_layer_barrel_.fill(0);
     n_segment_candidates_by_layer_barrel_.fill(0);
     n_tracklet_candidates_by_layer_barrel_.fill(0);
@@ -120,6 +124,10 @@ void SDL::Event::addHitToModule(SDL::Hit hit, unsigned int detId)
 
     // And get the module (if not exists, then create), and add the address to Module.hits_
     getModule(detId).addHit(&(hits_.back()));
+
+    // Count number of hits in the event
+    incrementNumberOfHits(getModule(detId));
+
 }
 
 void SDL::Event::addMiniDoubletToEvent(SDL::MiniDoublet md, unsigned int detId, int layerIdx, SDL::Layer::SubDet subdet)
@@ -154,6 +162,10 @@ void SDL::Event::addSegmentToEvent(SDL::Segment sg, unsigned int detId, int laye
 
     // And get the layer andd the segment to it
     getLayer(layerIdx, subdet).addSegment(&(segments_.back()));
+
+    // Link segments to mini-doublets
+    segments_.back().addSelfPtrToMiniDoublets();
+
 }
 
 void SDL::Event::addTrackletToEvent(SDL::Tracklet tl, unsigned int detId, int layerIdx, SDL::Layer::SubDet subdet)
@@ -166,6 +178,10 @@ void SDL::Event::addTrackletToEvent(SDL::Tracklet tl, unsigned int detId, int la
 
     // And get the layer andd the segment to it
     getLayer(layerIdx, subdet).addTracklet(&(tracklets_.back()));
+
+    // Link segments to mini-doublets
+    tracklets_.back().addSelfPtrToSegments();
+
 }
 
 void SDL::Event::addTripletToEvent(SDL::Triplet tp, unsigned int detId, int layerIdx, SDL::Layer::SubDet subdet)
@@ -280,6 +296,131 @@ void SDL::Event::createMiniDoubletsFromLowerModule(unsigned int detId, SDL::MDAl
 
 }
 
+void SDL::Event::createPseudoMiniDoubletsFromAnchorModule(SDL::MDAlgo algo)
+{
+
+    // Loop over lower modules
+    for (auto& lowerModulePtr : getLowerModulePtrs())
+    {
+
+        unsigned int detId = lowerModulePtr->detId();
+
+        // Get reference to the lower Module
+        Module& lowerModule = getModule(detId);
+
+        // Assign anchor hit pointers based on their hit type
+        bool loopLower = true;
+        if (lowerModule.moduleType() == SDL::Module::PS)
+        {
+            if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
+            {
+                loopLower = true;
+            }
+            else
+            {
+                loopLower = false;
+            }
+        }
+        else
+        {
+            loopLower = true;
+        }
+
+        // Get reference to the upper Module
+        Module& upperModule = getModule(lowerModule.partnerDetId());
+
+        if (loopLower)
+        {
+            // Loop over lower module hits
+            for (auto& lowerHitPtr : lowerModule.getHitPtrs())
+            {
+                // Get reference to lower Hit
+                SDL::Hit& lowerHit = *lowerHitPtr;
+
+                // Loop over upper module hits
+                for (auto& upperHitPtr : upperModule.getHitPtrs())
+                {
+
+                    // Get reference to upper Hit
+                    SDL::Hit& upperHit = *upperHitPtr;
+
+                    // Create a mini-doublet candidate
+                    SDL::MiniDoublet mdCand(lowerHitPtr, upperHitPtr);
+
+                    // Count the number of mdCand considered
+                    incrementNumberOfMiniDoubletCandidates(lowerModule);
+
+                    // Run mini-doublet algorithm on mdCand (mini-doublet candidate)
+                    mdCand.runMiniDoubletAlgo(SDL::AllComb_MDAlgo, logLevel_);
+
+                    if (mdCand.passesMiniDoubletAlgo(SDL::AllComb_MDAlgo))
+                    {
+
+                        // Count the number of md formed
+                        incrementNumberOfMiniDoublets(lowerModule);
+
+                        if (lowerModule.subdet() == SDL::Module::Barrel)
+                            addMiniDoubletToEvent(mdCand, lowerModule.detId(), lowerModule.layer(), SDL::Layer::Barrel);
+                        else
+                            addMiniDoubletToEvent(mdCand, lowerModule.detId(), lowerModule.layer(), SDL::Layer::Endcap);
+
+                        // Break to exit on first pseudo mini-doublet
+                        break;
+                    }
+
+                }
+
+            }
+
+        }
+        else
+        {
+            // Loop over lower module hits
+            for (auto& upperHitPtr : upperModule.getHitPtrs())
+            {
+                // Get reference to upper Hit
+                SDL::Hit& upperHit = *upperHitPtr;
+
+                // Loop over upper module hits
+                for (auto& lowerHitPtr : lowerModule.getHitPtrs())
+                {
+
+                    // Get reference to lower Hit
+                    SDL::Hit& lowerHit = *lowerHitPtr;
+
+                    // Create a mini-doublet candidate
+                    SDL::MiniDoublet mdCand(lowerHitPtr, upperHitPtr);
+
+                    // Count the number of mdCand considered
+                    incrementNumberOfMiniDoubletCandidates(lowerModule);
+
+                    // Run mini-doublet algorithm on mdCand (mini-doublet candidate)
+                    mdCand.runMiniDoubletAlgo(SDL::AllComb_MDAlgo, logLevel_);
+
+                    if (mdCand.passesMiniDoubletAlgo(SDL::AllComb_MDAlgo))
+                    {
+
+                        // Count the number of md formed
+                        incrementNumberOfMiniDoublets(lowerModule);
+
+                        if (lowerModule.subdet() == SDL::Module::Barrel)
+                            addMiniDoubletToEvent(mdCand, lowerModule.detId(), lowerModule.layer(), SDL::Layer::Barrel);
+                        else
+                            addMiniDoubletToEvent(mdCand, lowerModule.detId(), lowerModule.layer(), SDL::Layer::Endcap);
+
+                        // Break to exit on first pseudo mini-doublet
+                        break;
+                    }
+
+                }
+
+            }
+
+        }
+    }
+
+}
+
 void SDL::Event::createSegments(SGAlgo algo)
 {
 
@@ -378,6 +519,9 @@ void SDL::Event::createTriplets(TPAlgo algo)
     for (auto& lowerModulePtr : getLowerModulePtrs())
     {
 
+        // if (lowerModulePtr->layer() != 4 and lowerModulePtr->layer() != 3)
+        //     continue;
+
         // Create mini doublets
         createTripletsFromInnerLowerModule(lowerModulePtr->detId(), algo);
 
@@ -462,6 +606,9 @@ void SDL::Event::createTrackletsWithModuleMap(TLAlgo algo)
     for (auto& lowerModulePtr : getLowerModulePtrs())
     {
 
+        // if (lowerModulePtr->layer() != 1)
+        //     continue;
+
         // Create mini doublets
         createTrackletsFromInnerLowerModule(lowerModulePtr->detId(), algo);
 
@@ -508,17 +655,6 @@ void SDL::Event::createTrackletsFromInnerLowerModule(unsigned int detId, SDL::TL
                 // Count the # of tlCands considered by layer
                 incrementNumberOfTrackletCandidates(innerLowerModule);
 
-                // Segment between innerSgOuterMD - outerSgInnerMD
-                SDL::Segment sgCand(innerSegmentPtr->outerMiniDoubletPtr(), outerSegmentPtr->innerMiniDoubletPtr());
-
-                // Run the segment algo (supposedly is fast)
-                sgCand.runSegmentAlgo(SDL::Default_SGAlgo, logLevel_);
-
-                if (not (sgCand.passesSegmentAlgo(SDL::Default_SGAlgo)))
-                {
-                    continue;
-                }
-
                 // Get reference to mini-doublet in outer lower module
                 SDL::Segment& outerSegment = *outerSegmentPtr;
 
@@ -544,6 +680,64 @@ void SDL::Event::createTrackletsFromInnerLowerModule(unsigned int detId, SDL::TL
 
         }
 
+    }
+
+}
+
+// Create tracklets via navigation
+void SDL::Event::createTrackletsViaNavigation(SDL::TLAlgo algo)
+{
+    // Loop over lower modules
+    for (auto& lowerModulePtr : getLowerModulePtrs())
+    {
+
+        // Get reference to the inner lower Module
+        Module& innerLowerModule = getModule(lowerModulePtr->detId());
+
+        // Triple nested loops
+        // Loop over inner lower module for segments
+        for (auto& innerSegmentPtr : innerLowerModule.getSegmentPtrs())
+        {
+
+            // Get reference to segment in inner lower module
+            SDL::Segment& innerSegment = *innerSegmentPtr;
+
+            // Get the connecting segment ptrs
+            for (auto& connectingSegmentPtr : innerSegmentPtr->outerMiniDoubletPtr()->getListOfOutwardSegmentPtrs())
+            {
+
+                for (auto& outerSegmentPtr : connectingSegmentPtr->outerMiniDoubletPtr()->getListOfOutwardSegmentPtrs())
+                {
+
+                    // Count the # of tlCands considered by layer
+                    incrementNumberOfTrackletCandidates(innerLowerModule);
+
+                    // Get reference to mini-doublet in outer lower module
+                    SDL::Segment& outerSegment = *outerSegmentPtr;
+
+                    // Create a tracklet candidate
+                    SDL::Tracklet tlCand(innerSegmentPtr, outerSegmentPtr);
+
+                    // Run segment algorithm on tlCand (tracklet candidate)
+                    tlCand.runTrackletAlgo(algo, logLevel_);
+
+                    if (tlCand.passesTrackletAlgo(algo))
+                    {
+
+                        // Count the # of sg formed by layer
+                        incrementNumberOfTracklets(innerLowerModule);
+
+                        if (innerLowerModule.subdet() == SDL::Module::Barrel)
+                            addTrackletToEvent(tlCand, innerLowerModule.detId(), innerLowerModule.layer(), SDL::Layer::Barrel);
+                        else
+                            addTrackletToEvent(tlCand, innerLowerModule.detId(), innerLowerModule.layer(), SDL::Layer::Endcap);
+                    }
+
+                }
+
+            }
+
+        }
     }
 
 }
@@ -675,8 +869,8 @@ void SDL::Event::createTrackCandidatesFromTriplets(TCAlgo algo)
     for (auto& lowerModulePtr : getLowerModulePtrs())
     {
 
-        if (not (lowerModulePtr->layer() == 1))
-            continue;
+        // if (not (lowerModulePtr->layer() == 1))
+        //     continue;
 
         // Create mini doublets
         createTrackCandidatesFromInnerModulesFromTriplets(lowerModulePtr->detId(), algo);
@@ -734,15 +928,15 @@ void SDL::Event::createTrackCandidatesFromInnerModulesFromTriplets(unsigned int 
                     continue;
                 }
 
-                SDL::Tracklet tlCand(innerTripletPtr->innerSegmentPtr(), &sgCand);
+                // SDL::Tracklet tlCand(innerTripletPtr->innerSegmentPtr(), &sgCand);
 
-                // Run the segment algo (supposedly is fast)
-                tlCand.runTrackletAlgo(SDL::Default_TLAlgo, logLevel_);
+                // // Run the segment algo (supposedly is fast)
+                // tlCand.runTrackletAlgo(SDL::Default_TLAlgo, logLevel_);
 
-                if (not (tlCand.passesTrackletAlgo(SDL::Default_TLAlgo)))
-                {
-                    continue;
-                }
+                // if (not (tlCand.passesTrackletAlgo(SDL::Default_TLAlgo)))
+                // {
+                //     continue;
+                // }
 
                 SDL::Tracklet tlCandOuter(&sgCand, outerTripletPtr->outerSegmentPtr());
 
@@ -785,8 +979,8 @@ void SDL::Event::createTrackCandidatesFromTracklets(TCAlgo algo)
     for (auto& lowerModulePtr : getLowerModulePtrs())
     {
 
-        if (not (lowerModulePtr->layer() == 1))
-            continue;
+        // if (not (lowerModulePtr->layer() == 1))
+        //     continue;
 
         // Create mini doublets
         createTrackCandidatesFromInnerModulesFromTracklets(lowerModulePtr->detId(), algo);
@@ -858,6 +1052,21 @@ void SDL::Event::createTrackCandidatesFromInnerModulesFromTracklets(unsigned int
     }
 
 }
+
+// Multiplicity of mini-doublets
+unsigned int SDL::Event::getNumberOfHits() { return hits_.size(); }
+
+// Multiplicity of mini-doublet candidates considered in this event
+unsigned int SDL::Event::getNumberOfHitsByLayerBarrel(unsigned int ilayer) { return n_hits_by_layer_barrel_[ilayer]; }
+
+// Multiplicity of mini-doublet candidates considered in this event
+unsigned int SDL::Event::getNumberOfHitsByLayerEndcap(unsigned int ilayer) { return n_hits_by_layer_endcap_[ilayer]; }
+
+// Multiplicity of mini-doublet candidates considered in this event
+unsigned int SDL::Event::getNumberOfHitsByLayerBarrelUpperModule(unsigned int ilayer) { return n_hits_by_layer_barrel_upper_[ilayer]; }
+
+// Multiplicity of mini-doublet candidates considered in this event
+unsigned int SDL::Event::getNumberOfHitsByLayerEndcapUpperModule(unsigned int ilayer) { return n_hits_by_layer_endcap_upper_[ilayer]; }
 
 // Multiplicity of mini-doublets
 unsigned int SDL::Event::getNumberOfMiniDoublets() { return miniDoublets_.size(); }
@@ -948,6 +1157,29 @@ unsigned int SDL::Event::getNumberOfTripletsByLayerEndcap(unsigned int ilayer) {
 
 // Multiplicity of track candidate formed in this event
 unsigned int SDL::Event::getNumberOfTrackCandidatesByLayerEndcap(unsigned int ilayer) { return n_trackcandidate_by_layer_endcap_[ilayer]; }
+
+// Multiplicity of hits in this event
+void SDL::Event::incrementNumberOfHits(SDL::Module& module)
+{
+    int layer = module.layer();
+    int isbarrel = (module.subdet() == SDL::Module::Barrel);
+
+    // Only count hits in lower module
+    if (not module.isLower())
+    {
+        if (isbarrel)
+            n_hits_by_layer_barrel_upper_[layer-1]++;
+        else
+            n_hits_by_layer_endcap_upper_[layer-1]++;
+    }
+    else
+    {
+        if (isbarrel)
+            n_hits_by_layer_barrel_[layer-1]++;
+        else
+            n_hits_by_layer_endcap_[layer-1]++;
+    }
+}
 
 // Multiplicity of mini-doublet candidates considered in this event
 void SDL::Event::incrementNumberOfMiniDoubletCandidates(SDL::Module& module)

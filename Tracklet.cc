@@ -30,6 +30,12 @@ SDL::Tracklet::Tracklet(SDL::Segment* innerSegmentPtr, SDL::Segment* outerSegmen
 {
 }
 
+void SDL::Tracklet::addSelfPtrToSegments()
+{
+    innerSegmentPtr_->addOutwardTrackletPtr(this);
+    outerSegmentPtr_->addInwardTrackletPtr(this);
+}
+
 const float& SDL::Tracklet::getDeltaBeta() const
 {
     return deltaBeta_;
@@ -610,8 +616,8 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel
     setDeltaBeta(dBeta);
     setDeltaBetaCut(std::sqrt(dBetaCut2));
 
-    // if (not (dBeta * dBeta <= dBetaCut2))
-    if (not (dBeta * dBeta <= 0.004*0.004))
+    if (not (dBeta * dBeta <= dBetaCut2))
+    // if (not (dBeta * dBeta <= 0.004*0.004))
     {
         if (logLevel >= SDL::Log_Debug3)
         {

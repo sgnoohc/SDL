@@ -66,6 +66,18 @@ namespace SDL
             SDL::LogLevel logLevel_;
 
             // diagnostic variables
+            // # of hits in barrel
+            std::array<unsigned int, 6> n_hits_by_layer_barrel_;
+
+            // # of hits in endcap
+            std::array<unsigned int, 5> n_hits_by_layer_endcap_;
+
+            // # of hits in barrel in upper module
+            std::array<unsigned int, 6> n_hits_by_layer_barrel_upper_;
+
+            // # of hits in endcap in upper module
+            std::array<unsigned int, 5> n_hits_by_layer_endcap_upper_;
+
             // # of pairs of hits considered for mini-doublet
             std::array<unsigned int, 6> n_miniDoublet_candidates_by_layer_barrel_;
 
@@ -125,6 +137,9 @@ namespace SDL
 
             // # of pairs of tracklet considered for trackcandidate
             std::array<unsigned int, 5> n_trackcandidate_by_layer_endcap_;
+
+            // Multiplicity of mini-doublet candidates considered in this event
+            void incrementNumberOfHits(SDL::Module& module);
 
             // Multiplicity of mini-doublet candidates considered in this event
             void incrementNumberOfMiniDoubletCandidates(SDL::Module& module);
@@ -224,6 +239,9 @@ namespace SDL
             // Create mini doublet for a module
             void createMiniDoubletsFromLowerModule(unsigned int detId, MDAlgo algo=Default_MDAlgo);
 
+            // Pseudo mini-doublet (which is really just a hit) for study purpose only
+            void createPseudoMiniDoubletsFromAnchorModule(MDAlgo algo=Default_MDAlgo);
+
             // Create segments
             void createSegments(SGAlgo algo=Default_SGAlgo);
 
@@ -254,6 +272,9 @@ namespace SDL
             // Create tracklets from two layers (inefficient way)
             void createTrackletsFromTwoLayers(int innerLayerIdx, SDL::Layer::SubDet innerLayerSubDet, int outerLayerIdx, SDL::Layer::SubDet outerLayerSubDet, TLAlgo algo=Default_TLAlgo);
 
+            // Create tracklets
+            void createTrackletsViaNavigation(TLAlgo algo=Default_TLAlgo);
+
             // Create trackcandidates
             void createTrackCandidates(TCAlgo algo=Default_TCAlgo);
 
@@ -274,6 +295,21 @@ namespace SDL
 
             // Create trackcandidates from two tracklets (and check that the connecting mini-doublet passes segment requirement)
             void createTrackCandidatesFromInnerModulesFromTracklets(unsigned int detId, SDL::TCAlgo algo);
+
+            // Multiplicity of Hits
+            unsigned int getNumberOfHits();
+
+            // Multiplicity of hits in this event
+            unsigned int getNumberOfHitsByLayerBarrel(unsigned int);
+
+            // Multiplicity of hits in this event
+            unsigned int getNumberOfHitsByLayerEndcap(unsigned int);
+
+            // Multiplicity of hits in this event for upper module
+            unsigned int getNumberOfHitsByLayerBarrelUpperModule(unsigned int);
+
+            // Multiplicity of hits in this event for upper module
+            unsigned int getNumberOfHitsByLayerEndcapUpperModule(unsigned int);
 
             // Multiplicity of mini-doublets
             unsigned int getNumberOfMiniDoublets();

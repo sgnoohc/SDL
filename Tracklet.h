@@ -77,6 +77,8 @@ namespace SDL
             Tracklet(Segment* innerSegmentPtr, Segment* outerSegmentPtr);
             ~Tracklet();
 
+            void addSelfPtrToSegments();
+
             const float& getDeltaBeta() const;
             const float& getDeltaBetaCut() const;
             const float& getBetaIn() const;

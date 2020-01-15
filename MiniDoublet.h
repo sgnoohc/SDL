@@ -17,6 +17,7 @@ namespace SDL
 {
     class Module;
     class Hit;
+    class Segment;
 }
 
 namespace SDL
@@ -61,11 +62,25 @@ namespace SDL
             float dphichangeCut_;
             float drtCut_;
 
+            // Pointers of segments containing this Mini-doublet as inner mini doublet
+            std::vector<Segment*> outwardSegmentPtrs;
+
+            // Pointers of segments containing this Mini-doublet as outer mini doublet
+            std::vector<Segment*> inwardSegmentPtrs;
+
+            std::map<std::string, float> recovars_;
+
         public:
             MiniDoublet();
             MiniDoublet(const MiniDoublet&);
             MiniDoublet(Hit* lowerHit, Hit* upperHit);
             ~MiniDoublet();
+
+            const std::vector<Segment*>& getListOfOutwardSegmentPtrs();
+            const std::vector<Segment*>& getListOfInwardSegmentPtrs();
+
+            void addOutwardSegmentPtr(Segment* sg);
+            void addInwardSegmentPtr(Segment* sg);
 
             Hit* lowerHitPtr() const;
             Hit* upperHitPtr() const;
@@ -85,6 +100,8 @@ namespace SDL
             const float& getDeltaPhiChange() const;
             const float& getDeltaPhiNoShift() const;
             const float& getDeltaPhiChangeNoShift() const;
+            const std::map<std::string, float>& getRecoVars() const;
+            const float& getRecoVar(std::string) const;
 
             void setAnchorHit();
             void setLowerShiftedHit(float, float, float, int=-1);
@@ -96,6 +113,7 @@ namespace SDL
             void setDeltaPhiChange(float);
             void setDeltaPhiNoShift(float);
             void setDeltaPhiChangeNoShift(float);
+            void setRecoVars(std::string, float);
 
             const float& getdZCut() const;
             const float& getdphiCut() const;
