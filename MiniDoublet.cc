@@ -339,7 +339,7 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgo(SDL::LogLevel logLevel)
     // Retreived the lower module object
     const SDL::Module& lowerModule = lowerHitPtr_->getModule();
 
-    //if (useBarrelLogic(lowerModule))
+    if (useBarrelLogic(lowerModule))
     if(lowerModule.subdet() == SDL::Module::Barrel)
     {
         runMiniDoubletDefaultAlgoBarrel(logLevel);
@@ -984,7 +984,7 @@ float SDL::MiniDoublet::dPhiThreshold(const SDL::Hit& lowerHit, const SDL::Modul
         {
             return miniSlope + sqrt(pow(miniMuls, 2) + pow(miniPVoff, 2));
         }
-        else if (isTilted)
+        else if (isNormalTiltedModules(module))
         {
             return miniSlope + sqrt(pow(miniMuls, 2) + pow(miniPVoff, 2) + pow(miniTilt * miniSlope, 2));
         }

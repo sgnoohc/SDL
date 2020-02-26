@@ -232,9 +232,9 @@ void SDL::Segment::runSegmentDefaultAlgo(SDL::LogLevel logLevel)
 
     //FIXME:Change the whole thing to a check in outer module alone if this trick works!
 
-    if (innerLowerModule.subdet() == SDL::Module::Barrel)
+    if (SDL::MiniDoublet::useBarrelLogic(innerLowerModule))
     {
-        if(outerLowerModule.subdet() == SDL::Module::Barrel)
+        if(SDL::MiniDoublet::useBarrelLogic(outerLowerModule))
         {
             //Needs a name change to BarrelBarrel later
             runSegmentDefaultAlgoBarrel(logLevel);
@@ -246,7 +246,7 @@ void SDL::Segment::runSegmentDefaultAlgo(SDL::LogLevel logLevel)
     }
     else
     {
-        if(outerLowerModule.subdet() == SDL::Module::Endcap)
+        if(not(SDL::MiniDoublet::useBarrelLogic(outerLowerModule)))
         {
             runSegmentDefaultAlgoEndcap(logLevel);
         }
@@ -850,7 +850,7 @@ std::unordered_map<std::string,float> SDL::Segment::dAlphaThreshold(const SDL::M
     float dAlpha_res = 0.04f/miniDelta * (SDL::MiniDoublet::useBarrelLogic(innerLowerModule) ? 1.0f : std::abs(innerMiniDoubletAnchorHitZ/innerMiniDoubletAnchorHitRt));
 
     //TODO:Check if PVoff is required
-    if(innerLowerModule.subdet() == SDL::Module::Barrel)
+    if(SDL::MiniDoublet::useBarrelLogic(innerLowerModule))
     {
         dAlphaValues["dAlphaInnerMDSegment"] = dAlpha_Bfield + sqrt(pow(dAlpha_res,2) + pow(sdMuls,2));
         dAlphaValues["dAlphaOuterMDSegment"]  = dAlpha_Bfield + sqrt(pow(dAlpha_res,2) + pow(sdMuls,2));
