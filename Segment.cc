@@ -17,8 +17,11 @@ SDL::Segment::Segment(const Segment& sg) :
     rtIn_(sg.getRtIn()),
     dphichange_(sg.getDeltaPhiChange()),
     zOut_(sg.getZOut()),
+    zIn_(sg.getZIn()),
     zLo_(sg.getZLo()),
     zHi_(sg.getZHi()),
+    rtLo_(sg.getRtLo()),
+    rtHi_(sg.getRtHi()),
     recovars_(sg.getRecoVars())
 {
     // addSelfPtrToMiniDoublets();
@@ -33,8 +36,11 @@ SDL::Segment::Segment(SDL::MiniDoublet* innerMiniDoubletPtr, SDL::MiniDoublet* o
     rtIn_(0),
     dphichange_(0),
     zOut_(0),
+    zIn_(0),
     zLo_(0),
-    zHi_(0)
+    zHi_(0),
+    rtLo_(0),
+    rtHi_(0)
 {
     // addSelfPtrToMiniDoublets();
 }
@@ -105,6 +111,11 @@ const float& SDL::Segment::getZOut() const
     return zOut_;
 }
 
+const float& SDL::Segment::getZIn() const
+{
+    return zIn_;
+}
+
 const float& SDL::Segment::getZLo() const
 {
     return zLo_;
@@ -113,6 +124,16 @@ const float& SDL::Segment::getZLo() const
 const float& SDL::Segment::getZHi() const
 {
     return zHi_;
+}
+
+const float& SDL::Segment::getRtLo() const
+{
+    return rtLo_;
+}
+
+const float& SDL::Segment::getRtHi() const
+{
+    return rtHi_;
 }
 
 const std::map<std::string, float>& SDL::Segment::getRecoVars() const
@@ -135,6 +156,17 @@ void SDL::Segment::setRtIn(float rt)
     rtIn_ = rt;
 }
 
+void SDL::Segment::setRtLo(float rt)
+{
+    rtLo_ = rt;
+}
+
+void SDL::Segment::setRtHi(float rt)
+{
+    rtHi_ = rt;
+}
+
+
 void SDL::Segment::setDeltaPhiChange(float dphichange)
 {
     dphichange_ = dphichange;
@@ -143,6 +175,11 @@ void SDL::Segment::setDeltaPhiChange(float dphichange)
 void SDL::Segment::setZOut(float zOut)
 {
     zOut_ = zOut;
+}
+
+void SDL::Segment::setZIn(float zIn)
+{
+    zIn_ = zIn;
 }
 
 void SDL::Segment::setZLo(float zLo)
@@ -207,7 +244,7 @@ void SDL::Segment::runSegmentAllCombAlgo()
     passAlgo_ |= (1 << SDL::AllComb_SGAlgo);
 }
 
-void SDL::Segment::runSegmentDefaultAlgo(SDL::LogLevel logLevel)
+/*void SDL::Segment::runSegmentDefaultAlgo(SDL::LogLevel logLevel)
 {
     // Retreived the lower module object
     const Module& innerLowerModule = innerMiniDoubletPtr()->lowerHitPtr()->getModule();
@@ -219,6 +256,42 @@ void SDL::Segment::runSegmentDefaultAlgo(SDL::LogLevel logLevel)
     else
     {
         runSegmentDefaultAlgoEndcap(logLevel);
+    }
+}*/
+
+void SDL::Segment::runSegmentDefaultAlgo(SDL::LogLevel logLevel)
+{
+    // Retreived the lower module object
+    const Module& innerLowerModule = innerMiniDoubletPtr()->lowerHitPtr()->getModule();
+    const Module& outerLowerModule = outerMiniDoubletPtr()->lowerHitPtr()->getModule();
+
+    //FIXME:Change the whole thing to a check in outer module alone if this trick works!
+
+    if(SDL::MiniDoublet::useBarrelLogic(innerLowerModule))
+//    if (innerLowerModule.subdet() == SDL::Module::Barrel)
+    {
+        if(SDL::MiniDoublet::useBarrelLogic(outerLowerModule))
+//	if(outerLowerModule.subdet() == SDL::Module::Barrel)
+        {
+            //Needs a name change to BarrelBarrel later
+            runSegmentDefaultAlgoBarrel(logLevel);
+        }
+        else
+        {
+            runSegmentDefaultAlgoEndcap(logLevel);
+        }
+    }
+    else
+    {
+        if(not SDL::MiniDoublet::useBarrelLogic(outerLowerModule))
+        //if(outerLowerModule.subdet() == SDL::Module::Endcap)
+        {
+            runSegmentDefaultAlgoEndcap(logLevel);
+        }
+        else
+        {
+            runSegmentDefaultAlgoBarrel(logLevel);
+        }
     }
 }
 
@@ -274,7 +347,7 @@ void SDL::Segment::runSegmentDefaultAlgoBarrel(SDL::LogLevel logLevel)
     const float deltaZLum = 15.f;
     std::array<float, 6> miniMulsPtScaleBarrel {0.0052, 0.0038, 0.0034, 0.0034, 0.0032, 0.0034};
     // std::array<float, 5> miniMulsPtScaleEndcap {0.006, 0.006, 0.006, 0.006, 0.006}; //inter/extra-polated from L11 and L13 both roughly 0.006 [larger R have smaller value by ~50%]
-    const float sdMuls = miniMulsPtScaleBarrel[innerLowerModule.layer()] * 3.f / ptCut * 2.f;//will need a better guess than x2?
+    const float sdMuls = miniMulsPtScaleBarrel[innerLowerModule.layer()] * 3.f / ptCut;//will need a better guess than x2?
 
     // Get the relevant anchor hits
     const Hit& innerMiniDoubletAnchorHit = (innerLowerModule.moduleType() == SDL::Module::PS) ? ( (innerLowerModule.moduleLayerType() == SDL::Module::Pixel) ? *innerMiniDoublet.lowerHitPtr() : *innerMiniDoublet.upperHitPtr()): *innerMiniDoublet.lowerHitPtr();
@@ -302,6 +375,7 @@ void SDL::Segment::runSegmentDefaultAlgoBarrel(SDL::LogLevel logLevel)
     float zHi = innerMiniDoubletAnchorHitZ + (innerMiniDoubletAnchorHitZ + deltaZLum) * (outerMiniDoubletAnchorHitRt / innerMiniDoubletAnchorHitRt - 1.f) * (innerMiniDoubletAnchorHitZ < 0.f ? 1.f : dzDrtScale) + zGeom;
 
     setZOut(outerMiniDoubletAnchorHitZ);
+    setZIn(innerMiniDoubletAnchorHitZ);
     setZLo(zLo);
     setZHi(zHi);
 
@@ -365,35 +439,16 @@ void SDL::Segment::runSegmentDefaultAlgoBarrel(SDL::LogLevel logLevel)
     float sdZ = innerMiniDoubletAnchorHit.z();
     float sdRt = innerMiniDoubletAnchorHit.rt();
 
-    const float dAlpha_Bfield = std::asin(std::min(segmentDr * k2Rinv1GeVf / ptCut, sinAlphaMax));
-
-    std::array<float, 6> miniDeltaBarrel {0.26, 0.16, 0.16, 0.18, 0.18, 0.18};
-    std::array<float, 5> miniDeltaEndcap {0.4 , 0.4 , 0.4 , 0.4 , 0.4};
-    std::array<float, 6> miniDeltaTilted {0.26, 0.26, 0.26, 0.4, 0.4, 0.4}; // Used only for tilted modules (i.e. first 3 numbers only matter)
-
-    const bool isInnerTilted = innerLowerModule.subdet() == SDL::Module::Barrel and innerLowerModule.side() != SDL::Module::Center;
-    const bool isOuterTilted = outerLowerModule.subdet() == SDL::Module::Barrel and outerLowerModule.side() != SDL::Module::Center;
-    const unsigned int innerdetid = (innerLowerModule.moduleLayerType() == SDL::Module::Pixel) ?  innerLowerModule.partnerDetId() : innerLowerModule.detId();
-    const unsigned int outerdetid = (outerLowerModule.moduleLayerType() == SDL::Module::Pixel) ?  outerLowerModule.partnerDetId() : outerLowerModule.detId();
-    const float drdzinner = tiltedGeometry.getDrDz(innerdetid);
-    const float drdzouter = tiltedGeometry.getDrDz(outerdetid);
-    const float innerminiTilt = isInnerTilted ? (0.5f * pixelPSZpitch * drdzinner / sqrt(1.f + drdzinner * drdzinner) / miniDeltaTilted[innerLowerModule.layer()-1]) : 0;
-    const float outerminiTilt = isOuterTilted ? (0.5f * pixelPSZpitch * drdzouter / sqrt(1.f + drdzouter * drdzouter) / miniDeltaTilted[outerLowerModule.layer()-1]) : 0;
-
-    float miniDelta = (innerLowerModule.subdet() == SDL::Module::Barrel) ? (miniDeltaBarrel[innerLowerModule.layer()-1]) : (miniDeltaEndcap[innerLowerModule.layer()-1]);
-    float sdLumForInnerMini = (SDL::MiniDoublet::useBarrelLogic(innerLowerModule)) ?  (innerminiTilt * dAlpha_Bfield) :  (15.f / innerMiniDoubletAnchorHitZ);
-    float sdLumForOuterMini = (SDL::MiniDoublet::useBarrelLogic(outerLowerModule)) ?  (outerminiTilt * dAlpha_Bfield) :  (15.f / outerMiniDoubletAnchorHitZ);
-
-    // float dAlpha_res = 0.04f / miniDelta * (innerLowerModule.subdet() == SDL::Module::Barrel ? 1.0f : std::abs(sdZ / sdRt)); //4-strip difference
-    float dAlpha_res = 0.04f / miniDelta * (SDL::MiniDoublet::useBarrelLogic(innerLowerModule) ? 1.0f : std::abs(sdZ / sdRt)); //4-strip difference
-    float dAlpha_compat_inner_vs_sg = dAlpha_Bfield + sqrt(dAlpha_res * dAlpha_res + sdMuls * sdMuls/* + sdLumForInnerMini * sdLumForInnerMini*/);
-    float dAlpha_compat_outer_vs_sg = dAlpha_Bfield + sqrt(dAlpha_res * dAlpha_res + sdMuls * sdMuls/* + sdLumForOuterMini * sdLumForOuterMini*/);
-    // float dAlpha_compat_inner_vs_outer = dAlpha_Bfield + sqrt(dAlpha_res * dAlpha_res + sdMuls * sdMuls + sdLumForInnerMini * sdLumForInnerMini + sdLumForOuterMini * sdLumForOuterMini);
-    float dAlpha_compat_inner_vs_outer = dAlpha_Bfield + sqrt(dAlpha_res * dAlpha_res + sdMuls * sdMuls);
 
     float inner_md_alpha = innerMiniDoublet.getDeltaPhiChange();
     float outer_md_alpha = outerMiniDoublet.getDeltaPhiChange();
     float sg_alpha = getDeltaPhiChange();
+
+    std::unordered_map<std::string,float> dAlphaCutValues = dAlphaThreshold(innerMiniDoublet,outerMiniDoublet);
+    float dAlpha_compat_inner_vs_sg = dAlphaCutValues["dAlphaInnerMDSegment"];
+    float dAlpha_compat_outer_vs_sg = dAlphaCutValues["dAlphaOuterMDSegment"];
+    float dAlpha_compat_inner_vs_outer = dAlphaCutValues["dAlphaInnerMDOuterMD"];
+
 
     // Cut #4: angle compatibility between mini-doublet and segment
     float dAlpha_inner_md_sg = inner_md_alpha - sg_alpha;
@@ -403,7 +458,7 @@ void SDL::Segment::runSegmentDefaultAlgoBarrel(SDL::LogLevel logLevel)
         {
             SDL::cout << "Failed Cut #4 in " << __FUNCTION__ << std::endl;
             SDL::cout <<  " dAlpha_inner_md_sg: " << dAlpha_inner_md_sg <<  " dAlpha_compat_inner_vs_sg: " << dAlpha_compat_inner_vs_sg <<  std::endl;
-            SDL::cout <<  " dAlpha_Bfield: " << dAlpha_Bfield <<  " dAlpha_res: " << dAlpha_res <<  " sdMuls: " << sdMuls <<  " sdLumForInnerMini: " << sdLumForInnerMini <<  std::endl;
+//            SDL::cout <<  " dAlpha_Bfield: " << dAlpha_Bfield <<  " dAlpha_res: " << dAlpha_res <<  " sdMuls: " << sdMuls <<  " sdLumForInnerMini: " << sdLumForInnerMini <<  std::endl;
             SDL::cout <<  " inner_md_alpha: " << inner_md_alpha <<  " sg_alpha: " << sg_alpha <<  std::endl;
         }
         passAlgo_ &= (0 << SDL::Default_SGAlgo);
@@ -421,7 +476,7 @@ void SDL::Segment::runSegmentDefaultAlgoBarrel(SDL::LogLevel logLevel)
         {
             SDL::cout << "Failed Cut #5 in " << __FUNCTION__ << std::endl;
             SDL::cout <<  " dAlpha_outer_md_sg: " << dAlpha_outer_md_sg <<  " dAlpha_compat_outer_vs_sg: " << dAlpha_compat_outer_vs_sg <<  std::endl;
-            SDL::cout <<  " dAlpha_Bfield: " << dAlpha_Bfield <<  " dAlpha_res: " << dAlpha_res <<  " sdMuls: " << sdMuls <<  " sdLumForOuterMini: " << sdLumForOuterMini <<  std::endl;
+//            SDL::cout <<  " dAlpha_Bfield: " << dAlpha_Bfield <<  " dAlpha_res: " << dAlpha_res <<  " sdMuls: " << sdMuls <<  " sdLumForOuterMini: " << sdLumForOuterMini <<  std::endl;
             SDL::cout <<  " outer_md_alpha: " << outer_md_alpha <<  " sg_alpha: " << sg_alpha <<  std::endl;
         }
         passAlgo_ &= (0 << SDL::Default_SGAlgo);
@@ -439,7 +494,7 @@ void SDL::Segment::runSegmentDefaultAlgoBarrel(SDL::LogLevel logLevel)
         {
             SDL::cout << "Failed Cut #6 in " << __FUNCTION__ << std::endl;
             SDL::cout <<  " dAlpha_outer_md_inner_md: " << dAlpha_outer_md_inner_md <<  " dAlpha_compat_inner_vs_outer: " << dAlpha_compat_inner_vs_outer <<  std::endl;
-            SDL::cout <<  " dAlpha_Bfield: " << dAlpha_Bfield <<  " dAlpha_res: " << dAlpha_res <<  " sdMuls: " << sdMuls <<  " sdLumForInnerMini: " << sdLumForInnerMini <<  " sdLumForOuterMini: " << sdLumForOuterMini <<  std::endl;
+//            SDL::cout <<  " dAlpha_Bfield: " << dAlpha_Bfield <<  " dAlpha_res: " << dAlpha_res <<  " sdMuls: " << sdMuls <<  " sdLumForInnerMini: " << sdLumForInnerMini <<  " sdLumForOuterMini: " << sdLumForOuterMini <<  std::endl;
             SDL::cout <<  " outer_md_alpha: " << outer_md_alpha <<  " inner_md_alpha: " << inner_md_alpha <<  std::endl;
         }
         passAlgo_ &= (0 << SDL::Default_SGAlgo);
@@ -501,9 +556,20 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
     const float ptCut = PTCUT;
     const float sinAlphaMax = 0.95;
     const float deltaZLum = 15.f;
-    // std::array<float, 6> miniMulsPtScaleBarrel {0.0052, 0.0038, 0.0034, 0.0034, 0.0032, 0.0034};
+     std::array<float, 6> miniMulsPtScaleBarrel {0.0052, 0.0038, 0.0034, 0.0034, 0.0032, 0.0034};
     std::array<float, 5> miniMulsPtScaleEndcap {0.006, 0.006, 0.006, 0.006, 0.006}; //inter/extra-polated from L11 and L13 both roughly 0.006 [larger R have smaller value by ~50%]
-    const float sdMuls = miniMulsPtScaleEndcap[innerLowerModule.layer()] * 3.f / ptCut * 2.f;//will need a better guess than x2?
+
+    float sdMuls;
+
+     if(innerLowerModule.subdet() == SDL::Module::Endcap)
+    {
+        sdMuls = miniMulsPtScaleEndcap[innerLowerModule.layer()-1] * 3.f / ptCut;//will need a better guess than x2?
+    }
+    else
+    {
+        sdMuls = miniMulsPtScaleBarrel[innerLowerModule.layer()-1] * 3.f / ptCut;
+    }
+
 
     // Get the relevant anchor hits
     const Hit& innerMiniDoubletAnchorHit = (innerLowerModule.moduleType() == SDL::Module::PS) ? ( (innerLowerModule.moduleLayerType() == SDL::Module::Pixel) ? *innerMiniDoublet.lowerHitPtr() : *innerMiniDoublet.upperHitPtr()): *innerMiniDoublet.lowerHitPtr();
@@ -554,6 +620,10 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
     const float drtDzScale = sdSlope / std::tan(sdSlope); //FIXME: need approximate value
     float rtLo = std::max(innerMiniDoubletAnchorHitRt * (1.f + dz / (innerMiniDoubletAnchorHitZ + dLum) * drtDzScale) - rtGeom, innerMiniDoubletAnchorHitRt - 0.5f * rtGeom); //rt should increase
     float rtHi = innerMiniDoubletAnchorHitRt * (outerMiniDoubletAnchorHitZ - dLum) / (innerMiniDoubletAnchorHitZ - dLum) + rtGeom; //dLum for luminous; rGeom for measurement size; no tanTheta_loc(pt) correction
+
+
+    setRtLo(rtLo);
+    setRtHi(rtHi);
     if (not (outerMiniDoubletAnchorHitRt >= rtLo and outerMiniDoubletAnchorHitRt <= rtHi))
     {
         if (logLevel >= SDL::Log_Debug3)
@@ -571,6 +641,10 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
     const float sdCut = sdSlope;
     // const float sdCut = sdSlope + sqrt(sdMuls * sdMuls + sdPVoff * sdPVoff);
     const float dPhiPos = innerMiniDoubletAnchorHit.deltaPhi(outerMiniDoubletAnchorHit);
+    setRecoVars("sdCut",sdCut);
+    setRecoVars("sdSlope",sdSlope);
+    setRecoVars("deltaPhi",dPhiPos);
+
     if (not (std::abs(dPhiPos) <= sdCut))
     {
         if (logLevel >= SDL::Log_Debug3)
@@ -604,27 +678,16 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
     // float sdZ_outer = outerMiniDoubletAnchorHit.z();
     // float sdRt_outer = outerMiniDoubletAnchorHit.rt();
 
-    const float dAlpha_Bfield = std::asin(std::min(segmentDr * k2Rinv1GeVf / ptCut, sinAlphaMax));
-
-    // std::array<float, 6> miniDeltaBarrel {0.26, 0.16, 0.16, 0.18, 0.18, 0.18};
-    // std::array<float, 5> miniDeltaEndcap {0.4 , 0.4 , 0.4 , 0.4 , 0.4};
-
-    float miniDelta = 0.4f;
-    float sdLumForInnerMini = 15.f / innerMiniDoubletAnchorHitZ;
-    float sdLumForOuterMini = 15.f / outerMiniDoubletAnchorHitZ;
-
-    // float dAlpha_res = 0.04f / miniDelta * (innerLowerModule.subdet() == SDL::Module::Barrel ? 1.0f : std::abs(sdZ / sdRt)); //4-strip difference
-    float dAlpha_res = 0.04f / miniDelta * std::abs(sdZ / (sdRt/*-10.f*/)); //4-strip difference
-    float dAlpha_uncRt = 15.0f / sdRt * dAlpha_res;
-    float dAlpha_compat_inner_vs_sg = dAlpha_Bfield + sqrt(dAlpha_res * dAlpha_res + sdMuls * sdMuls + sdLumForInnerMini * sdLumForInnerMini);
-    float dAlpha_compat_outer_vs_sg = dAlpha_Bfield + sqrt(dAlpha_res * dAlpha_res + sdMuls * sdMuls + sdLumForOuterMini * sdLumForOuterMini);
-    float dAlpha_compat_inner_vs_outer = dAlpha_Bfield + sqrt(dAlpha_res * dAlpha_res + sdMuls * sdMuls);
-    // float dAlpha_compat_inner_vs_outer = dAlpha_Bfield + sqrt(dAlpha_res * dAlpha_res + sdMuls * sdMuls + sdLumForInnerMini * sdLumForInnerMini + sdLumForOuterMini * sdLumForOuterMini);
-    // float dAlpha_compat_inner_vs_outer = dAlpha_Bfield + sqrt(dAlpha_res * dAlpha_res + dAlpha_uncRt * dAlpha_uncRt + sdMuls * sdMuls);
 
     float inner_md_alpha = innerMiniDoublet.getDeltaPhiChange();
     float outer_md_alpha = outerMiniDoublet.getDeltaPhiChange();
     float sg_alpha = getDeltaPhiChange();
+    
+    std::unordered_map<std::string,float> dAlphaCutValues = dAlphaThreshold(innerMiniDoublet,outerMiniDoublet);
+
+    dAlpha_compat_inner_vs_sg = dAlphaCutValues["dAlphaInnerMDSegment"];
+    dAlpha_compat_outer_vs_sg = dAlphaCutValues["dAlphaOuterMDSegment"];
+    dAlpha_compat_inner_vs_outer = dAlphaCutValues["dAlphaInnerMDOuterMD"];
 
     // Cut #4: angle compatibility between mini-doublet and segment
     float dAlpha_inner_md_sg = inner_md_alpha - sg_alpha;
@@ -662,8 +725,8 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
         {
             SDL::cout << "Failed Cut #6 in " << __FUNCTION__ << std::endl;
             SDL::cout <<  " dAlpha_outer_md_inner_md: " << dAlpha_outer_md_inner_md <<  " dAlpha_compat_inner_vs_outer: " << dAlpha_compat_inner_vs_outer <<  std::endl;
-            SDL::cout <<  " dAlpha_Bfield: " << dAlpha_Bfield <<  " dAlpha_res: " << dAlpha_res <<  " sdMuls: " << sdMuls <<  " dAlpha_uncRt: " << dAlpha_uncRt <<  " sdLumForInnerMini: " << sdLumForInnerMini <<  " sdLumForOuterMini: " << sdLumForOuterMini <<  std::endl;
-            SDL::cout <<  " sdZ: " << sdZ <<  " sdRt: " << sdRt <<  " miniDelta: " << miniDelta <<  std::endl;
+//            SDL::cout <<  " dAlpha_Bfield: " << dAlpha_Bfield <<  " dAlpha_res: " << dAlpha_res <<  " sdMuls: " << sdMuls <<  " dAlpha_uncRt: " << dAlpha_uncRt <<  " sdLumForInnerMini: " << sdLumForInnerMini <<  " sdLumForOuterMini: " << sdLumForOuterMini <<  std::endl;
+//            SDL::cout <<  " sdZ: " << sdZ <<  " sdRt: " << sdRt <<  " miniDelta: " << miniDelta <<  std::endl;
             SDL::cout <<  " segmentDr: " << segmentDr <<  " k2Rinv1GeVf: " << k2Rinv1GeVf <<  " ptCut: " << ptCut <<  " sinAlphaMax: " << sinAlphaMax <<  std::endl;
             SDL::cout <<  " outer_md_alpha: " << outer_md_alpha <<  " inner_md_alpha: " << inner_md_alpha <<  std::endl;
         }
@@ -698,6 +761,101 @@ bool SDL::Segment::isAnchorHitIdxMatched(const Segment& sg) const
     if (not outerMiniDoubletPtr_->isAnchorHitIdxMatched(*(sg.outerMiniDoubletPtr())))
         return false;
     return true;
+}
+
+std::unordered_map<std::string,float> SDL::Segment::dAlphaThreshold(const SDL::MiniDoublet &innerMiniDoublet, const SDL::MiniDoublet &outerMiniDoublet)
+{
+
+    std::unordered_map<std::string,float> dAlphaValues;
+    const Module& innerLowerModule = innerMiniDoublet.lowerHitPtr()->getModule();
+    const Module& outerLowerModule = outerMiniDoublet.lowerHitPtr()->getModule();
+    const float kRinv1GeVf = (2.99792458e-3 * 3.8);
+    const float k2Rinv1GeVf = kRinv1GeVf / 2.;
+    float ptCut = PTCUT;
+    float sinAlphaMax = 0.95;
+
+    std::array<float, 6> miniMulsPtScaleBarrel {0.0052, 0.0038, 0.0034, 0.0034, 0.0032, 0.0034};
+    std::array<float, 5> miniMulsPtScaleEndcap {0.006, 0.006, 0.006, 0.006, 0.006}; //inter/extra-polated from L11 and L13 both roughly 0.006 [larger R have smaller value by ~50%]
+
+    std::array<float, 6> miniDeltaBarrel {0.26, 0.16, 0.16, 0.18, 0.18, 0.18};
+    std::array<float, 5> miniDeltaEndcap {0.4 , 0.4 , 0.4 , 0.4 , 0.4};
+    std::array<float, 6> miniDeltaTilted {0.26, 0.26, 0.26, 0.4, 0.4, 0.4}; // Used only for tilted modules (i.e. first 3 numbers only matter)
+    
+    float sdMuls = (innerLowerModule.subdet() == SDL::Module::Barrel) ? miniMulsPtScaleBarrel[innerLowerModule.layer()-1] * 3.f/ptCut : miniMulsPtScaleEndcap[innerLowerModule.layer()-1] * 3.f/ptCut;
+
+    //BField dAlpha
+    const Hit& innerMiniDoubletAnchorHit = (innerLowerModule.moduleType() == SDL::Module::PS) ? ( (innerLowerModule.moduleLayerType() == SDL::Module::Pixel) ? *innerMiniDoublet.lowerHitPtr() : *innerMiniDoublet.upperHitPtr()): *innerMiniDoublet.lowerHitPtr();
+    const Hit& outerMiniDoubletAnchorHit = (outerLowerModule.moduleType() == SDL::Module::PS) ? ( (outerLowerModule.moduleLayerType() == SDL::Module::Pixel) ? *outerMiniDoublet.lowerHitPtr() : *outerMiniDoublet.upperHitPtr()): *outerMiniDoublet.lowerHitPtr();
+
+    float innerMiniDoubletAnchorHitRt = innerMiniDoubletAnchorHit.rt();
+    float outerMiniDoubletAnchorHitRt = outerMiniDoubletAnchorHit.rt();
+    float innerMiniDoubletAnchorHitZ = innerMiniDoubletAnchorHit.z();
+    float outerMiniDoubletAnchorHitZ = outerMiniDoubletAnchorHit.z();
+
+
+    float segmentDr = outerMiniDoubletAnchorHitRt - innerMiniDoubletAnchorHitRt; 
+    const float dAlpha_Bfield = std::asin(std::min(segmentDr * k2Rinv1GeVf/ptCut, sinAlphaMax));
+    const float pixelPSZpitch = 0.15;
+
+    const bool isInnerTilted = innerLowerModule.subdet() == SDL::Module::Barrel and innerLowerModule.side() != SDL::Module::Center;
+    const bool isOuterTilted = outerLowerModule.subdet() == SDL::Module::Barrel and outerLowerModule.side() != SDL::Module::Center;
+    const unsigned int innerdetid = (innerLowerModule.moduleLayerType() == SDL::Module::Pixel) ?  innerLowerModule.partnerDetId() : innerLowerModule.detId();
+    const unsigned int outerdetid = (outerLowerModule.moduleLayerType() == SDL::Module::Pixel) ?  outerLowerModule.partnerDetId() : outerLowerModule.detId();
+    const float drdzinner = tiltedGeometry.getDrDz(innerdetid);
+    const float drdzouter = tiltedGeometry.getDrDz(outerdetid);
+    const float innerminiTilt = isInnerTilted ? (0.5f * pixelPSZpitch * drdzinner / sqrt(1.f + drdzinner * drdzinner) / miniDeltaTilted[innerLowerModule.layer()-1]) : 0;
+    const float outerminiTilt = isOuterTilted ? (0.5f * pixelPSZpitch * drdzouter / sqrt(1.f + drdzouter * drdzouter) / miniDeltaTilted[outerLowerModule.layer()-1]) : 0;
+
+    float miniDelta; 
+    if(innerLowerModule.subdet() == SDL::Module::Barrel)
+    {
+        if(isInnerTilted)
+        {
+            if(SDL::MiniDoublet::useBarrelLogic(innerLowerModule))
+            {
+                miniDelta = miniDeltaTilted[innerLowerModule.layer()-1];
+            }
+            else
+            {
+                miniDelta = miniDeltaEndcap[innerLowerModule.layer()-1];
+            }
+        }
+        else
+        {
+            miniDelta = miniDeltaBarrel[innerLowerModule.layer()-1];
+        }
+    }
+    else
+    {
+        miniDelta = miniDeltaEndcap[innerLowerModule.layer()-1];
+    }
+ 
+
+    float sdLumForInnerMini = (SDL::MiniDoublet::useBarrelLogic(innerLowerModule)) ?  (innerminiTilt * dAlpha_Bfield) :  (15.f / innerMiniDoubletAnchorHitZ);
+    float sdLumForOuterMini = (SDL::MiniDoublet::useBarrelLogic(outerLowerModule)) ?  (outerminiTilt * dAlpha_Bfield) :  (15.f / outerMiniDoubletAnchorHitZ);
+
+
+    //Unique stuff for the segment dudes alone
+    float dAlpha_res = 0.04f/miniDelta * (SDL::MiniDoublet::useBarrelLogic(innerLowerModule) ? 1.0f : std::abs(innerMiniDoubletAnchorHitZ/innerMiniDoubletAnchorHitRt));
+
+    //TODO:Check if PVoff is required
+//    if(innerLowerModule.subdet() == SDL::Module::Barrel)
+    if(SDL::MiniDoublet::useBarrelLogic(innerLowerModule))
+    {
+        dAlphaValues["dAlphaInnerMDSegment"] = dAlpha_Bfield + sqrt(pow(dAlpha_res,2) + pow(sdMuls,2));
+        dAlphaValues["dAlphaOuterMDSegment"]  = dAlpha_Bfield + sqrt(pow(dAlpha_res,2) + pow(sdMuls,2));
+        dAlphaValues["dAlphaInnerMDOuterMD"] = dAlpha_Bfield + sqrt(pow(dAlpha_res,2) + pow(sdMuls,2));
+ 
+    }
+    else
+    {
+        dAlphaValues["dAlphaInnerMDSegment"] = dAlpha_Bfield + sqrt(pow(dAlpha_res,2) + pow(sdMuls,2) + pow(sdLumForInnerMini,2));
+        dAlphaValues["dAlphaOuterMDSegment"] = dAlpha_Bfield + sqrt(pow(dAlpha_res,2) + pow(sdMuls,2) + pow(sdLumForOuterMini,2));
+        dAlphaValues["dAlphaInnerMDOuterMD"] = dAlpha_Bfield + sqrt(pow(dAlpha_res,2) + pow(sdMuls,2));
+
+    }
+
+    return dAlphaValues;
 }
 
 [[deprecated("SDL:: isMiniDoubletPairASegment() is deprecated")]]
@@ -888,6 +1046,8 @@ bool SDL::Segment::isMiniDoubletPairASegmentCandidateEndcap(const MiniDoublet& i
     const float sdCut = sdSlope;
     // const float sdCut = sdSlope + sqrt(sdMuls * sdMuls + sdPVoff * sdPVoff);
     const float dPhiPos = innerMiniDoubletAnchorHit.deltaPhi(outerMiniDoubletAnchorHit);
+
+
     if (not (std::abs(dPhiPos) <= sdCut))
     {
         if (logLevel >= SDL::Log_Debug3)
@@ -948,4 +1108,5 @@ namespace SDL
         return out;
     }
 }
+
 
