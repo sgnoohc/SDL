@@ -133,25 +133,139 @@ void SDL::Tracklet::runTrackletDefaultAlgo(SDL::LogLevel logLevel)
     const Module& outerSgOuterMDLowerHitModule = outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule();
 
     if (innerSgInnerMDLowerHitModule.subdet() == SDL::Module::Barrel
-            and outerSgInnerMDLowerHitModule.subdet() == SDL::Module::Barrel
             and innerSgOuterMDLowerHitModule.subdet() == SDL::Module::Barrel
+            and outerSgInnerMDLowerHitModule.subdet() == SDL::Module::Barrel
             and outerSgOuterMDLowerHitModule.subdet() == SDL::Module::Barrel
             )
     {
         runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(logLevel);
     }
     else if (innerSgInnerMDLowerHitModule.subdet() == SDL::Module::Barrel
-            and outerSgInnerMDLowerHitModule.subdet() == SDL::Module::Endcap
             and innerSgOuterMDLowerHitModule.subdet() == SDL::Module::Barrel
+            and outerSgInnerMDLowerHitModule.subdet() == SDL::Module::Endcap
             and outerSgOuterMDLowerHitModule.subdet() == SDL::Module::Endcap
             )
     {
         runTrackletDefaultAlgoBarrelBarrelEndcapEndcap(logLevel);
     }
+    else if (innerSgInnerMDLowerHitModule.subdet() == SDL::Module::Barrel
+            and innerSgOuterMDLowerHitModule.subdet() == SDL::Module::Barrel
+            and outerSgInnerMDLowerHitModule.subdet() == SDL::Module::Barrel
+            and outerSgOuterMDLowerHitModule.subdet() == SDL::Module::Endcap
+            )
+    {
+        // runTrackletDefaultAlgoBarrelBarrelEndcapEndcap(logLevel);
+        runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(logLevel);
+    }
+    else if (innerSgInnerMDLowerHitModule.subdet() == SDL::Module::Barrel
+            and innerSgOuterMDLowerHitModule.subdet() == SDL::Module::Endcap
+            and outerSgInnerMDLowerHitModule.subdet() == SDL::Module::Endcap
+            and outerSgOuterMDLowerHitModule.subdet() == SDL::Module::Endcap
+            )
+    {
+        runTrackletDefaultAlgoBarrelBarrelEndcapEndcap(logLevel);
+    }
+    // else if (innerSgInnerMDLowerHitModule.subdet() == SDL::Module::Endcap
+    //         and innerSgOuterMDLowerHitModule.subdet() == SDL::Module::Endcap
+    //         and outerSgInnerMDLowerHitModule.subdet() == SDL::Module::Endcap
+    //         and outerSgOuterMDLowerHitModule.subdet() == SDL::Module::Endcap
+    //         )
+    // {
+    //     runTrackletDefaultAlgoBarrelBarrelEndcapEndcap(logLevel);
+    // }
 }
 
 void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel logLevel)
 {
+
+    setRecoVars("betaAv", -999);
+    setRecoVars("betaAv_0th", -999);
+    setRecoVars("betaAv_1st", -999);
+    setRecoVars("betaAv_2nd", -999);
+    setRecoVars("betaAv_3rd", -999);
+    setRecoVars("betaAv_4th", -999);
+    setRecoVars("betaIn", -999);
+    setRecoVars("betaInRHmax", -999);
+    setRecoVars("betaInRHmin", -999);
+    setRecoVars("betaIn_0th", -999);
+    setRecoVars("betaIn_1st", -999);
+    setRecoVars("betaIn_1stCorr", -999);
+    setRecoVars("betaIn_2nd", -999);
+    setRecoVars("betaIn_2ndCorr", -999);
+    setRecoVars("betaIn_3rd", -999);
+    setRecoVars("betaIn_3rdCorr", -999);
+    setRecoVars("betaIn_4th", -999);
+    setRecoVars("betaOut", -999);
+    setRecoVars("betaOutRHmax", -999);
+    setRecoVars("betaOutRHmin", -999);
+    setRecoVars("betaOut_0th", -999);
+    setRecoVars("betaOut_1st", -999);
+    setRecoVars("betaOut_1stCorr", -999);
+    setRecoVars("betaOut_2nd", -999);
+    setRecoVars("betaOut_2ndCorr", -999);
+    setRecoVars("betaOut_3rd", -999);
+    setRecoVars("betaOut_3rdCorr", -999);
+    setRecoVars("betaOut_4th", -999);
+    setRecoVars("betaPt_0th", -999);
+    setRecoVars("betaPt_1st", -999);
+    setRecoVars("betaPt_2nd", -999);
+    setRecoVars("betaPt_3rd", -999);
+    setRecoVars("betaPt_4th", -999);
+    setRecoVars("betacormode", -999);
+    setRecoVars("dBeta", -999);
+    setRecoVars("dBetaCut2", -999);
+    setRecoVars("dBetaLum2", -999);
+    setRecoVars("dBetaMuls", -999);
+    setRecoVars("dBetaRIn2", -999);
+    setRecoVars("dBetaROut2", -999);
+    setRecoVars("dBetaRes", -999);
+    setRecoVars("dBeta_0th", -999);
+    setRecoVars("dBeta_1st", -999);
+    setRecoVars("dBeta_2nd", -999);
+    setRecoVars("dBeta_3rd", -999);
+    setRecoVars("dBeta_4th", -999);
+    setRecoVars("dBeta_midPoint", -999);
+    setRecoVars("deltaZLum", -999);
+    setRecoVars("dr", -999);
+    setRecoVars("dzDrtScale", -999);
+    setRecoVars("hit1_x", -999);
+    setRecoVars("hit1_y", -999);
+    setRecoVars("hit2_x", -999);
+    setRecoVars("hit2_y", -999);
+    setRecoVars("hit3_x", -999);
+    setRecoVars("hit3_y", -999);
+    setRecoVars("hit4_x", -999);
+    setRecoVars("hit4_y", -999);
+    setRecoVars("innerSgInnerMdDetId", -999);
+    setRecoVars("innerSgOuterMdDetId", -999);
+    setRecoVars("k2Rinv1GeVf", -999);
+    setRecoVars("kRinv1GeVf", -999);
+    setRecoVars("outerSgInnerMdDetId", -999);
+    setRecoVars("outerSgOuterMdDetId", -999);
+    setRecoVars("pixelPSZpitch", -999);
+    setRecoVars("ptCut", -999);
+    setRecoVars("pt_beta", -999);
+    setRecoVars("pt_betaIn", -999);
+    setRecoVars("pt_betaOut", -999);
+    setRecoVars("rawBetaIn", -999);
+    setRecoVars("rawBetaInCorrection", -999);
+    setRecoVars("rawBetaOut", -999);
+    setRecoVars("rawBetaOutCorrection", -999);
+    setRecoVars("rtIn", -999);
+    setRecoVars("rtOut", -999);
+    setRecoVars("rtOut_o_rtIn", -999);
+    setRecoVars("sdIn_alpha", -999);
+    setRecoVars("sdIn_d", -999);
+    setRecoVars("sdOut_alphaOut", -999);
+    setRecoVars("sdOut_d", -999);
+    setRecoVars("sdlSlope", -999);
+    setRecoVars("sinAlphaMax", -999);
+    setRecoVars("strip2SZpitch", -999);
+    setRecoVars("zGeom", -999);
+    setRecoVars("zIn", -999);
+    setRecoVars("zLo", -999);
+    setRecoVars("zOut", -999);
+
     const float deltaZLum = 15.f;
     const float pixelPSZpitch = 0.15;
     const float strip2SZpitch = 5.0;
@@ -650,6 +764,94 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel
 
 void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelEndcapEndcap(SDL::LogLevel logLevel)
 {
+
+    setRecoVars("betaAv", -999);
+    setRecoVars("betaAv_0th", -999);
+    setRecoVars("betaAv_1st", -999);
+    setRecoVars("betaAv_2nd", -999);
+    setRecoVars("betaAv_3rd", -999);
+    setRecoVars("betaAv_4th", -999);
+    setRecoVars("betaIn", -999);
+    setRecoVars("betaInRHmax", -999);
+    setRecoVars("betaInRHmin", -999);
+    setRecoVars("betaIn_0th", -999);
+    setRecoVars("betaIn_1st", -999);
+    setRecoVars("betaIn_1stCorr", -999);
+    setRecoVars("betaIn_2nd", -999);
+    setRecoVars("betaIn_2ndCorr", -999);
+    setRecoVars("betaIn_3rd", -999);
+    setRecoVars("betaIn_3rdCorr", -999);
+    setRecoVars("betaIn_4th", -999);
+    setRecoVars("betaOut", -999);
+    setRecoVars("betaOutRHmax", -999);
+    setRecoVars("betaOutRHmin", -999);
+    setRecoVars("betaOut_0th", -999);
+    setRecoVars("betaOut_1st", -999);
+    setRecoVars("betaOut_1stCorr", -999);
+    setRecoVars("betaOut_2nd", -999);
+    setRecoVars("betaOut_2ndCorr", -999);
+    setRecoVars("betaOut_3rd", -999);
+    setRecoVars("betaOut_3rdCorr", -999);
+    setRecoVars("betaOut_4th", -999);
+    setRecoVars("betaPt_0th", -999);
+    setRecoVars("betaPt_1st", -999);
+    setRecoVars("betaPt_2nd", -999);
+    setRecoVars("betaPt_3rd", -999);
+    setRecoVars("betaPt_4th", -999);
+    setRecoVars("betacormode", -999);
+    setRecoVars("dBeta", -999);
+    setRecoVars("dBetaCut2", -999);
+    setRecoVars("dBetaLum2", -999);
+    setRecoVars("dBetaMuls", -999);
+    setRecoVars("dBetaRIn2", -999);
+    setRecoVars("dBetaROut2", -999);
+    setRecoVars("dBetaRes", -999);
+    setRecoVars("dBeta_0th", -999);
+    setRecoVars("dBeta_1st", -999);
+    setRecoVars("dBeta_2nd", -999);
+    setRecoVars("dBeta_3rd", -999);
+    setRecoVars("dBeta_4th", -999);
+    setRecoVars("dBeta_midPoint", -999);
+    setRecoVars("deltaZLum", -999);
+    setRecoVars("dr", -999);
+    setRecoVars("dzDrtScale", -999);
+    setRecoVars("hit1_x", -999);
+    setRecoVars("hit1_y", -999);
+    setRecoVars("hit2_x", -999);
+    setRecoVars("hit2_y", -999);
+    setRecoVars("hit3_x", -999);
+    setRecoVars("hit3_y", -999);
+    setRecoVars("hit4_x", -999);
+    setRecoVars("hit4_y", -999);
+    setRecoVars("innerSgInnerMdDetId", -999);
+    setRecoVars("innerSgOuterMdDetId", -999);
+    setRecoVars("k2Rinv1GeVf", -999);
+    setRecoVars("kRinv1GeVf", -999);
+    setRecoVars("outerSgInnerMdDetId", -999);
+    setRecoVars("outerSgOuterMdDetId", -999);
+    setRecoVars("pixelPSZpitch", -999);
+    setRecoVars("ptCut", -999);
+    setRecoVars("pt_beta", -999);
+    setRecoVars("pt_betaIn", -999);
+    setRecoVars("pt_betaOut", -999);
+    setRecoVars("rawBetaIn", -999);
+    setRecoVars("rawBetaInCorrection", -999);
+    setRecoVars("rawBetaOut", -999);
+    setRecoVars("rawBetaOutCorrection", -999);
+    setRecoVars("rtIn", -999);
+    setRecoVars("rtOut", -999);
+    setRecoVars("rtOut_o_rtIn", -999);
+    setRecoVars("sdIn_alpha", -999);
+    setRecoVars("sdIn_d", -999);
+    setRecoVars("sdOut_alphaOut", -999);
+    setRecoVars("sdOut_d", -999);
+    setRecoVars("sdlSlope", -999);
+    setRecoVars("sinAlphaMax", -999);
+    setRecoVars("strip2SZpitch", -999);
+    setRecoVars("zGeom", -999);
+    setRecoVars("zIn", -999);
+    setRecoVars("zLo", -999);
+    setRecoVars("zOut", -999);
 
     const float deltaZLum = 15.f;
     const float pixelPSZpitch = 0.15;
