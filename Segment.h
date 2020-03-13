@@ -6,7 +6,6 @@
 #include "Module.h"
 #include "Algo.h"
 #include "ModuleConnectionMap.h"
-#include <unordered_map>
 
 namespace SDL
 {
@@ -73,16 +72,11 @@ namespace SDL
             // Some reco'ed quantities
             float rtOut_; // Rt of the outer mini-doublet (anchor hit = pixel hit, if available)
             float rtIn_; // Rt of the inner mini-doublet (anchor hit = pixel hit, if available)
-            
             float dphichange_;
 
             float zOut_;
-            float zIn_;
             float zLo_; // z constraint boundary
             float zHi_; // z constraint boundary
-            float rtLo_;
-            float rtHi_;
-
 
             std::map<std::string, float> recovars_;
 
@@ -106,11 +100,8 @@ namespace SDL
             const int& getPassBitsDefaultAlgo() const;
             const float& getRtOut() const;
             const float& getRtIn() const;
-            const float& getRtLo() const;
-            const float& getRtHi() const;
             const float& getDeltaPhiChange() const;
             const float& getZOut() const;
-            const float& getZIn() const;
             const float& getZLo() const;
             const float& getZHi() const;
             const std::map<std::string, float>& getRecoVars() const;
@@ -118,11 +109,8 @@ namespace SDL
 
             void setRtOut(float);
             void setRtIn(float);
-            void setRtLo(float);
-            void setRtHi(float);
             void setDeltaPhiChange(float);
             void setZOut(float);
-            void setZIn(float);
             void setZLo(float);
             void setZHi(float);
             void setRecoVars(std::string, float);
@@ -144,8 +132,6 @@ namespace SDL
             bool hasCommonMiniDoublet(const Segment&) const;
             bool isIdxMatched(const Segment&) const;
             bool isAnchorHitIdxMatched(const Segment&) const;
-            std::unordered_map<std::string,float> dAlphaThreshold(const SDL::MiniDoublet&, const SDL::MiniDoublet&);
-
 
             // The function to actually determine whether a pair of mini-doublets is a reco-ed segment or not
             static bool isMiniDoubletPairASegment(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
