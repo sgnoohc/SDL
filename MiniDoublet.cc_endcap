@@ -230,8 +230,7 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgo(SDL::LogLevel logLevel)
     // Retreived the lower module object
     const SDL::Module& lowerModule = lowerHitPtr_->getModule();
 
-//    if (useBarrelLogic(lowerModule))
-    if(lowerModule.subdet() == SDL::Module::Center)
+    if (useBarrelLogic(lowerModule))
     {
         runMiniDoubletDefaultAlgoBarrel(logLevel);
     }
@@ -805,8 +804,7 @@ float SDL::MiniDoublet::dPhiThreshold(const SDL::Hit& lowerHit, const SDL::Modul
     }
     // Following condition is met if the module is central and tilted
     // else if (module.subdet() == SDL::Module::Barrel and module.side() != SDL::Module::Center and not isNormalTiltedModules(module))
-//    else if (isNormalTiltedModules(module))
-    else if(module.subdet() == SDL::Module::Barrel) //all types of tilted modules
+    else if (isNormalTiltedModules(module))
     {
         return miniSlope + sqrt(pow(miniMuls, 2) + pow(miniPVoff, 2) + pow(miniTilt * miniSlope, 2));
     }
