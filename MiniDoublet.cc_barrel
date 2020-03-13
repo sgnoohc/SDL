@@ -589,6 +589,8 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
         setDeltaPhiNoShift(lowerHit.deltaPhi(upperHit));
     }
 
+    setRecoVars("miniCut",miniCut);
+
     if (not (std::abs(getDeltaPhi()) < miniCut)) // If cut fails continue
     {
         if (logLevel >= SDL::Log_Debug2)
