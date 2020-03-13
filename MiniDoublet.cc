@@ -230,7 +230,8 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgo(SDL::LogLevel logLevel)
     // Retreived the lower module object
     const SDL::Module& lowerModule = lowerHitPtr_->getModule();
 
-    if (useBarrelLogic(lowerModule))
+//    if (useBarrelLogic(lowerModule))
+    if(lowerModule.subdet() == SDL::Module::Barrel)
     {
         runMiniDoubletDefaultAlgoBarrel(logLevel);
     }
@@ -267,7 +268,7 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
     //*
 
     //*
-    const float dzCut = 10.f; // Could be tighter for PS modules
+    const float dzCut = lowerModule.moduleLayerType() == SDL::Module::PS ? 2.f : 10.f;
     const bool isNotInvertedCrosser = lowerModule.moduleType() == SDL::Module::PS ? true : (lowerHit.z() * dz > 0);
     const float sign = ((dz > 0) - (dz < 0)) * ((lowerHit.z() > 0) - (lowerHit.z() < 0));
     const float invertedcrossercut = (abs(dz) > 2) * sign;
@@ -499,7 +500,7 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
 
     // Cut #2 : drt cut. The dz difference can't be larger than 1cm. (max separation is 4mm for modules in the endcap)
     // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3100
-    const float drtCut = 10.f; // i.e. should be smaller than the module length. Could be tighter if PS modules
+    const float drtCut = lowerModule.moduleLayerType() == SDL::Module::PS ? 2.f : 10.f;
     float drt = std::abs(lowerHit.rt() - upperHit.rt());
     if (not (drt < drtCut)) // If cut fails continue
     {
@@ -587,6 +588,8 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
         setDeltaPhi(lowerHit.deltaPhi(getUpperShiftedHit()));
         setDeltaPhiNoShift(lowerHit.deltaPhi(upperHit));
     }
+
+    setRecoVars("miniCut",miniCut);
 
     if (not (std::abs(getDeltaPhi()) < miniCut)) // If cut fails continue
     {
@@ -763,6 +766,7 @@ float SDL::MiniDoublet::dPhiThreshold(const SDL::Hit& lowerHit, const SDL::Modul
     std::array<float, 5> miniRminMeanEndcap {131.4, 156.2, 185.6, 220.3, 261.5};// use z for endcaps // TODO: Update this with newest geometry
 
     std::array<float, 6> miniDeltaTilted {0.26, 0.26, 0.26, 0.4, 0.4, 0.4}; // Used only for tilted modules (i.e. first 3 numbers only matter)
+    std::array<float,6> miniDeltaEndcap {0.4,0.4,0.4,0.18,0.18,0.18};
 
     // =================================================================
     // Computing some components that make up the cut threshold
@@ -778,7 +782,17 @@ float SDL::MiniDoublet::dPhiThreshold(const SDL::Hit& lowerHit, const SDL::Modul
     const float pixelPSZpitch = 0.15;
     const unsigned int detid = ((module.moduleLayerType() == SDL::Module::Pixel) ?  module.partnerDetId() : module.detId());
     const float drdz = tiltedGeometry.getDrDz(detid);
-    const float miniTilt = ((isTilted && tiltedOT123) ? 0.5f * pixelPSZpitch * drdz / sqrt(1.f + drdz * drdz) / miniDeltaTilted[iL] : 0);
+    //const float miniTilt = ((isTilted && tiltedOT123) ? 0.5f * pixelPSZpitch * drdz / sqrt(1.f + drdz * drdz) / miniDeltaTilted[iL] : 0);
+    float miniTilt = 0;
+    if(isTilted and useBarrelLogic(module)) // does not change because miniDeltaTilted is configuration dependent
+    {
+        miniTilt = 0.5f * pixelPSZpitch * drdz/sqrt(1.f + drdz * drdz) / miniDeltaTilted[iL]; 
+    }
+    else
+    {
+        miniTilt = 0.5f * pixelPSZpitch * drdz/sqrt(1.f + drdz * drdz) / miniDeltaEndcap[iL];   
+    }
+
     // Compute luminous region requirement for endcap
     const float deltaZLum = 15.f;
     const float miniLum = deltaZLum / std::abs(lowerHit.z());
@@ -793,7 +807,8 @@ float SDL::MiniDoublet::dPhiThreshold(const SDL::Hit& lowerHit, const SDL::Modul
     }
     // Following condition is met if the module is central and tilted
     // else if (module.subdet() == SDL::Module::Barrel and module.side() != SDL::Module::Center and not isNormalTiltedModules(module))
-    else if (isNormalTiltedModules(module))
+//    else if (isNormalTiltedModules(module))
+    else if(module.subdet() == SDL::Module::Barrel) //all types of tilted modules
     {
         return miniSlope + sqrt(pow(miniMuls, 2) + pow(miniPVoff, 2) + pow(miniTilt * miniSlope, 2));
     }
@@ -1075,10 +1090,34 @@ std::tuple<float, float, float> SDL::MiniDoublet::shiftStripHits(const SDL::Hit&
     // If the lowerModule is pixel, then the module separation direction is positive and vice versa.
     // (i.e. if the pixel was the upper module, then the anchor points are going to shift inward in x-y plane wrt to pixel x-y point and vice versa.)
     // (cf. this should be taking care of the "rt" size comparison that would be done when calculating fabsdPhiChange variable.)
-    if (lowerModule.moduleType() == SDL::Module::PS) // ensure this happens only for PS modules
+/*    if (lowerModule.moduleType() == SDL::Module::PS) // ensure this happens only for PS modules
         moduleSeparation = (isEndcap ? 0.40 : 0.26) * ((lowerModule.moduleLayerType() == SDL::Module::Pixel) ? 1 : -1);
     else
-        moduleSeparation = (isEndcap ? 0.40 : 0.26);
+        moduleSeparation = (isEndcap ? 0.40 : 0.26);*/
+
+
+    std::array<float, 6> miniDeltaTilted {0.26, 0.26, 0.26, 0.4, 0.4, 0.4}; // Used only for tilted modules (i.e. first 3 numbers only matter)
+    std::array<float,6> miniDeltaEndcap {0.4,0.4,0.4,0.18,0.18,0.18};
+    std::array<float,6> miniDeltaFlat {0.26,0.16,0.16,0.18,0.18,0.18};
+
+    unsigned int iL = lowerModule.layer() - 1; 
+    if(lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() == SDL::Module::Center)
+    {
+        moduleSeparation = miniDeltaFlat[iL]; 
+    }
+    else if(isNormalTiltedModules(lowerModule))
+    {
+        moduleSeparation = miniDeltaTilted[iL];
+    }
+    else
+    {
+        moduleSeparation = miniDeltaEndcap[iL];
+    }
+
+    if(lowerModule.moduleType() == SDL::Module::PS and lowerModule.moduleLayerType() != SDL::Module::Pixel)
+    {
+        moduleSeparation *= -1;
+    }
 
     drprime = (moduleSeparation / std::sin(angleA + angleB)) * std::sin(angleA);
 
@@ -1249,7 +1288,8 @@ bool SDL::MiniDoublet::isHitPairAMiniDoublet(const SDL::Hit& lowerHit, const SDL
 
             // Cut #1: The dz difference
             // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3067
-            const float dzCut = 10.f; // Could be tighter for PS modules
+            float dzCut = lowerModule.moduleLayerType() == SDL::Module::PS ? 2.f : 10.f;
+                        
             float dz = std::abs(lowerHit.z() - upperHit.z());
             if (not (dz < dzCut)) // If cut fails continue
             {
@@ -1279,6 +1319,7 @@ bool SDL::MiniDoublet::isHitPairAMiniDoublet(const SDL::Hit& lowerHit, const SDL
 
             // Calculate the cut thresholds for the selection
             float miniCut = 0;
+
             if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
                 miniCut = MiniDoublet::dPhiThreshold(lowerHit, lowerModule);
             else
