@@ -685,9 +685,9 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
     
     std::unordered_map<std::string,float> dAlphaCutValues = dAlphaThreshold(innerMiniDoublet,outerMiniDoublet);
 
-    dAlpha_compat_inner_vs_sg = dAlphaCutValues["dAlphaInnerMDSegment"];
-    dAlpha_compat_outer_vs_sg = dAlphaCutValues["dAlphaOuterMDSegment"];
-    dAlpha_compat_inner_vs_outer = dAlphaCutValues["dAlphaInnerMDOuterMD"];
+    float dAlpha_compat_inner_vs_sg = dAlphaCutValues["dAlphaInnerMDSegment"];
+    float dAlpha_compat_outer_vs_sg = dAlphaCutValues["dAlphaOuterMDSegment"];
+    float dAlpha_compat_inner_vs_outer = dAlphaCutValues["dAlphaInnerMDOuterMD"];
 
     // Cut #4: angle compatibility between mini-doublet and segment
     float dAlpha_inner_md_sg = inner_md_alpha - sg_alpha;
