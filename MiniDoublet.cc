@@ -231,7 +231,7 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgo(SDL::LogLevel logLevel)
     const SDL::Module& lowerModule = lowerHitPtr_->getModule();
 
 //    if (useBarrelLogic(lowerModule))
-    if(lowerModule.subdet() == SDL::Module::Center)
+    if(lowerModule.subdet() == SDL::Module::Barrel)
     {
         runMiniDoubletDefaultAlgoBarrel(logLevel);
     }
