@@ -231,7 +231,7 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgo(SDL::LogLevel logLevel)
     const SDL::Module& lowerModule = lowerHitPtr_->getModule();
 
 //    if (useBarrelLogic(lowerModule))
-    if(lowerModule.subdet() == SDL::Module::Center)
+    if(lowerModule.subdet() == SDL::Module::Barrel)
     {
         runMiniDoubletDefaultAlgoBarrel(logLevel);
     }
@@ -766,7 +766,7 @@ float SDL::MiniDoublet::dPhiThreshold(const SDL::Hit& lowerHit, const SDL::Modul
     std::array<float, 5> miniRminMeanEndcap {131.4, 156.2, 185.6, 220.3, 261.5};// use z for endcaps // TODO: Update this with newest geometry
 
     std::array<float, 6> miniDeltaTilted {0.26, 0.26, 0.26, 0.4, 0.4, 0.4}; // Used only for tilted modules (i.e. first 3 numbers only matter)
-    std::array<float,6> miniDeltaEndcap {0.4,0.4,0.4,0.4,0.4,0.4};
+    std::array<float,6> miniDeltaEndcap {0.4,0.4,0.4,0.18,0.18,0.18};
 
     // =================================================================
     // Computing some components that make up the cut threshold
@@ -1090,10 +1090,34 @@ std::tuple<float, float, float> SDL::MiniDoublet::shiftStripHits(const SDL::Hit&
     // If the lowerModule is pixel, then the module separation direction is positive and vice versa.
     // (i.e. if the pixel was the upper module, then the anchor points are going to shift inward in x-y plane wrt to pixel x-y point and vice versa.)
     // (cf. this should be taking care of the "rt" size comparison that would be done when calculating fabsdPhiChange variable.)
-    if (lowerModule.moduleType() == SDL::Module::PS) // ensure this happens only for PS modules
+/*    if (lowerModule.moduleType() == SDL::Module::PS) // ensure this happens only for PS modules
         moduleSeparation = (isEndcap ? 0.40 : 0.26) * ((lowerModule.moduleLayerType() == SDL::Module::Pixel) ? 1 : -1);
     else
-        moduleSeparation = (isEndcap ? 0.40 : 0.26);
+        moduleSeparation = (isEndcap ? 0.40 : 0.26);*/
+
+
+    std::array<float, 6> miniDeltaTilted {0.26, 0.26, 0.26, 0.4, 0.4, 0.4}; // Used only for tilted modules (i.e. first 3 numbers only matter)
+    std::array<float,6> miniDeltaEndcap {0.4,0.4,0.4,0.18,0.18,0.18};
+    std::array<float,6> miniDeltaFlat {0.26,0.16,0.16,0.18,0.18,0.18};
+
+    unsigned int iL = lowerModule.layer() - 1; 
+    if(lowerModule.subdet() == SDL::Module::Barrel and lowerModule.side() == SDL::Module::Center)
+    {
+        moduleSeparation = miniDeltaFlat[iL]; 
+    }
+    else if(isNormalTiltedModules(lowerModule))
+    {
+        moduleSeparation = miniDeltaTilted[iL];
+    }
+    else
+    {
+        moduleSeparation = miniDeltaEndcap[iL];
+    }
+
+    if(lowerModule.moduleType() == SDL::Module::PS and lowerModule.moduleLayerType() != SDL::Module::Pixel)
+    {
+        moduleSeparation *= -1;
+    }
 
     drprime = (moduleSeparation / std::sin(angleA + angleB)) * std::sin(angleA);
 
