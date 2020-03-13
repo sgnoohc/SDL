@@ -140,6 +140,12 @@ namespace SDL
             // The function to determine transition region for inner most tilted layer
             static bool isNormalTiltedModules(const Module& lowerModule);
 
+            // The function to determine transition region for inner most tilted layer (same as isNormalTiltedModules)
+            static bool isTighterTiltedModules(const Module& lowerModule);
+
+            // The function to determine gap
+            static float moduleGapSize(const Module& lowerModule);
+
     };
 }
 
