@@ -1256,10 +1256,52 @@ bool SDL::MiniDoublet::isTighterTiltedModules(const SDL::Module& lowerModule)
 float SDL::MiniDoublet::moduleGapSize(const Module& lowerModule)
 {
     std::array<float, 3> miniDeltaTilted {0.26, 0.26, 0.26};
-    std::array<float, 6> miniDeltaEndcap {0.4, 0.4, 0.4, 0.18, 0.18, 0.18};
+    //std::array<float, 6> miniDeltaEndcap {0.4, 0.4, 0.4, 0.18, 0.18, 0.18};
     std::array<float, 6> miniDeltaFlat {0.26, 0.16, 0.16, 0.18, 0.18, 0.18};
+    std::array<std::array<float,15>,5> miniDeltaEndcap; //15 rings, 5 layers
+
+    for(size_t i = 0; i<5; i++)
+    {
+        for(size_t j = 0; j<15;j++)
+        {
+            if(i == 0 || i == 1)
+            {
+                if(j<10)
+                {
+                 miniDeltaEndcap[i][j] = 0.4;
+                }
+                else
+                {
+                    miniDeltaEndcap[i][j] = 0.18;
+                }
+            }
+            else if(i == 2 || i == 3)
+            {
+                if(j<8)
+                {
+                    miniDeltaEndcap[i][j] = 0.4;
+                }
+                else
+                {
+                    miniDeltaEndcap[i][j]  = 0.18;
+                }
+            }
+            else
+            {
+                if(j<9)
+                {
+                    miniDeltaEndcap[i][j] = 0.4;
+                }
+                else
+                {
+                    miniDeltaEndcap[i][j] = 0.18;
+                }
+            }
+        }
+    }
 
     unsigned int iL = lowerModule.layer() - 1;
+    int iR = lowerModule.subdet() == SDL::Module::Endcap ? lowerModule.ring()-1 : -1;
 
     float moduleSeparation = 0;
 
@@ -1273,7 +1315,7 @@ float SDL::MiniDoublet::moduleGapSize(const Module& lowerModule)
     }
     else
     {
-        moduleSeparation = miniDeltaEndcap[iL];
+        moduleSeparation = miniDeltaEndcap[iL][iR];
     }
 
     return moduleSeparation;
