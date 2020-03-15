@@ -1259,26 +1259,26 @@ float SDL::MiniDoublet::moduleGapSize(const Module& lowerModule)
     std::array<float,3> miniDeltaLooseTilted {0.4,0.4,0.4};
     //std::array<float, 6> miniDeltaEndcap {0.4, 0.4, 0.4, 0.18, 0.18, 0.18};
     std::array<float, 6> miniDeltaFlat {0.26, 0.16, 0.16, 0.18, 0.18, 0.18};
-    std::array<std::array<float,15>,5> miniDeltaEndcap; //15 rings, 5 layers
+    std::array<std::array<float, 15>, 5> miniDeltaEndcap; //15 rings, 5 layers
 
-    for(size_t i = 0; i<5; i++)
+    for (size_t i = 0; i < 5; i++)
     {
-        for(size_t j = 0; j<15;j++)
+        for (size_t j = 0; j < 15; j++)
         {
-            if(i == 0 || i == 1)
+            if (i == 0 || i == 1)
             {
-                if(j<10)
+                if (j < 10)
                 {
-                 miniDeltaEndcap[i][j] = 0.4;
+                    miniDeltaEndcap[i][j] = 0.4;
                 }
                 else
                 {
                     miniDeltaEndcap[i][j] = 0.18;
                 }
             }
-            else if(i == 2 || i == 3)
+            else if (i == 2 || i == 3)
             {
-                if(j<8)
+                if (j < 8)
                 {
                     miniDeltaEndcap[i][j] = 0.4;
                 }
@@ -1289,7 +1289,7 @@ float SDL::MiniDoublet::moduleGapSize(const Module& lowerModule)
             }
             else
             {
-                if(j<9)
+                if (j < 9)
                 {
                     miniDeltaEndcap[i][j] = 0.4;
                 }
@@ -1302,7 +1302,7 @@ float SDL::MiniDoublet::moduleGapSize(const Module& lowerModule)
     }
 
     unsigned int iL = lowerModule.layer() - 1;
-    int iR = lowerModule.subdet() == SDL::Module::Endcap ? lowerModule.ring()-1 : -1;
+    int iR = lowerModule.subdet() == SDL::Module::Endcap ? lowerModule.ring() - 1 : -1;
 
     float moduleSeparation = 0;
 
