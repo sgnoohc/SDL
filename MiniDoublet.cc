@@ -1314,7 +1314,7 @@ float SDL::MiniDoublet::moduleGapSize(const Module& lowerModule)
     {
         moduleSeparation = miniDeltaTilted[iL];
     }
-    else if(lowerModule.subdet() == SDL::Module::Endcap)
+    else if (lowerModule.subdet() == SDL::Module::Endcap)
     {
         moduleSeparation = miniDeltaEndcap[iL][iR];
     }
