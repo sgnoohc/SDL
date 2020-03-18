@@ -6,6 +6,7 @@
 #include "Module.h"
 #include "Algo.h"
 #include "ModuleConnectionMap.h"
+#include <unordered_map>
 
 namespace SDL
 {
@@ -70,11 +71,14 @@ namespace SDL
             int passBitsDefaultAlgo_;
 
             // Some reco'ed quantities
+            float rtLo_;
+            float rtHi_;
             float rtOut_; // Rt of the outer mini-doublet (anchor hit = pixel hit, if available)
             float rtIn_; // Rt of the inner mini-doublet (anchor hit = pixel hit, if available)
             float dphichange_;
 
             float zOut_;
+            float zIn_;
             float zLo_; // z constraint boundary
             float zHi_; // z constraint boundary
 
@@ -100,8 +104,11 @@ namespace SDL
             const int& getPassBitsDefaultAlgo() const;
             const float& getRtOut() const;
             const float& getRtIn() const;
+            const float& getRtLo() const;
+            const float& getRtHi() const;
             const float& getDeltaPhiChange() const;
             const float& getZOut() const;
+            const float & getZIn() const;
             const float& getZLo() const;
             const float& getZHi() const;
             const std::map<std::string, float>& getRecoVars() const;
@@ -109,7 +116,10 @@ namespace SDL
 
             void setRtOut(float);
             void setRtIn(float);
+            void setRtLo(float);
+            void setRtHi(float);
             void setDeltaPhiChange(float);
+            void setZIn(float);
             void setZOut(float);
             void setZLo(float);
             void setZHi(float);
@@ -138,6 +148,8 @@ namespace SDL
             static bool isMiniDoubletPairASegmentCandidateBarrel(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
             static bool isMiniDoubletPairASegmentCandidateEndcap(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
             static bool isMiniDoubletPairAngleCompatibleEndcap(const MiniDoublet& innerMiniDoublet, const MiniDoublet& outerMiniDoublet, SGAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);
+            std::unordered_map<std::string,float> dAlphaThreshold(const SDL::MiniDoublet &innerMiniDoublet, const SDL::MiniDoublet &outerMiniDoublet);
+
 
             // cout printing
             friend std::ostream& operator<<(std::ostream& out, const Segment& md);
