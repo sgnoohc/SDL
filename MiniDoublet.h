@@ -120,7 +120,8 @@ namespace SDL
             // The math for the threshold cut value to apply between hits for mini-doublet
             // The main idea is to be consistent with 1 GeV minimum pt
             // Some residual effects such as tilt, multiple scattering, beam spots are considered
-            static float dPhiThreshold(const Hit&, const Module&);
+            //static float dPhiThreshold(const Hit&, const Module&);
+            static float dPhiThreshold(const Hit& lowerHit, const Module& module, const float dPhi = 0, const float dz = 1);
 
             // The math for shifting the pixel hit up or down along the PS module orientation (deprecated)
             static float fabsdPhiPixelShift(const Hit& lowerHit, const Hit& upperHit, const Module& lowerModule, SDL::LogLevel logLevel=SDL::Log_Nothing);
