@@ -531,12 +531,7 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
     }
 
     // Calculate the cut thresholds for the selection
-    float miniCut = 0;
-    if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
-        miniCut = MiniDoublet::dPhiThreshold(lowerHit, lowerModule);
-    else
-        miniCut = MiniDoublet::dPhiThreshold(upperHit, lowerModule);
-
+    
     // Cut #3: dphi difference
     // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3111
     // // Old comments ----
@@ -588,6 +583,28 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
         setDeltaPhiNoShift(lowerHit.deltaPhi(upperHit));
     }
 
+    // dz needs to change if it is a PS module where the strip hits are shifted in order to properly account for the case when a tilted module falls under "endcap logic"
+    // if it was an endcap it will have zero effect
+    if (lowerModule.moduleType() == SDL::Module::PS)
+    {
+        if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
+        {
+            setShiftedDz(lowerHit.z() - zn);
+            dz = getShiftedDz();
+        }
+        else
+        {
+            setShiftedDz(upperHit.z() - zn);
+            dz = getShiftedDz();
+        }
+    }
+
+    float miniCut = 0;
+    if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
+        miniCut = MiniDoublet::dPhiThreshold(lowerHit, lowerModule, getDeltaPhi(), dz);
+    else
+        miniCut = MiniDoublet::dPhiThreshold(upperHit, lowerModule, getDeltaPhi(), dz);
+
     setRecoVars("miniCut",miniCut);
 
     if (not (std::abs(getDeltaPhi()) < miniCut)) // If cut fails continue
@@ -622,22 +639,7 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
     // Cut #4: Another cut on the dphi after some modification
     // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3119-L3124
 
-    // dz needs to change if it is a PS module where the strip hits are shifted in order to properly account for the case when a tilted module falls under "endcap logic"
-    // if it was an endcap it will have zero effect
-    if (lowerModule.moduleType() == SDL::Module::PS)
-    {
-        if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
-        {
-            setShiftedDz(lowerHit.z() - zn);
-            dz = getShiftedDz();
-        }
-        else
-        {
-            setShiftedDz(upperHit.z() - zn);
-            dz = getShiftedDz();
-        }
-    }
-
+    
     float dzFrac = std::abs(dz) / fabs(lowerHit.z());
     setDeltaPhiChange(getDeltaPhi() / dzFrac * (1.f + dzFrac));
     setDeltaPhiChangeNoShift(getDeltaPhiNoShift() / dzFrac * (1.f + dzFrac));
@@ -736,7 +738,7 @@ namespace SDL
     }
 }
 
-float SDL::MiniDoublet::dPhiThreshold(const SDL::Hit& lowerHit, const SDL::Module& module)
+float SDL::MiniDoublet::dPhiThreshold(const SDL::Hit& lowerHit, const SDL::Module& module,const float dPhi, const float dz)
 {
     // =================================================================
     // Various constants
@@ -782,7 +784,8 @@ float SDL::MiniDoublet::dPhiThreshold(const SDL::Hit& lowerHit, const SDL::Modul
 
     // Compute luminous region requirement for endcap
     const float deltaZLum = 15.f;
-    const float miniLum = deltaZLum / std::abs(lowerHit.z());
+    const float miniLum = abs(dPhi * deltaZLum/dz);
+
 
     // =================================================================
     // Return the threshold value
@@ -1314,7 +1317,7 @@ float SDL::MiniDoublet::moduleGapSize(const Module& lowerModule)
     {
         moduleSeparation = miniDeltaTilted[iL];
     }
-    else if(lowerModule.subdet() == SDL::Module::Endcap)
+    else if (lowerModule.subdet() == SDL::Module::Endcap)
     {
         moduleSeparation = miniDeltaEndcap[iL][iR];
     }
