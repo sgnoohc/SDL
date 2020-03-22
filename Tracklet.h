@@ -105,9 +105,11 @@ namespace SDL
             // The default algorithms
             void runTrackletDefaultAlgo(SDL::LogLevel logLevel);
             void runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel logLevel);
-            void runTrackletDefaultAlgoDeltaBetaOnlyBarrelBarrelBarrelBarrel(SDL::LogLevel logLevel);
+            void runTrackletDefaultAlgoBarrelBarrelBarrelBarrel_v1(SDL::LogLevel logLevel);
+            void runTrackletDefaultAlgoBarrelBarrelBarrelBarrel_v2(SDL::LogLevel logLevel);
             void runTrackletDefaultAlgoBarrelBarrelEndcapEndcap(SDL::LogLevel logLevel);
             void runTrackletDefaultAlgoEndcapEndcapEndcapEndcap(SDL::LogLevel logLevel);
+            void runTrackletDefaultAlgoDeltaBetaOnlyBarrelBarrelBarrelBarrel(SDL::LogLevel logLevel);
             void runTrackletDefaultAlgoBarrelBarrel(SDL::LogLevel logLevel);
             void runTrackletDefaultAlgoBarrelEndcap(SDL::LogLevel logLevel);
             void runTrackletDefaultAlgoEndcapEndcap(SDL::LogLevel logLevel);
