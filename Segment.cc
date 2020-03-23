@@ -338,6 +338,20 @@ void SDL::Segment::runSegmentDefaultAlgoBarrel(SDL::LogLevel logLevel)
     // Get connected outer lower module detids
     const std::vector<unsigned int>& connectedModuleDetIds = moduleConnectionMap.getConnectedModuleDetIds(innerLowerModule.detId());
 
+
+    // set default values
+    
+    setRecoVars("sdCut", -999);
+    setRecoVars("sdSlope", -999);
+    setRecoVars("sdMuls", -999);
+    setRecoVars("sdPVoff", -999);
+    setRecoVars("deltaPhi", -999);
+
+    setRecoVars("dAlpha_innerMD_segment",-999);
+    setRecoVars("dAlpha_outerMD_segment",-999);
+    setRecoVars("dAlpha_innerMD_outerMD",-999);
+
+
     // Loop over connected outer lower modules
     bool found = false;
     for (auto& outerLowerModuleDetId : connectedModuleDetIds)
@@ -559,6 +573,17 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
 
     // Get connected outer lower module detids
     const std::vector<unsigned int>& connectedModuleDetIds = moduleConnectionMap.getConnectedModuleDetIds(innerLowerModule.detId());
+
+    setRecoVars("sdCut", -999);
+    setRecoVars("sdSlope", -999);
+    setRecoVars("sdMuls", -999);
+    setRecoVars("sdPVoff", -999);
+    setRecoVars("deltaPhi", -999);
+
+    setRecoVars("dAlpha_innerMD_segment",-999);
+    setRecoVars("dAlpha_outerMD_segment",-999);
+    setRecoVars("dAlpha_innerMD_outerMD",-999);
+ 
 
     // Loop over connected outer lower modules
     bool found = false;
