@@ -146,6 +146,21 @@ const float& SDL::Segment::getRecoVar(std::string key) const
     return recovars_.at(key);
 }
 
+const float& SDL::Segment::getdAlphaInnerMDSegment() const
+{
+    return dAlphaInnerMDSegment_;
+}
+
+const float& SDL::Segment::getdAlphaOuterMDSegment() const
+{
+    return dAlphaOuterMDSegment_;
+}
+
+const float& SDL::Segment::getdAlphaInnerMDOuterMD() const
+{
+    return dAlphaInnerMDOuterMD_;
+}
+
 void SDL::Segment::setRtOut(float rt)
 {
     rtOut_ = rt;
