@@ -143,6 +143,7 @@ const std::map<std::string, float>& SDL::Segment::getRecoVars() const
 
 const float& SDL::Segment::getRecoVar(std::string key) const
 {
+    std::cout<<key<<std::endl;
     return recovars_.at(key);
 }
 
