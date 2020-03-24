@@ -20,6 +20,9 @@ namespace SDL
             std::map<unsigned int, float> sls_; // lower slope
             std::map<unsigned int, float> yus_; // upper hits
             std::map<unsigned int, float> sus_; // upper slope
+            std::map<unsigned int, float> centroid_rs_; // centroid r
+            std::map<unsigned int, float> centroid_phis_; // centroid phi
+            std::map<unsigned int, float> centroid_zs_; // centroid z
 
         public:
             EndcapGeometry();
@@ -33,6 +36,9 @@ namespace SDL
             float getSlopeLower(unsigned int detid);
             float getYInterceptUpper(unsigned int detid);
             float getSlopeUpper(unsigned int detid);
+            float getCentroidR(unsigned int detid);
+            float getCentroidPhi(unsigned int detid);
+            float getCentroidZ(unsigned int detid);
 
     };
 
