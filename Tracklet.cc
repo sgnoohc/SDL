@@ -1147,17 +1147,16 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel_v2(SDL::LogLe
     float betaOutRHmin = betaOut;
     float betaOutRHmax = betaOut;
 
-    const Hit& sdIn_mdRef_hit = (*innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr());
+    const Hit& hit_InRef = (*innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr());
 
-    const float sdIn_dr = (hit_InUp - sdIn_mdRef_hit).rt();
-    const float sdIn_d = hit_InUp.rt() - sdIn_mdRef_hit.rt();
+    const float rt_InSeg = (hit_InUp - hit_InRef).rt();
 
     const float dr = tl_axis.rt();
     //beta upper cuts: 2-strip difference for direction resolution
     const float corrF = 1.f;
     bool pass_betaIn_cut = false;//pixel seeds were already selected
-    const float betaIn_cut = (-sdIn_dr * corrF + dr) * k2Rinv1GeVf / ptCut + (0.02f / sdIn_d);
-    // const float betaIn_cut = std::asin((-sdIn_dr * corrF + dr) * k2Rinv1GeVf / ptCut) + (0.02f / sdIn_d);
+    const float betaIn_cut = (-rt_InSeg * corrF + dr) * k2Rinv1GeVf / ptCut + (0.02f / drt_InSeg);
+    // const float betaIn_cut = std::asin((-rt_InSeg * corrF + dr) * k2Rinv1GeVf / ptCut) + (0.02f / drt_InSeg);
     pass_betaIn_cut = std::abs(betaInRHmin) < betaIn_cut;
 
     setRecoVars("betaInRHmin", betaInRHmin);
@@ -1226,7 +1225,7 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel_v2(SDL::LogLe
 
     const float sdOut_dr = (hit_OutUp - hit_OutLo).rt();
     const float sdOut_d = hit_OutUp.rt() - hit_OutLo.rt();
-    const float diffDr = std::abs(sdIn_dr - sdOut_dr) / std::abs(sdIn_dr + sdOut_dr);
+    const float diffDr = std::abs(rt_InSeg - sdOut_dr) / std::abs(rt_InSeg + sdOut_dr);
     if (true //do it for all//diffDr > 0.05 //only if segment length is different significantly
             && betaIn * betaOut > 0.f
             && (std::abs(pt_beta) < 4.f * pt_betaMax
@@ -1238,11 +1237,11 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel_v2(SDL::LogLe
         setRecoVars("betaOut_0th", betaOut);
         setRecoVars("betaAv_0th", betaAv);
         setRecoVars("betaPt_0th", pt_beta);
-        setRecoVars("betaIn_1stCorr", copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
+        setRecoVars("betaIn_1stCorr", copysign(std::asin(std::min(rt_InSeg * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
         setRecoVars("betaOut_1stCorr", copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
         setRecoVars("dBeta_0th", betaIn - betaOut);
 
-        const float betaInUpd  = betaIn + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
+        const float betaInUpd  = betaIn + copysign(std::asin(std::min(rt_InSeg * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
         const float betaOutUpd = betaOut + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut); //FIXME: need a faster version
         betaAv = 0.5f * (betaInUpd + betaOutUpd);
         pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
@@ -1251,11 +1250,11 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel_v2(SDL::LogLe
         setRecoVars("betaOut_1st", betaOutUpd);
         setRecoVars("betaAv_1st", betaAv);
         setRecoVars("betaPt_1st", pt_beta);
-        setRecoVars("betaIn_2ndCorr", copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
+        setRecoVars("betaIn_2ndCorr", copysign(std::asin(std::min(rt_InSeg * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
         setRecoVars("betaOut_2ndCorr", copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
         setRecoVars("dBeta_1st", betaInUpd - betaOutUpd);
 
-        betaIn  += copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
+        betaIn  += copysign(std::asin(std::min(rt_InSeg * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
         betaOut += copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut); //FIXME: need a faster version
         //update the av and pt
         betaAv = 0.5f * (betaIn + betaOut);
@@ -1265,17 +1264,17 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel_v2(SDL::LogLe
         setRecoVars("betaOut_2nd", betaOut);
         setRecoVars("betaAv_2nd", betaAv);
         setRecoVars("betaPt_2nd", pt_beta);
-        setRecoVars("betaIn_3rdCorr", copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
+        setRecoVars("betaIn_3rdCorr", copysign(std::asin(std::min(rt_InSeg * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
         setRecoVars("betaOut_3rdCorr", copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
         setRecoVars("dBeta_2nd", betaIn - betaOut);
 
-        setRecoVars("betaIn_3rd", getRecoVar("rawBetaIn") + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
+        setRecoVars("betaIn_3rd", getRecoVar("rawBetaIn") + copysign(std::asin(std::min(rt_InSeg * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
         setRecoVars("betaOut_3rd", getRecoVar("rawBetaOut") + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
         setRecoVars("betaAv_3rd", 0.5f * (getRecoVar("betaIn_3rd") + getRecoVar("betaOut_3rd")));
         setRecoVars("betaPt_3rd", dr * k2Rinv1GeVf / sin(getRecoVar("betaAv_3rd")));
         setRecoVars("dBeta_3rd", getRecoVar("betaIn_3rd") - getRecoVar("betaOut_3rd"));
 
-        setRecoVars("betaIn_4th", getRecoVar("rawBetaIn") + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(getRecoVar("betaPt_3rd")), sinAlphaMax)), getRecoVar("betaIn_3rd")));
+        setRecoVars("betaIn_4th", getRecoVar("rawBetaIn") + copysign(std::asin(std::min(rt_InSeg * k2Rinv1GeVf / std::abs(getRecoVar("betaPt_3rd")), sinAlphaMax)), getRecoVar("betaIn_3rd")));
         setRecoVars("betaOut_4th", getRecoVar("rawBetaOut") + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(getRecoVar("betaPt_3rd")), sinAlphaMax)), getRecoVar("betaOut_3rd")));
         setRecoVars("betaAv_4th", 0.5f * (getRecoVar("betaIn_4th") + getRecoVar("betaOut_4th")));
         setRecoVars("betaPt_4th", dr * k2Rinv1GeVf / sin(getRecoVar("betaAv_4th")));
@@ -1286,11 +1285,11 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel_v2(SDL::LogLe
     {
         betacormode = 2;
         const float pt_betaIn = dr * k2Rinv1GeVf / sin(betaIn);
-        const float betaInUpd  = betaIn + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_betaIn), sinAlphaMax)), betaIn); //FIXME: need a faster version
+        const float betaInUpd  = betaIn + copysign(std::asin(std::min(rt_InSeg * k2Rinv1GeVf / std::abs(pt_betaIn), sinAlphaMax)), betaIn); //FIXME: need a faster version
         const float betaOutUpd = betaOut + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_betaIn), sinAlphaMax)), betaIn); //FIXME: need a faster version
         betaAv = (std::abs(betaOut) > 0.2f * std::abs(betaIn)) ? (0.5f * (betaInUpd + betaOutUpd)) : betaInUpd;
         pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
-        betaIn  += copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
+        betaIn  += copysign(std::asin(std::min(rt_InSeg * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
         betaOut += copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
         //update the av and pt
         betaAv = 0.5f * (betaIn + betaOut);
@@ -1313,9 +1312,9 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel_v2(SDL::LogLe
     const float dBetaMuls = sdlThetaMulsF * 4.f / std::min(std::abs(pt_beta), pt_betaMax); //need to confirm the range-out value of 7 GeV
 
     //regularize to alpha of pt_betaMax .. review may want to add resolution
-    const float sdIn_rt = sdIn_mdRef_hit.rt();
+    const float sdIn_rt = hit_InRef.rt();
     const float sdOut_rt = hit_OutLo.rt();
-    const float sdIn_z = sdIn_mdRef_hit.z();
+    const float sdIn_z = hit_InRef.z();
     const float sdOut_z = hit_OutLo.z();
     const float alpha_OutLo = outerSegmentPtr()->getDeltaPhiChange(); // Angle between deltaPhi(OutLo, (OutUp - OutLo))
     const float alphaInAbsReg = std::max(std::abs(alpha_InLo), std::asin(std::min(sdIn_rt * k2Rinv1GeVf / 3.0f, sinAlphaMax)));
@@ -1353,7 +1352,7 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel_v2(SDL::LogLe
 
     float pt_betaIn = dr * k2Rinv1GeVf / sin(betaIn);
     const float pt_betaOut = dr * k2Rinv1GeVf / sin(betaOut);
-    const float dBetaRes = 0.02f / std::min(sdOut_d, sdIn_d);
+    const float dBetaRes = 0.02f / std::min(sdOut_d, drt_InSeg);
     const float dBetaCut2 = (dBetaRes*dBetaRes * 2.0f + dBetaMuls * dBetaMuls + dBetaLum2 + dBetaRIn2 + dBetaROut2
             + 0.25 * std::pow(std::abs(betaInRHmin - betaInRHmax) + std::abs(betaOutRHmin - betaOutRHmax), 2));
     float dBeta = betaIn - betaOut;
@@ -1441,7 +1440,7 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel_v2(SDL::LogLe
     setRecoVars("rt_InLo", rt_InLo);
     setRecoVars("rt_OutLo", rt_OutLo);
     setRecoVars("rtRatio_OutLoInLo", rtRatio_OutLoInLo);
-    setRecoVars("sdIn_d", sdIn_d);
+    setRecoVars("drt_InSeg", drt_InSeg);
     setRecoVars("sdOut_d", sdOut_d);
     setRecoVars("alpha1GeV_OutLo", alpha1GeV_OutLo);
     setRecoVars("strip2SZpitch", strip2SZpitch);
