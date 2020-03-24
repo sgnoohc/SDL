@@ -82,6 +82,10 @@ namespace SDL
             float zLo_; // z constraint boundary
             float zHi_; // z constraint boundary
 
+            float dAlphaInnerMDSegment_;
+            float dAlphaOuterMDSegment_;
+            float dAlphaInnerMDOuterMD_;
+
             std::map<std::string, float> recovars_;
 
         public:
@@ -114,6 +118,10 @@ namespace SDL
             const std::map<std::string, float>& getRecoVars() const;
             const float& getRecoVar(std::string) const;
 
+            const float& getdAlphaInnerMDSegment() const;
+            const float& getdAlphaOuterMDSegment() const;
+            const float& getdAlphaInnerMDOuterMD() const;
+
             void setRtOut(float);
             void setRtIn(float);
             void setRtLo(float);
@@ -124,6 +132,9 @@ namespace SDL
             void setZLo(float);
             void setZHi(float);
             void setRecoVars(std::string, float);
+            void setdAlphaInnerMDSegment(float);
+            void setdAlphaOuterMDSegment(float);
+            void setdAlphaInnerMDOuterMD(float);
 
             // return whether it passed the algorithm
             bool passesSegmentAlgo(SGAlgo algo) const;

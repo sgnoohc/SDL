@@ -146,6 +146,21 @@ const float& SDL::Segment::getRecoVar(std::string key) const
     return recovars_.at(key);
 }
 
+const float& SDL::Segment::getdAlphaInnerMDSegment() const
+{
+    return dAlphaInnerMDSegment_;
+}
+
+const float& SDL::Segment::getdAlphaOuterMDSegment() const
+{
+    return dAlphaOuterMDSegment_;
+}
+
+const float& SDL::Segment::getdAlphaInnerMDOuterMD() const
+{
+    return dAlphaInnerMDOuterMD_;
+}
+
 void SDL::Segment::setRtOut(float rt)
 {
     rtOut_ = rt;
@@ -196,6 +211,22 @@ void SDL::Segment::setRecoVars(std::string key, float var)
 {
     recovars_[key] = var;
 }
+
+void SDL::Segment::setdAlphaInnerMDSegment(float var)
+{
+    dAlphaInnerMDSegment_ = var;
+}
+
+void SDL::Segment::setdAlphaOuterMDSegment(float var)
+{
+    dAlphaOuterMDSegment_ = var;
+}
+
+void SDL::Segment::setdAlphaInnerMDOuterMD(float var)
+{
+    dAlphaInnerMDOuterMD_ = var;
+}
+
 
 bool SDL::Segment::passesSegmentAlgo(SDL::SGAlgo algo) const
 {
@@ -306,6 +337,20 @@ void SDL::Segment::runSegmentDefaultAlgoBarrel(SDL::LogLevel logLevel)
 
     // Get connected outer lower module detids
     const std::vector<unsigned int>& connectedModuleDetIds = moduleConnectionMap.getConnectedModuleDetIds(innerLowerModule.detId());
+
+
+    // set default values
+    
+    setRecoVars("sdCut", -999);
+    setRecoVars("sdSlope", -999);
+    setRecoVars("sdMuls", -999);
+    setRecoVars("sdPVoff", -999);
+    setRecoVars("deltaPhi", -999);
+
+    setRecoVars("dAlpha_innerMD_segment",-999);
+    setRecoVars("dAlpha_outerMD_segment",-999);
+    setRecoVars("dAlpha_innerMD_outerMD",-999);
+
 
     // Loop over connected outer lower modules
     bool found = false;
@@ -446,9 +491,15 @@ void SDL::Segment::runSegmentDefaultAlgoBarrel(SDL::LogLevel logLevel)
     float dAlpha_compat_outer_vs_sg = dAlphaCutValues["dAlphaOuterMDSegment"];
     float dAlpha_compat_inner_vs_outer = dAlphaCutValues["dAlphaInnerMDOuterMD"];
 
+    setRecoVars("dAlpha_innerMD_segment",dAlpha_compat_inner_vs_sg);
+    setRecoVars("dAlpha_outerMD_segment",dAlpha_compat_outer_vs_sg);
+    setRecoVars("dAlpha_innerMD_outerMD",dAlpha_compat_inner_vs_outer);
+
 
     // Cut #4: angle compatibility between mini-doublet and segment
     float dAlpha_inner_md_sg = inner_md_alpha - sg_alpha;
+    setdAlphaInnerMDSegment(dAlpha_inner_md_sg);
+
     if (not (std::abs(dAlpha_inner_md_sg) < dAlpha_compat_inner_vs_sg))
     {
         if (logLevel >= SDL::Log_Debug3)
@@ -467,6 +518,8 @@ void SDL::Segment::runSegmentDefaultAlgoBarrel(SDL::LogLevel logLevel)
 
     // Cut #5: angle compatibility between mini-doublet and segment
     float dAlpha_outer_md_sg = outer_md_alpha - sg_alpha;
+    setdAlphaOuterMDSegment(dAlpha_outer_md_sg);
+
     if (not (std::abs(dAlpha_outer_md_sg) < dAlpha_compat_outer_vs_sg))
     {
         if (logLevel >= SDL::Log_Debug3)
@@ -485,6 +538,8 @@ void SDL::Segment::runSegmentDefaultAlgoBarrel(SDL::LogLevel logLevel)
 
     // Cut #6: angle compatibility between mini-doublet mini-doublets
     float dAlpha_outer_md_inner_md = outer_md_alpha - inner_md_alpha;
+    setdAlphaOuterMDSegment(dAlpha_outer_md_inner_md);
+
     if (not (std::abs(dAlpha_outer_md_inner_md) < dAlpha_compat_inner_vs_outer))
     {
         if (logLevel >= SDL::Log_Debug3)
@@ -518,6 +573,17 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
 
     // Get connected outer lower module detids
     const std::vector<unsigned int>& connectedModuleDetIds = moduleConnectionMap.getConnectedModuleDetIds(innerLowerModule.detId());
+
+    setRecoVars("sdCut", -999);
+    setRecoVars("sdSlope", -999);
+    setRecoVars("sdMuls", -999);
+    setRecoVars("sdPVoff", -999);
+    setRecoVars("deltaPhi", -999);
+
+    setRecoVars("dAlpha_innerMD_segment",-999);
+    setRecoVars("dAlpha_outerMD_segment",-999);
+    setRecoVars("dAlpha_innerMD_outerMD",-999);
+ 
 
     // Loop over connected outer lower modules
     bool found = false;
@@ -558,7 +624,7 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
     float sdMuls;
 
     sdMuls = miniMulsPtScaleEndcap[innerLowerModule.layer()-1] * 3.f / ptCut;//will need a better guess than x2?
-
+    
 
     // Get the relevant anchor hits
     const Hit& innerMiniDoubletAnchorHit = (innerLowerModule.moduleType() == SDL::Module::PS) ? ( (innerLowerModule.moduleLayerType() == SDL::Module::Pixel) ? *innerMiniDoublet.lowerHitPtr() : *innerMiniDoublet.upperHitPtr()): *innerMiniDoublet.lowerHitPtr();
@@ -650,6 +716,7 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
     const float dzFrac = dz / innerMiniDoubletAnchorHitZ;
     // const float dPhiChange = dPhiPos / dzFrac * (1.f + dzFrac);
     setDeltaPhiChange(dPhiPos / dzFrac * (1.f + dzFrac));
+
     if (not (std::abs(getDeltaPhiChange()) <= sdCut))
     {
         if (logLevel >= SDL::Log_Debug3)
@@ -678,8 +745,15 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
     float dAlpha_compat_outer_vs_sg = dAlphaCutValues["dAlphaOuterMDSegment"];
     float dAlpha_compat_inner_vs_outer = dAlphaCutValues["dAlphaInnerMDOuterMD"];
 
+    setRecoVars("dAlpha_innerMD_segment",dAlpha_compat_inner_vs_sg);
+    setRecoVars("dAlpha_outerMD_segment",dAlpha_compat_outer_vs_sg);
+    setRecoVars("dAlpha_innerMD_outerMD",dAlpha_compat_inner_vs_outer);
+
+
     // Cut #4: angle compatibility between mini-doublet and segment
     float dAlpha_inner_md_sg = inner_md_alpha - sg_alpha;
+    setdAlphaInnerMDSegment(dAlpha_inner_md_sg);
+
     if (not (std::abs(dAlpha_inner_md_sg) < dAlpha_compat_inner_vs_sg))
     {
         if (logLevel >= SDL::Log_Debug3)
@@ -694,6 +768,8 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
 
     // Cut #5: angle compatibility between mini-doublet and segment
     float dAlpha_outer_md_sg = outer_md_alpha - sg_alpha;
+    setdAlphaOuterMDSegment(dAlpha_outer_md_sg);
+
     if (not (std::abs(dAlpha_outer_md_sg) < dAlpha_compat_outer_vs_sg))
     {
         if (logLevel >= SDL::Log_Debug3)
@@ -708,6 +784,8 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
 
     // Cut #6: angle compatibility between mini-doublet mini-doublets
     float dAlpha_outer_md_inner_md = outer_md_alpha - inner_md_alpha;
+    setdAlphaInnerMDOuterMD(dAlpha_outer_md_inner_md);
+
     if (not (std::abs(dAlpha_outer_md_inner_md) < dAlpha_compat_inner_vs_outer))
     {
         if (logLevel >= SDL::Log_Debug3)
