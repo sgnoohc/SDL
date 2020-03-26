@@ -829,7 +829,7 @@ std::unordered_map<std::string,float> SDL::Segment::dAlphaThreshold(const SDL::M
     
     float sdMuls = (innerLowerModule.subdet() == SDL::Module::Barrel) ? miniMulsPtScaleBarrel[innerLowerModule.layer()-1] * 3.f/ptCut : miniMulsPtScaleEndcap[innerLowerModule.layer()-1] * 3.f/ptCut;
 
-    //BField dAlpha
+    // BField dAlpha
     const Hit& innerMiniDoubletAnchorHit = (innerLowerModule.moduleType() == SDL::Module::PS) ? ( (innerLowerModule.moduleLayerType() == SDL::Module::Pixel) ? *innerMiniDoublet.lowerHitPtr() : *innerMiniDoublet.upperHitPtr()): *innerMiniDoublet.lowerHitPtr();
     const Hit& outerMiniDoubletAnchorHit = (outerLowerModule.moduleType() == SDL::Module::PS) ? ( (outerLowerModule.moduleLayerType() == SDL::Module::Pixel) ? *outerMiniDoublet.lowerHitPtr() : *outerMiniDoublet.upperHitPtr()): *outerMiniDoublet.lowerHitPtr();
 
@@ -839,7 +839,7 @@ std::unordered_map<std::string,float> SDL::Segment::dAlphaThreshold(const SDL::M
     float outerMiniDoubletAnchorHitZ = outerMiniDoubletAnchorHit.z();
 
 
-//    float segmentDr = outerMiniDoubletAnchorHitRt - innerMiniDoubletAnchorHitRt; 
+    // float segmentDr = outerMiniDoubletAnchorHitRt - innerMiniDoubletAnchorHitRt; 
     float segmentDr = sqrt(pow(outerMiniDoubletAnchorHit.y() - innerMiniDoubletAnchorHit.y(),2) + pow(outerMiniDoubletAnchorHit.x() - innerMiniDoubletAnchorHit.x(),2));
     const float dAlpha_Bfield = std::asin(std::min(segmentDr * k2Rinv1GeVf/ptCut, sinAlphaMax));
     const float innerminiSlope = std::asin(std::min(innerMiniDoubletAnchorHitRt * k2Rinv1GeVf/ptCut,sinAlphaMax));
@@ -866,36 +866,28 @@ std::unordered_map<std::string,float> SDL::Segment::dAlphaThreshold(const SDL::M
     float sdLumForInnerMini;    
     float sdLumForOuterMini;
 
-    if(innerLowerModule.subdet() == SDL::Module::Barrel)
+    if (innerLowerModule.subdet() == SDL::Module::Barrel)
     {
         sdLumForInnerMini = innerminiTilt * dAlpha_Bfield;
     }
     else
     {
-        if(innerLowerModule.moduleType() == SDL::Module::PS)
-        {
-            sdLumForInnerMini = innerMiniDoublet.getDeltaPhi() * 15.0/innerMiniDoublet.getShiftedDz();
-        }
+        if (innerLowerModule.moduleType() == SDL::Module::PS)
+            sdLumForInnerMini = innerMiniDoublet.getDeltaPhi() * 15.0 / innerMiniDoublet.getShiftedDz();
         else
-        {
-            sdLumForInnerMini = innerMiniDoublet.getDeltaPhi() * 15.0/innerMiniDoublet.getDz();
-        }
+            sdLumForInnerMini = innerMiniDoublet.getDeltaPhi() * 15.0 / innerMiniDoublet.getDz();
     }
 
-    if(outerLowerModule.subdet() == SDL::Module::Barrel)
+    if (outerLowerModule.subdet() == SDL::Module::Barrel)
     {
         sdLumForOuterMini = outerminiTilt * dAlpha_Bfield;
     }
     else
     {
-        if(outerLowerModule.moduleType() == SDL::Module::PS)
-        {
-            sdLumForOuterMini = outerMiniDoublet.getDeltaPhi() * 15.0/outerMiniDoublet.getShiftedDz();
-        }
+        if (outerLowerModule.moduleType() == SDL::Module::PS)
+            sdLumForOuterMini = outerMiniDoublet.getDeltaPhi() * 15.0 / outerMiniDoublet.getShiftedDz();
         else
-        {
-            sdLumForOuterMini = outerMiniDoublet.getDeltaPhi() * 15.0/outerMiniDoublet.getDz();
-        }
+            sdLumForOuterMini = outerMiniDoublet.getDeltaPhi() * 15.0 / outerMiniDoublet.getDz();
     }
 
 
@@ -903,25 +895,23 @@ std::unordered_map<std::string,float> SDL::Segment::dAlphaThreshold(const SDL::M
     float dAlpha_res = 0.04f/miniDelta * (innerLowerModule.subdet() == SDL::Module::Barrel ? 1.0f : std::abs(innerMiniDoubletAnchorHitZ/innerMiniDoubletAnchorHitRt));
 
     //TODO:Check if tilt is required
-/*    if(innerLowerModule.subdet() == SDL::Module::Barrel)
-    {
-        dAlphaValues["dAlphaInnerMDSegment"] = dAlpha_Bfield + sqrt(pow(dAlpha_res,2) + pow(sdMuls,2));
-        dAlphaValues["dAlphaOuterMDSegment"]  = dAlpha_Bfield + sqrt(pow(dAlpha_res,2) + pow(sdMuls,2));
-        dAlphaValues["dAlphaInnerMDOuterMD"] = abs(outerminiSlope - innerminiSlope) + sqrt(2 * pow(dAlpha_res,2) + 2 * pow(sdMuls,2));
- 
-    }
-    else
-    {
-        dAlphaValues["dAlphaInnerMDSegment"] = dAlpha_Bfield + sqrt(pow(dAlpha_res,2) + pow(sdMuls,2) + pow(sdLumForInnerMini,2));
-        dAlphaValues["dAlphaOuterMDSegment"] = dAlpha_Bfield + sqrt(pow(dAlpha_res,2) + pow(sdMuls,2) + pow(sdLumForOuterMini,2));
-        dAlphaValues["dAlphaInnerMDOuterMD"] = dAlpha_Bfield + sqrt(pow(dAlpha_res,2) + pow(sdMuls,2));
+    // if (innerLowerModule.subdet() == SDL::Module::Barrel)
+    // {
+    //     dAlphaValues["dAlphaInnerMDSegment"] = dAlpha_Bfield + sqrt(pow(dAlpha_res, 2) + pow(sdMuls, 2));
+    //     dAlphaValues["dAlphaOuterMDSegment"]  = dAlpha_Bfield + sqrt(pow(dAlpha_res, 2) + pow(sdMuls, 2));
+    //     dAlphaValues["dAlphaInnerMDOuterMD"] = abs(outerminiSlope - innerminiSlope) + sqrt(2 * pow(dAlpha_res, 2) + 2 * pow(sdMuls, 2));
+    // }
+    // else
+    // {
+    //     dAlphaValues["dAlphaInnerMDSegment"] = dAlpha_Bfield + sqrt(pow(dAlpha_res, 2) + pow(sdMuls, 2) + pow(sdLumForInnerMini, 2));
+    //     dAlphaValues["dAlphaOuterMDSegment"] = dAlpha_Bfield + sqrt(pow(dAlpha_res, 2) + pow(sdMuls, 2) + pow(sdLumForOuterMini, 2));
+    //     dAlphaValues["dAlphaInnerMDOuterMD"] = dAlpha_Bfield + sqrt(pow(dAlpha_res, 2) + pow(sdMuls, 2));
+    // }
 
-    }
-
-    return dAlphaValues;*/
+    // return dAlphaValues;
 
 
-    if(innerLowerModule.subdet() == SDL::Module::Barrel and innerLowerModule.side() == SDL::Module::Center)
+    if (innerLowerModule.subdet() == SDL::Module::Barrel and innerLowerModule.side() == SDL::Module::Center)
     {
         dAlphaValues["dAlphaInnerMDSegment"] = dAlpha_Bfield + sqrt(pow(dAlpha_res,2) + pow(sdMuls,2) + pow(sdPVoff,2));
     }
@@ -930,7 +920,7 @@ std::unordered_map<std::string,float> SDL::Segment::dAlphaThreshold(const SDL::M
         dAlphaValues["dAlphaInnerMDSegment"] = dAlpha_Bfield + sqrt(pow(dAlpha_res,2) + pow(sdMuls,2) + pow(sdLumForInnerMini,2));
     }
 
-    if(outerLowerModule.subdet() == SDL::Module::Barrel and outerLowerModule.side() == SDL::Module::Center)
+    if (outerLowerModule.subdet() == SDL::Module::Barrel and outerLowerModule.side() == SDL::Module::Center)
     {
         dAlphaValues["dAlphaOuterMDSegment"] = dAlpha_Bfield + sqrt(pow(dAlpha_res,2) + pow(sdMuls,2));
     }
