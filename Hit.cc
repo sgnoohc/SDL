@@ -50,9 +50,19 @@ void SDL::Hit::setIdx(int idx)
     idx_ = idx;
 }
 
-void SDL::Hit::setModule(SDL::Module* module)
+void SDL::Hit::setModule(const SDL::Module* module)
 {
     modulePtr_ = module;
+}
+
+void SDL::Hit::setHitHighEdgePtr(SDL::Hit* hit)
+{
+    hit_high_edge_ = hit;
+}
+
+void SDL::Hit::setHitLowEdgePtr(SDL::Hit* hit)
+{
+    hit_low_edge_ = hit;
 }
 
 void SDL::Hit::setDerivedQuantities()

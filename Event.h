@@ -37,6 +37,9 @@ namespace SDL
             // list of hits (this holds the actual instances)
             std::list<Hit> hits_;
 
+            // list of hit_boundaries (this holds the actual instances) this is only used for the 2S in the endcap
+            std::list<Hit> hits_2s_edges_;
+
             // list of MiniDoublets (this holds the actual instances)
             std::list<MiniDoublet> miniDoublets_;
 

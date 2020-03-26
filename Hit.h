@@ -19,7 +19,7 @@ namespace SDL
     class Hit
     {
         private:
-            Module* modulePtr_;
+            const Module* modulePtr_;
 
             float x_;
             float y_;
@@ -29,6 +29,9 @@ namespace SDL
             float phi_;
             float eta_;
             int idx_; // unique index to the hit index in the ntuple
+
+            Hit* hit_high_edge_;
+            Hit* hit_low_edge_;
 
             void setDerivedQuantities();
 
@@ -46,7 +49,11 @@ namespace SDL
             void setZ(float z);
             void setXYZ(float x, float y, float z);
             void setIdx(int idx);
-            void setModule(Module*);
+            void setModule(const Module*);
+
+            // Set the boundary hits where the hits are shifted
+            void setHitHighEdgePtr(Hit* hit);
+            void setHitLowEdgePtr(Hit* hit);
 
             // accessor functions
             const float& x() const;
