@@ -641,7 +641,7 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
     setRtIn(innerMiniDoubletAnchorHitRt);
 
     const float sdSlope = std::asin(std::min(outerMiniDoubletAnchorHitRt * k2Rinv1GeVf / ptCut, sinAlphaMax));
-    // const float sdPVoff = 0.1f / outerMiniDoubletAnchorHitRt;
+     const float sdPVoff = 0.1f / outerMiniDoubletAnchorHitRt;
     // const float dzDrtScale = std::tan(sdSlope) / sdSlope; //FIXME: need approximate value
     const float pixelPSZpitch = 0.15;
     const float strip2SZpitch = 5.0;
@@ -693,9 +693,11 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
     // Cut #2: dPhi compatibility
     // const float sdLum = deltaZLum / std::abs(innerMiniDoubletAnchorHitZ);
     // const float sdCut = sdSlope + sqrt(sdMuls * sdMuls + sdPVoff * sdPVoff + sdLum * sdLum);
-    const float sdCut = sdSlope;
-    // const float sdCut = sdSlope + sqrt(sdMuls * sdMuls + sdPVoff * sdPVoff);
+    //const float sdCut = sdSlope;
     const float dPhiPos = innerMiniDoubletAnchorHit.deltaPhi(outerMiniDoubletAnchorHit);
+    const float sdLum = dPhiPos * deltaZLum / dz; 
+    const float sdCut = sdSlope + sqrt(sdMuls * sdMuls + sdPVoff * sdPVoff + sdLum * sdLum);
+	
     setRecoVars("sdCut",sdCut);
     setRecoVars("sdSlope",sdSlope);
     setRecoVars("deltaPhi",dPhiPos);
@@ -838,6 +840,7 @@ std::unordered_map<std::string,float> SDL::Segment::dAlphaThreshold(const SDL::M
     const Module& outerLowerModule = outerMiniDoublet.lowerHitPtr()->getModule();
     const float kRinv1GeVf = (2.99792458e-3 * 3.8);
     const float k2Rinv1GeVf = kRinv1GeVf / 2.;
+   
     float ptCut = PTCUT;
     float sinAlphaMax = 0.95;
 
@@ -857,9 +860,16 @@ std::unordered_map<std::string,float> SDL::Segment::dAlphaThreshold(const SDL::M
     float outerMiniDoubletAnchorHitZ = outerMiniDoubletAnchorHit.z();
 
 
-    float segmentDr = outerMiniDoubletAnchorHitRt - innerMiniDoubletAnchorHitRt; 
+//    float segmentDr = outerMiniDoubletAnchorHitRt - innerMiniDoubletAnchorHitRt; 
+    float segmentDr = sqrt(pow(outerMiniDoubletAnchorHit.y() - innerMiniDoubletAnchorHit.y(),2) + pow(outerMiniDoubletAnchorHit.x() - innerMiniDoubletAnchorHit.x(),2));
     const float dAlpha_Bfield = std::asin(std::min(segmentDr * k2Rinv1GeVf/ptCut, sinAlphaMax));
+    const float innerminiSlope = std::asin(std::min(innerMiniDoubletAnchorHitRt * k2Rinv1GeVf/ptCut,sinAlphaMax));
+    const float outerminiSlope = std::asin(std::min(outerMiniDoubletAnchorHitRt * k2Rinv1GeVf/ptCut,sinAlphaMax));
     const float pixelPSZpitch = 0.15;
+    const float innersdPVoff = 0.1f / innerMiniDoubletAnchorHitRt;
+    const float outersdPVoff = 0.1f/ innerMiniDoubletAnchorHitRt;
+    const float sdPVoff = 0.1f/segmentDr;
+
 
     const bool isInnerTilted = innerLowerModule.subdet() == SDL::Module::Barrel and innerLowerModule.side() != SDL::Module::Center;
     const bool isOuterTilted = outerLowerModule.subdet() == SDL::Module::Barrel and outerLowerModule.side() != SDL::Module::Center;
@@ -869,6 +879,7 @@ std::unordered_map<std::string,float> SDL::Segment::dAlphaThreshold(const SDL::M
     const float drdzouter = tiltedGeometry.getDrDz(outerdetid);
     const float innerminiTilt = isInnerTilted ? (0.5f * pixelPSZpitch * drdzinner / sqrt(1.f + drdzinner * drdzinner) / SDL::MiniDoublet::moduleGapSize(innerLowerModule)) : 0;
     const float outerminiTilt = isOuterTilted ? (0.5f * pixelPSZpitch * drdzouter / sqrt(1.f + drdzouter * drdzouter) / SDL::MiniDoublet::moduleGapSize(outerLowerModule)) : 0;
+
 
     float miniDelta = SDL::MiniDoublet::moduleGapSize(innerLowerModule); 
  
@@ -913,11 +924,11 @@ std::unordered_map<std::string,float> SDL::Segment::dAlphaThreshold(const SDL::M
     float dAlpha_res = 0.04f/miniDelta * (innerLowerModule.subdet() == SDL::Module::Barrel ? 1.0f : std::abs(innerMiniDoubletAnchorHitZ/innerMiniDoubletAnchorHitRt));
 
     //TODO:Check if tilt is required
-    if(innerLowerModule.subdet() == SDL::Module::Barrel)
+/*    if(innerLowerModule.subdet() == SDL::Module::Barrel)
     {
         dAlphaValues["dAlphaInnerMDSegment"] = dAlpha_Bfield + sqrt(pow(dAlpha_res,2) + pow(sdMuls,2));
         dAlphaValues["dAlphaOuterMDSegment"]  = dAlpha_Bfield + sqrt(pow(dAlpha_res,2) + pow(sdMuls,2));
-        dAlphaValues["dAlphaInnerMDOuterMD"] = dAlpha_Bfield + sqrt(pow(dAlpha_res,2) + pow(sdMuls,2));
+        dAlphaValues["dAlphaInnerMDOuterMD"] = abs(outerminiSlope - innerminiSlope) + sqrt(2 * pow(dAlpha_res,2) + 2 * pow(sdMuls,2));
  
     }
     else
@@ -927,6 +938,40 @@ std::unordered_map<std::string,float> SDL::Segment::dAlphaThreshold(const SDL::M
         dAlphaValues["dAlphaInnerMDOuterMD"] = dAlpha_Bfield + sqrt(pow(dAlpha_res,2) + pow(sdMuls,2));
 
     }
+
+    return dAlphaValues;*/
+
+
+    if(innerLowerModule.subdet() == SDL::Module::Barrel and innerLowerModule.side() == SDL::Module::Center)
+    {
+        dAlphaValues["dAlphaInnerMDSegment"] = dAlpha_Bfield + sqrt(pow(dAlpha_res,2) + pow(sdMuls,2) + pow(sdPVoff,2));
+    }
+    else
+    {
+        dAlphaValues["dAlphaInnerMDSegment"] = dAlpha_Bfield + sqrt(pow(dAlpha_res,2) + pow(sdMuls,2) + pow(sdLumForInnerMini,2));
+    }
+
+    if(outerLowerModule.subdet() == SDL::Module::Barrel and outerLowerModule.side() == SDL::Module::Center)
+    {
+        dAlphaValues["dAlphaOuterMDSegment"] = dAlpha_Bfield + sqrt(pow(dAlpha_res,2) + pow(sdMuls,2));
+    }
+    else
+    {
+        dAlphaValues["dAlphaOuterMDSegment"] = dAlpha_Bfield + sqrt(pow(dAlpha_res,2) + pow(sdMuls,2) + pow(sdLumForOuterMini,2));
+    }
+
+    //Inner to outer
+    //Get the dPhiThreshold values from the MD function, then subtract the slope to get the error terms. Then square them, add them up and take square root again to create giant error term. 
+    
+    float alphaInner = (innerLowerModule.moduleLayerType() == SDL::Module::Pixel) ? MiniDoublet::dPhiThreshold(*(innerMiniDoublet.lowerHitPtr()),innerLowerModule) : MiniDoublet::dPhiThreshold(*(innerMiniDoublet.upperHitPtr()),innerLowerModule);
+    float alphaInnerError = alphaInner - innerminiSlope;
+
+    float alphaOuter =  (outerLowerModule.moduleLayerType() == SDL::Module::Pixel) ? MiniDoublet::dPhiThreshold(*(outerMiniDoublet.lowerHitPtr()),outerLowerModule) : MiniDoublet::dPhiThreshold(*(outerMiniDoublet.upperHitPtr()),outerLowerModule);
+    float alphaOuterError = alphaOuter - outerminiSlope;
+    
+    float dAlphaInnerMDOuterMDError = sqrt(pow(alphaInnerError,2) + pow(alphaOuterError,2) + 2 * pow(dAlpha_res,2));
+
+    dAlphaValues["dAlphaInnerMDOuterMD"] = fabs(innerminiSlope - outerminiSlope) + dAlphaInnerMDOuterMDError;
 
     return dAlphaValues;
 }
