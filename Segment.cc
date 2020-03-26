@@ -275,21 +275,6 @@ void SDL::Segment::runSegmentAllCombAlgo()
     passAlgo_ |= (1 << SDL::AllComb_SGAlgo);
 }
 
-/*void SDL::Segment::runSegmentDefaultAlgo(SDL::LogLevel logLevel)
-{
-    // Retreived the lower module object
-    const Module& innerLowerModule = innerMiniDoubletPtr()->lowerHitPtr()->getModule();
-
-    if (innerLowerModule.subdet() == SDL::Module::Barrel)
-    {
-        runSegmentDefaultAlgoBarrel(logLevel);
-    }
-    else
-    {
-        runSegmentDefaultAlgoEndcap(logLevel);
-    }
-}*/
-
 void SDL::Segment::runSegmentDefaultAlgo(SDL::LogLevel logLevel)
 {
     // Retreived the lower module object
@@ -300,26 +285,20 @@ void SDL::Segment::runSegmentDefaultAlgo(SDL::LogLevel logLevel)
 
     if (innerLowerModule.subdet() == SDL::Module::Barrel)
     {
-        if(outerLowerModule.subdet() == SDL::Module::Barrel)
+        if (outerLowerModule.subdet() == SDL::Module::Barrel)
         {
             //Needs a name change to BarrelBarrel later
             runSegmentDefaultAlgoBarrel(logLevel);
         }
         else
-        {
             runSegmentDefaultAlgoEndcap(logLevel);
-        }
     }
     else
     {
-        if(outerLowerModule.subdet() == SDL::Module::Endcap)
-        {
+        if (outerLowerModule.subdet() == SDL::Module::Endcap)
             runSegmentDefaultAlgoEndcap(logLevel);
-        }
         else //shouldn't really be running
-        {
             runSegmentDefaultAlgoBarrel(logLevel);
-        }
     }
 }
 
