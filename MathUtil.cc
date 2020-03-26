@@ -4,7 +4,7 @@ float SDL::MathUtil::Phi_mpi_pi(float x)
 {
     if (isnan(x))
     {
-        std::cout << "SDL::MathUtil::Phi_0_2pi() function called with NaN" << std::endl;
+        std::cout << "SDL::MathUtil::Phi_mpi_pi() function called with NaN" << std::endl;
         return x;
     }
 

@@ -22,6 +22,9 @@ void SDL::EndcapGeometry::load(std::string filename)
     sls_.clear();
     yus_.clear();
     sus_.clear();
+    centroid_rs_.clear();
+    centroid_phis_.clear();
+    centroid_zs_.clear();
 
     std::ifstream ifile;
     ifile.open(filename.c_str());
@@ -36,10 +39,13 @@ void SDL::EndcapGeometry::load(std::string filename)
         float sl;
         float yh;
         float sh;
+        float cr;
+        float cp;
+        float cz;
 
         std::stringstream ss(line);
 
-        ss >> detid >> avgr2 >> yl >> sl >> yh >> sh;
+        ss >> detid >> avgr2 >> yl >> sl >> yh >> sh >> cr >> cp >> cz;
 
         // std::cout <<  " detid: " << detid <<  " avgr2: " << avgr2 <<  " yl: " << yl <<  " sl: " << sl <<  " yh: " << yh <<  " sh: " << sh <<  std::endl;
 
@@ -48,6 +54,9 @@ void SDL::EndcapGeometry::load(std::string filename)
         sls_[detid] = sl;
         yus_[detid] = yh;
         sus_[detid] = sh;
+        centroid_rs_[detid] = cp;
+        centroid_phis_[detid] = cr;
+        centroid_zs_[detid] = cz;
     }
 }
 
@@ -74,4 +83,19 @@ float SDL::EndcapGeometry::getYInterceptUpper(unsigned int detid)
 float SDL::EndcapGeometry::getSlopeUpper(unsigned int detid)
 {
     return sus_[detid];
+}
+
+float SDL::EndcapGeometry::getCentroidR(unsigned int detid)
+{
+    return centroid_rs_[detid];
+}
+
+float SDL::EndcapGeometry::getCentroidPhi(unsigned int detid)
+{
+    return centroid_phis_[detid];
+}
+
+float SDL::EndcapGeometry::getCentroidZ(unsigned int detid)
+{
+    return centroid_zs_[detid];
 }
