@@ -1222,7 +1222,7 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel_v2(SDL::LogLe
     const float pt_betaMax = 7.0f;
 
     int lIn = 5;
-    int lOut = 5;
+    int lOut = isEC_lastLayer ? 11 : 5;
     int betacormode = 0;
     const float sdOut_dr = (hit_OutUp - hit_OutLo).rt();
     const float sdOut_d = hit_OutUp.rt() - hit_OutLo.rt();
@@ -1327,9 +1327,9 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel_v2(SDL::LogLe
 
     const float sinDPhi = std::sin(dPhi);
     // const float dBetaRIn2 = std::pow((sdIn.mdRef.rtRHout - sdIn.mdRef.rtRHin) * sinDPhi / drt_tl_axis, 2); //TODO-RH: Ask Slava about this rtRHout? rtRHin?
-    // const float dBetaROut2 = std::pow((sdOut.mdOut.rtRHout - sdOut.mdOut.rtRHin) * sinDPhi / drt_tl_axis, 2); //TODO-RH
     const float dBetaRIn2 = 0; // TODO-RH
-    const float dBetaROut2 = 0; // TODO-RH
+    const float dBetaROut2 = std::pow((hit_OutUp_hiEdge.rt() - hit_OutUp_loEdge.rt()) * sinDPhi / drt_tl_axis, 2); //TODO-RH
+    // const float dBetaROut2 = 0; // TODO-RH
 
     const float betaOut_cut = std::asin(std::min(drt_tl_axis*k2Rinv1GeVf / ptCut, sinAlphaMax)) //FIXME: need faster version
         + (0.02f / sdOut_d) + sqrt(dBetaLum2 + dBetaMuls*dBetaMuls);
