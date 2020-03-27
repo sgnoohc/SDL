@@ -17,7 +17,12 @@ SDL::Segment::Segment(const Segment& sg) :
     rtHi_(sg.getRtHi()),
     rtOut_(sg.getRtOut()),
     rtIn_(sg.getRtIn()),
+    dphi_(sg.getDeltaPhi()),
+    dphi_min_(sg.getDeltaPhiMin()),
+    dphi_max_(sg.getDeltaPhiMax()),
     dphichange_(sg.getDeltaPhiChange()),
+    dphichange_min_(sg.getDeltaPhiMinChange()),
+    dphichange_max_(sg.getDeltaPhiMaxChange()),
     zOut_(sg.getZOut()),
     zIn_(sg.getZIn()),
     zLo_(sg.getZLo()),
@@ -36,7 +41,12 @@ SDL::Segment::Segment(SDL::MiniDoublet* innerMiniDoubletPtr, SDL::MiniDoublet* o
     rtHi_(0),
     rtOut_(0),
     rtIn_(0),
+    dphi_(0),
+    dphi_min_(0),
+    dphi_max_(0),
     dphichange_(0),
+    dphichange_min_(0),
+    dphichange_max_(0),
     zOut_(0),
     zIn_(0),
     zLo_(0),
@@ -101,9 +111,34 @@ const float& SDL::Segment::getRtIn() const
     return rtIn_;
 }
 
+const float& SDL::Segment::getDeltaPhi() const
+{
+    return dphi_;
+}
+
+const float& SDL::Segment::getDeltaPhiMin() const
+{
+    return dphi_min_;
+}
+
+const float& SDL::Segment::getDeltaPhiMax() const
+{
+    return dphi_max_;
+}
+
 const float& SDL::Segment::getDeltaPhiChange() const
 {
     return dphichange_;
+}
+
+const float& SDL::Segment::getDeltaPhiMinChange() const
+{
+    return dphichange_min_;
+}
+
+const float& SDL::Segment::getDeltaPhiMaxChange() const
+{
+    return dphichange_max_;
 }
 
 const float& SDL::Segment::getZOut() const
@@ -181,10 +216,34 @@ void SDL::Segment::setRtHi(float rt)
     rtHi_ = rt;
 }
 
+void SDL::Segment::setDeltaPhi(float dphi)
+{
+    dphi_ = dphi;
+}
+
+void SDL::Segment::setDeltaPhiMin(float dphimin)
+{
+    dphi_min_ = dphimin;
+}
+
+void SDL::Segment::setDeltaPhiMax(float dphimax)
+{
+    dphi_max_ = dphimax;
+}
 
 void SDL::Segment::setDeltaPhiChange(float dphichange)
 {
     dphichange_ = dphichange;
+}
+
+void SDL::Segment::setDeltaPhiMinChange(float dphichangemin)
+{
+    dphichange_min_ = dphichangemin;
+}
+
+void SDL::Segment::setDeltaPhiMaxChange(float dphichangemax)
+{
+    dphichange_max_ = dphichangemax;
 }
 
 void SDL::Segment::setZOut(float zOut)
@@ -606,8 +665,11 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
     
 
     // Get the relevant anchor hits
-    const Hit& innerMiniDoubletAnchorHit = (innerLowerModule.moduleType() == SDL::Module::PS) ? ( (innerLowerModule.moduleLayerType() == SDL::Module::Pixel) ? *innerMiniDoublet.lowerHitPtr() : *innerMiniDoublet.upperHitPtr()): *innerMiniDoublet.lowerHitPtr();
-    const Hit& outerMiniDoubletAnchorHit = (outerLowerModule.moduleType() == SDL::Module::PS) ? ( (outerLowerModule.moduleLayerType() == SDL::Module::Pixel) ? *outerMiniDoublet.lowerHitPtr() : *outerMiniDoublet.upperHitPtr()): *outerMiniDoublet.lowerHitPtr();
+    const Hit& innerMiniDoubletAnchorHit = *innerMiniDoublet.anchorHitPtr();
+    const Hit& outerMiniDoubletAnchorHit = *outerMiniDoublet.anchorHitPtr();
+    const bool outerLayerEndcapTwoS = outerLowerModule.moduleType() == SDL::Module::TwoS and outerLowerModule.subdet() == SDL::Module::Endcap;
+    const Hit& outerMiniDoubletAnchorHitHighEdge = outerLayerEndcapTwoS ? *(outerMiniDoublet.anchorHitPtr()->getHitHighEdgePtr()) : *outerMiniDoublet.anchorHitPtr();
+    const Hit& outerMiniDoubletAnchorHitLowEdge  = outerLayerEndcapTwoS ? *(outerMiniDoublet.anchorHitPtr()->getHitLowEdgePtr()) : *outerMiniDoublet.anchorHitPtr();
 
     // MiniDoublet information
     float innerMiniDoubletAnchorHitRt = innerMiniDoubletAnchorHit.rt();
@@ -676,10 +738,18 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
     const float dPhiPos = innerMiniDoubletAnchorHit.deltaPhi(outerMiniDoubletAnchorHit);
     const float sdLum = dPhiPos * deltaZLum / dz; 
     const float sdCut = sdSlope + sqrt(sdMuls * sdMuls + sdPVoff * sdPVoff + sdLum * sdLum);
-	
+    const float dPhiPos_high = innerMiniDoubletAnchorHit.deltaPhi(outerMiniDoubletAnchorHitHighEdge);
+    const float dPhiPos_low = innerMiniDoubletAnchorHit.deltaPhi(outerMiniDoubletAnchorHitLowEdge);
+    const float dPhiPos_max = abs(dPhiPos_high) > abs(dPhiPos_low) ? dPhiPos_high : dPhiPos_low;
+    const float dPhiPos_min = abs(dPhiPos_high) > abs(dPhiPos_low) ? dPhiPos_low : dPhiPos_high;
+
     setRecoVars("sdCut",sdCut);
     setRecoVars("sdSlope",sdSlope);
     setRecoVars("deltaPhi",dPhiPos);
+
+    setDeltaPhi(dPhiPos);
+    setDeltaPhiMin(dPhiPos_min);
+    setDeltaPhiMax(dPhiPos_max);
 
     if (not (std::abs(dPhiPos) <= sdCut))
     {
@@ -697,6 +767,8 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
     const float dzFrac = dz / innerMiniDoubletAnchorHitZ;
     // const float dPhiChange = dPhiPos / dzFrac * (1.f + dzFrac);
     setDeltaPhiChange(dPhiPos / dzFrac * (1.f + dzFrac));
+    setDeltaPhiMinChange(dPhiPos_min / dzFrac * (1.f + dzFrac));
+    setDeltaPhiMaxChange(dPhiPos_max / dzFrac * (1.f + dzFrac));
 
     if (not (std::abs(getDeltaPhiChange()) <= sdCut))
     {

@@ -75,7 +75,12 @@ namespace SDL
             float rtHi_;
             float rtOut_; // Rt of the outer mini-doublet (anchor hit = pixel hit, if available)
             float rtIn_; // Rt of the inner mini-doublet (anchor hit = pixel hit, if available)
+            float dphi_;
+            float dphi_min_;
+            float dphi_max_;
             float dphichange_;
+            float dphichange_min_;
+            float dphichange_max_;
 
             float zOut_;
             float zIn_;
@@ -110,7 +115,12 @@ namespace SDL
             const float& getRtIn() const;
             const float& getRtLo() const;
             const float& getRtHi() const;
+            const float& getDeltaPhi() const;
+            const float& getDeltaPhiMin() const;
+            const float& getDeltaPhiMax() const;
             const float& getDeltaPhiChange() const;
+            const float& getDeltaPhiMinChange() const;
+            const float& getDeltaPhiMaxChange() const;
             const float& getZOut() const;
             const float & getZIn() const;
             const float& getZLo() const;
@@ -126,7 +136,12 @@ namespace SDL
             void setRtIn(float);
             void setRtLo(float);
             void setRtHi(float);
+            void setDeltaPhi(float);
+            void setDeltaPhiMin(float);
+            void setDeltaPhiMax(float);
             void setDeltaPhiChange(float);
+            void setDeltaPhiMinChange(float);
+            void setDeltaPhiMaxChange(float);
             void setZIn(float);
             void setZOut(float);
             void setZLo(float);

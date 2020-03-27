@@ -280,7 +280,7 @@ void SDL::Tracklet::runTrackletDefaultAlgo(SDL::LogLevel logLevel)
 
 void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel logLevel)
 {
-    runTrackletDefaultAlgoBarrelBarrelBarrelBarrel_v1(logLevel);
+    runTrackletDefaultAlgoBarrelBarrelBarrelBarrel_v2(logLevel);
 }
 
 void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel_v1(SDL::LogLevel logLevel)
@@ -512,9 +512,13 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel_v1(SDL::LogLe
     const Hit& sdOut_mdRef_hit = (*outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr());
     const float sdIn_alpha = innerSegmentPtr()->getDeltaPhiChange();
     const float sdOut_alpha = outerSegmentPtr()->getDeltaPhiChange();
+    const float sdOut_alpha_min = outerSegmentPtr()->getDeltaPhiMinChange();
+    const float sdOut_alpha_max = outerSegmentPtr()->getDeltaPhiMaxChange();
     const bool isEC_lastLayer = (outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule().subdet() == SDL::Module::Endcap);
-    // const float sdOut_alphaOut = (isEC_lastLayer ? SDL::MathUtil::Phi_mpi_pi(outerSegmentPtr()->getDeltaPhiChange() - outerSegmentPtr()->getRecoVar("deltaPhi")) : (sdOut_mdOut_hit.deltaPhi(sdOut_mdOut_hit  - sdOut_mdRef_hit)));
+    // const float sdOut_alphaOut = (isEC_lastLayer ? SDL::MathUtil::Phi_mpi_pi(outerSegmentPtr()->getDeltaPhiChange() - outerSegmentPtr()->getDeltaPhi()) : (sdOut_mdOut_hit.deltaPhi(sdOut_mdOut_hit  - sdOut_mdRef_hit)));
     const float sdOut_alphaOut = sdOut_mdOut_hit.deltaPhi(sdOut_mdOut_hit  - sdOut_mdRef_hit);
+    const float sdOut_alphaOut_min = isEC_lastLayer ? SDL::MathUtil::Phi_mpi_pi(outerSegmentPtr()->getDeltaPhiMinChange() - outerSegmentPtr()->getDeltaPhiMin()) : sdOut_alphaOut;
+    const float sdOut_alphaOut_max = isEC_lastLayer ? SDL::MathUtil::Phi_mpi_pi(outerSegmentPtr()->getDeltaPhiMaxChange() - outerSegmentPtr()->getDeltaPhiMax()) : sdOut_alphaOut;
 
     // // Shifting strip hits 
     // SDL::Hit sdOut_mdOut_hit_hi = SDL::GeometryUtil::stripHighEdgeHit(sdOut_mdOut_hit);
@@ -526,8 +530,8 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel_v1(SDL::LogLe
     float betaOut = -sdOut_alphaOut + sdOut_mdOut_r3.deltaPhi(dr3);
     float betaInRHmin = betaIn;
     float betaInRHmax = betaIn;
-    float betaOutRHmin = betaOut;
-    float betaOutRHmax = betaOut;
+    float betaOutRHmin = betaOut + sdOut_alphaOut_min - sdOut_alphaOut;
+    float betaOutRHmax = betaOut + sdOut_alphaOut_max - sdOut_alphaOut;
 
     setRecoVars("sdIn_alpha", sdIn_alpha);
     setRecoVars("sdOut_alphaOut", sdOut_alphaOut);
@@ -1187,7 +1191,7 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel_v2(SDL::LogLe
     const float corrF = 1.f;
     bool pass_betaIn_cut = false;//pixel seeds were already selected
     const float rt_InSeg = (hit_InUp - hit_InRef).rt();
-    const float betaIn_cut = (-rt_InSeg * corrF + drt_tl_axis) * k2Rinv1GeVf / ptCut + (0.02f / drt_InSeg);
+    const float betaIn_cut = std::asin(std::min((-rt_InSeg * corrF + drt_tl_axis) * k2Rinv1GeVf / ptCut, sinAlphaMax)) + (0.02f / drt_InSeg);
     // const float betaIn_cut = std::asin((-rt_InSeg * corrF + drt_tl_axis) * k2Rinv1GeVf / ptCut) + (0.02f / drt_InSeg);
     pass_betaIn_cut = std::abs(betaInRHmin) < betaIn_cut;
 
@@ -1739,14 +1743,17 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelEndcapEndcap(SDL::LogLevel
     const float sdIn_alpha = innerSegmentPtr()->getDeltaPhiChange();
     const float sdOut_alpha = innerSegmentPtr()->getDeltaPhiChange();
     const float sdOut_alphaOut = sdOut_mdOut_hit.deltaPhi(sdOut_mdOut_hit  - sdOut_mdRef_hit);
+    const bool isEC_lastLayer = (outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule().subdet() == SDL::Module::Endcap);
+    const float sdOut_alphaOut_min = isEC_lastLayer ? SDL::MathUtil::Phi_mpi_pi(outerSegmentPtr()->getDeltaPhiMinChange() - outerSegmentPtr()->getDeltaPhiMin()) : sdOut_alphaOut;
+    const float sdOut_alphaOut_max = isEC_lastLayer ? SDL::MathUtil::Phi_mpi_pi(outerSegmentPtr()->getDeltaPhiMaxChange() - outerSegmentPtr()->getDeltaPhiMax()) : sdOut_alphaOut;
     const Hit& sdOut_mdOut_r3 = (*outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr());
     const Hit dr3 = sdOut_mdOut_r3 - sdIn_r3;
     float betaIn  = sdIn_alpha - sdIn_r3.deltaPhi(dr3);
     float betaOut = -sdOut_alphaOut + sdOut_mdOut_r3.deltaPhi(dr3);
     float betaInRHmin = betaIn;
     float betaInRHmax = betaIn;
-    float betaOutRHmin = betaOut;// - sdOut.alphaOutRHmin + sdOut.alphaOut; // TODO-RH: the alphaOutRHmin/ max are the sliding
-    float betaOutRHmax = betaOut;// - sdOut.alphaOutRHmax + sdOut.alphaOut; // TODO-RH: the alphaOutRHmin/ max are the sliding
+    float betaOutRHmin = betaOut - sdOut_alphaOut_min + sdOut_alphaOut; // TODO-RH: the alphaOutRHmin/ max are the sliding
+    float betaOutRHmax = betaOut - sdOut_alphaOut_max + sdOut_alphaOut; // TODO-RH: the alphaOutRHmin/ max are the sliding
     if (std::abs(betaOutRHmin) > std::abs(betaOutRHmax)) std::swap(betaOutRHmax, betaOutRHmin);
 
     const Hit& sdIn_mdRef_hit = (*innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr());

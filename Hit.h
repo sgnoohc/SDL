@@ -66,6 +66,10 @@ namespace SDL
             const int& idx() const;
             const Module& getModule() const;
 
+            // Set the boundary hits where the hits are shifted
+            const Hit* getHitHighEdgePtr() const;
+            const Hit* getHitLowEdgePtr() const;
+
             // variable computation between two hits
             float deltaPhi(const Hit&) const;
             float deltaPhiChange(const Hit&) const;

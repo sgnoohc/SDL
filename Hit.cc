@@ -127,6 +127,25 @@ const SDL::Module& SDL::Hit::getModule() const
     return (*modulePtr_);
 }
 
+// Set the boundary hits where the hits are shifted
+const SDL::Hit* SDL::Hit::getHitHighEdgePtr() const
+{
+    if (hit_high_edge_)
+    {
+        SDL::cout << "Error:: hit_high_edge_ does not exist but was asked" << std::endl;
+    }
+    return hit_high_edge_;
+}
+
+const SDL::Hit* SDL::Hit::getHitLowEdgePtr() const
+{
+    if (hit_low_edge_)
+    {
+        SDL::cout << "Error:: hit_low_edge_ does not exist but was asked" << std::endl;
+    }
+    return hit_low_edge_;
+}
+
 float SDL::Hit::deltaPhi(const SDL::Hit& hit) const
 {
     return SDL::MathUtil::Phi_mpi_pi(hit.phi() - phi_);
