@@ -128,6 +128,14 @@ void SDL::Event::addHitToModule(SDL::Hit hit, unsigned int detId)
     // Count number of hits in the event
     incrementNumberOfHits(getModule(detId));
 
+    // If the hit is 2S in the endcap then the hit boundary needs to be set
+    if (getModule(detId).subdet() == SDL::Module::Endcap and getModule(detId).moduleType() == SDL::Module::TwoS)
+    {
+        hits_2s_edges_.push_back(GeometryUtil::stripHighEdgeHit(hits_.back()));
+        hits_.back().setHitHighEdgePtr(&(hits_2s_edges_.back()));
+        hits_2s_edges_.push_back(GeometryUtil::stripLowEdgeHit(hits_.back()));
+        hits_.back().setHitLowEdgePtr(&(hits_2s_edges_.back()));
+    }
 }
 
 void SDL::Event::addMiniDoubletToEvent(SDL::MiniDoublet md, unsigned int detId, int layerIdx, SDL::Layer::SubDet subdet)

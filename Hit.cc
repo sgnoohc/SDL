@@ -50,9 +50,19 @@ void SDL::Hit::setIdx(int idx)
     idx_ = idx;
 }
 
-void SDL::Hit::setModule(SDL::Module* module)
+void SDL::Hit::setModule(const SDL::Module* module)
 {
     modulePtr_ = module;
+}
+
+void SDL::Hit::setHitHighEdgePtr(SDL::Hit* hit)
+{
+    hit_high_edge_ = hit;
+}
+
+void SDL::Hit::setHitLowEdgePtr(SDL::Hit* hit)
+{
+    hit_low_edge_ = hit;
 }
 
 void SDL::Hit::setDerivedQuantities()
@@ -115,6 +125,25 @@ const int& SDL::Hit::idx() const
 const SDL::Module& SDL::Hit::getModule() const
 {
     return (*modulePtr_);
+}
+
+// Set the boundary hits where the hits are shifted
+const SDL::Hit* SDL::Hit::getHitHighEdgePtr() const
+{
+    if (hit_high_edge_)
+    {
+        SDL::cout << "Error:: hit_high_edge_ does not exist but was asked" << std::endl;
+    }
+    return hit_high_edge_;
+}
+
+const SDL::Hit* SDL::Hit::getHitLowEdgePtr() const
+{
+    if (hit_low_edge_)
+    {
+        SDL::cout << "Error:: hit_low_edge_ does not exist but was asked" << std::endl;
+    }
+    return hit_low_edge_;
 }
 
 float SDL::Hit::deltaPhi(const SDL::Hit& hit) const
