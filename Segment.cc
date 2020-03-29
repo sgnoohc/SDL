@@ -912,7 +912,9 @@ std::unordered_map<std::string,float> SDL::Segment::dAlphaThreshold(const SDL::M
 
     //more accurate then outer rt - inner rt
 
-    float segmentDr = sqrt(pow(outerMiniDoubletAnchorHit.y() - innerMiniDoubletAnchorHit.y(),2) + pow(outerMiniDoubletAnchorHit.x() - innerMiniDoubletAnchorHit.x(),2));
+//    float segmentDr = sqrt(pow(outerMiniDoubletAnchorHit.y() - innerMiniDoubletAnchorHit.y(),2) + pow(outerMiniDoubletAnchorHit.x() - innerMiniDoubletAnchorHit.x(),2));
+    
+    float segmentDr = (outerMiniDoubletAnchorHit - innerMiniDoubletAnchorHit).rt();
 
     const float dAlpha_Bfield = std::asin(std::min(segmentDr * k2Rinv1GeVf/ptCut, sinAlphaMax));
     const float pixelPSZpitch = 0.15;
