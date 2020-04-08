@@ -115,6 +115,9 @@ namespace SDL
             void runTrackletDefaultAlgoBarrelEndcap(SDL::LogLevel logLevel);
             void runTrackletDefaultAlgoEndcapEndcap(SDL::LogLevel logLevel);
 
+            // Function for delta beta
+            void runDeltaBetaIterations(float& betaIn, float& betaOut, float& betaAv, float& pt_beta, float sdIn_dr, float sdOut_dr, float dr);
+
             bool hasCommonSegment(const Tracklet&) const;
 
             // The function to actually determine whether a pair of mini-doublets is a reco-ed segment or not
