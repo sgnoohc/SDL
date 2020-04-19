@@ -21,6 +21,7 @@ namespace SDL
     enum TLAlgo
     {
         Default_TLAlgo = 0,
+        DefaultNm1_TLAlgo,
         AllComb_TLAlgo
     };
 
