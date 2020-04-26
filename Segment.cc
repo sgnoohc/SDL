@@ -390,31 +390,31 @@ void SDL::Segment::runSegmentDefaultAlgoBarrel(SDL::LogLevel logLevel)
     setRecoVars("dAlpha_innerMD_outerMD",-999);
 
 
-    // Loop over connected outer lower modules
-    bool found = false;
-    for (auto& outerLowerModuleDetId : connectedModuleDetIds)
-    {
-        if (outerLowerModule.detId() == outerLowerModuleDetId)
-        {
-            found = true;
-            break;
-        }
-    }
+    // // Loop over connected outer lower modules
+    // bool found = false;
+    // for (auto& outerLowerModuleDetId : connectedModuleDetIds)
+    // {
+    //     if (outerLowerModule.detId() == outerLowerModuleDetId)
+    //     {
+    //         found = true;
+    //         break;
+    //     }
+    // }
 
-    // bool isOuterEndcap = (outerLowerModule.subdet() == SDL::Module::Endcap);
-    bool isOuterEndcap = false;
+    // // bool isOuterEndcap = (outerLowerModule.subdet() == SDL::Module::Endcap);
+    // bool isOuterEndcap = false;
 
-    // Cut #0: Module compatibility
-    if (not (found or isOuterEndcap))
-    {
-        if (logLevel >= SDL::Log_Debug3)
-        {
-            SDL::cout << "Failed Cut #0 in " << __FUNCTION__ << std::endl;
-            SDL::cout <<  " innerLowerModule.detId(): " << innerLowerModule.detId() <<  " outerLowerModule.detId(): " << outerLowerModule.detId() << std::endl;
-        }
-        passAlgo_ &= (0 << SDL::Default_SGAlgo);
-        return;
-    }
+    // // Cut #0: Module compatibility
+    // if (not (found or isOuterEndcap))
+    // {
+    //     if (logLevel >= SDL::Log_Debug3)
+    //     {
+    //         SDL::cout << "Failed Cut #0 in " << __FUNCTION__ << std::endl;
+    //         SDL::cout <<  " innerLowerModule.detId(): " << innerLowerModule.detId() <<  " outerLowerModule.detId(): " << outerLowerModule.detId() << std::endl;
+    //     }
+    //     passAlgo_ &= (0 << SDL::Default_SGAlgo);
+    //     return;
+    // }
 
     // Flag the pass bit
     passBitsDefaultAlgo_ |= (1 << SegmentSelection::moduleCompatible);
