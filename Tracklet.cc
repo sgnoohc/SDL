@@ -15,7 +15,8 @@ SDL::Tracklet::Tracklet(const Tracklet& tl) :
     betaIn_(tl.getBetaIn()),
     betaInCut_(tl.getBetaInCut()),
     betaOut_(tl.getBetaOut()),
-    betaOutCut_(tl.getBetaOutCut())
+    betaOutCut_(tl.getBetaOutCut()),
+    setNm1DeltaBeta_(false)
 {
 }
 
@@ -26,7 +27,8 @@ SDL::Tracklet::Tracklet(SDL::Segment* innerSegmentPtr, SDL::Segment* outerSegmen
     betaIn_(0),
     betaInCut_(0),
     betaOut_(0),
-    betaOutCut_(0)
+    betaOutCut_(0),
+    setNm1DeltaBeta_(false)
 {
 }
 
@@ -96,6 +98,16 @@ void SDL::Tracklet::setBetaOutCut(float betaOutCut)
     betaOutCut_ = betaOutCut;
 }
 
+void SDL::Tracklet::setNm1DeltaBetaCut(bool setNm1)
+{
+    setNm1DeltaBeta_ = setNm1;
+}
+
+bool SDL::Tracklet::getNm1DeltaBetaCut()
+{
+    return setNm1DeltaBeta_;
+}
+
 bool SDL::Tracklet::passesTrackletAlgo(SDL::TLAlgo algo) const
 {
     // Each algorithm is an enum shift it by its value and check against the flag
@@ -110,6 +122,11 @@ void SDL::Tracklet::runTrackletAlgo(SDL::TLAlgo algo, SDL::LogLevel logLevel)
     }
     else if (algo == SDL::Default_TLAlgo)
     {
+        runTrackletDefaultAlgo(logLevel);
+    }
+    else if (algo == SDL::DefaultNm1_TLAlgo)
+    {
+        setNm1DeltaBetaCut(true);
         runTrackletDefaultAlgo(logLevel);
     }
     else
@@ -1477,9 +1494,15 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel_v2(SDL::LogLe
             SDL::cout <<  " betaInRHmin: " << betaInRHmin <<  " betaInRHmax: " << betaInRHmax <<  std::endl;
             SDL::cout <<  " betaOutRHmin: " << betaOutRHmin <<  " betaOutRHmax: " << betaOutRHmax <<  std::endl;
         }
-        passAlgo_ &= (0 << SDL::Default_TLAlgo);
-        // passAlgo_ |= (1 << SDL::Default_TLAlgo);
-        return;
+        if (getNm1DeltaBetaCut())
+        {
+            passAlgo_ |= (1 << SDL::Default_TLAlgo);
+        }
+        else
+        {
+            passAlgo_ &= (0 << SDL::Default_TLAlgo);
+            return;
+        }
     }
     else if (logLevel >= SDL::Log_Debug3)
     {
@@ -1494,6 +1517,7 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel_v2(SDL::LogLe
     passBitsDefaultAlgo_ |= (1 << TrackletSelection::dBeta);
 
     passAlgo_ |= (1 << SDL::Default_TLAlgo);
+    if (getNm1DeltaBetaCut()) passAlgo_ |= (1 << SDL::DefaultNm1_TLAlgo);
     return;
 }
 
@@ -1944,9 +1968,15 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelEndcapEndcap(SDL::LogLevel
             SDL::cout <<  " betaInRHmin: " << betaInRHmin <<  " betaInRHmax: " << betaInRHmax <<  std::endl;
             SDL::cout <<  " betaOutRHmin: " << betaOutRHmin <<  " betaOutRHmax: " << betaOutRHmax <<  std::endl;
         }
-        passAlgo_ &= (0 << SDL::Default_TLAlgo);
-        // passAlgo_ |= (0 << SDL::Default_TLAlgo);
-        return;
+        if (getNm1DeltaBetaCut())
+        {
+            passAlgo_ |= (1 << SDL::Default_TLAlgo);
+        }
+        else
+        {
+            passAlgo_ &= (0 << SDL::Default_TLAlgo);
+            return;
+        }
     }
     else if (logLevel >= SDL::Log_Debug3)
     {
@@ -1962,6 +1992,7 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelEndcapEndcap(SDL::LogLevel
 
 
     passAlgo_ |= (1 << SDL::Default_TLAlgo);
+    if (getNm1DeltaBetaCut()) passAlgo_ |= (1 << SDL::DefaultNm1_TLAlgo);
     return;
 }
 
@@ -2580,9 +2611,15 @@ void SDL::Tracklet::runTrackletDefaultAlgoEndcapEndcapEndcapEndcap(SDL::LogLevel
             SDL::cout <<  " betaInRHmin: " << betaInRHmin <<  " betaInRHmax: " << betaInRHmax <<  std::endl;
             SDL::cout <<  " betaOutRHmin: " << betaOutRHmin <<  " betaOutRHmax: " << betaOutRHmax <<  std::endl;
         }
-        passAlgo_ &= (0 << SDL::Default_TLAlgo);
-        // passAlgo_ |= (1 << SDL::Default_TLAlgo);
-        return;
+        if (getNm1DeltaBetaCut())
+        {
+            passAlgo_ |= (1 << SDL::Default_TLAlgo);
+        }
+        else
+        {
+            passAlgo_ &= (0 << SDL::Default_TLAlgo);
+            return;
+        }
     }
     else if (logLevel >= SDL::Log_Debug3)
     {
@@ -2595,8 +2632,12 @@ void SDL::Tracklet::runTrackletDefaultAlgoEndcapEndcapEndcapEndcap(SDL::LogLevel
     }
     // Flag the pass bit
     passBitsDefaultAlgo_ |= (1 << TrackletSelection::dBeta);
+
+
+
     // It has passed everything
     passAlgo_ |= (1 << SDL::Default_TLAlgo);
+    if (getNm1DeltaBetaCut()) passAlgo_ |= (1 << SDL::DefaultNm1_TLAlgo);
     return;
 
 }

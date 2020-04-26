@@ -72,6 +72,8 @@ namespace SDL
             float deltaBeta_;
             float deltaBetaCut_;
 
+            bool setNm1DeltaBeta_;
+
         public:
             Tracklet();
             Tracklet(const Tracklet&);
@@ -93,6 +95,11 @@ namespace SDL
             void setBetaInCut(float);
             void setBetaOut(float);
             void setBetaOutCut(float);
+
+            // Set the N-1 setting for the deltabeta
+            // This is used for studying the performance of deltabeta
+            void setNm1DeltaBetaCut(bool=true);
+            bool getNm1DeltaBetaCut();
 
             // return whether it passed the algorithm
             bool passesTrackletAlgo(TLAlgo algo) const;
