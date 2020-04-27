@@ -1247,82 +1247,98 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelBarrelBarrel_v2(SDL::LogLe
     const float sdOut_d = hit_OutUp.rt() - hit_OutLo.rt();
     const float diffDr = std::abs(rt_InSeg - sdOut_dr) / std::abs(rt_InSeg + sdOut_dr);
 
-    if (true //do it for all//diffDr > 0.05 //only if segment length is different significantly
-            && betaIn * betaOut > 0.f
-            && (std::abs(pt_beta) < 4.f * pt_betaMax
-                || (lIn >= 11 && std::abs(pt_beta) < 8.f * pt_betaMax)))   //and the pt_beta is well-defined; less strict for endcap-endcap
-    {
-        betacormode = 1;
+    runDeltaBetaIterations(betaIn, betaOut, betaAv, pt_beta, rt_InSeg, sdOut_dr, drt_tl_axis, lIn, pt_betaMax);
 
-        runDeltaBetaIterations(betaIn, betaOut, betaAv, pt_beta, rt_InSeg, sdOut_dr, drt_tl_axis);
+    //if (true //do it for all//diffDr > 0.05 //only if segment length is different significantly
+    //        && betaIn * betaOut > 0.f
+    //        && (std::abs(pt_beta) < 4.f * pt_betaMax
+    //            || (lIn >= 11 && std::abs(pt_beta) < 8.f * pt_betaMax)))   //and the pt_beta is well-defined; less strict for endcap-endcap
+    //{
+    //    betacormode = 1;
 
-        //setRecoVars("betaIn_0th", betaIn);
-        //setRecoVars("betaOut_0th", betaOut);
-        //setRecoVars("betaAv_0th", betaAv);
-        //setRecoVars("betaPt_0th", pt_beta);
-        //setRecoVars("betaIn_1stCorr", copysign(std::asin(std::min(rt_InSeg * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
-        //setRecoVars("betaOut_1stCorr", copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
-        //setRecoVars("dBeta_0th", betaIn - betaOut);
+    //    runDeltaBetaIterations(betaIn, betaOut, betaAv, pt_beta, rt_InSeg, sdOut_dr, drt_tl_axis);
 
-        //const float betaInUpd  = betaIn + copysign(std::asin(std::min(rt_InSeg * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
-        //const float betaOutUpd = betaOut + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut); //FIXME: need a faster version
-        //betaAv = 0.5f * (betaInUpd + betaOutUpd);
-        //pt_beta = drt_tl_axis * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
+    //}
+    //else if (lIn < 11 && std::abs(betaOut) < 0.2 * std::abs(betaIn) && std::abs(pt_beta) < 12.f * pt_betaMax)   //use betaIn sign as ref
+    //{
+    //    betacormode = 2;
+    //    setRecoVars("betaIn_0th", betaIn);
+    //    setRecoVars("betaOut_0th", betaOut);
+    //    setRecoVars("betaAv_0th", betaAv);
+    //    setRecoVars("betaPt_0th", pt_beta);
+    //    setRecoVars("dBeta_0th", betaIn - betaOut);
 
-        //setRecoVars("betaIn_1st", betaInUpd);
-        //setRecoVars("betaOut_1st", betaOutUpd);
-        //setRecoVars("betaAv_1st", betaAv);
-        //setRecoVars("betaPt_1st", pt_beta);
-        //setRecoVars("betaIn_2ndCorr", copysign(std::asin(std::min(rt_InSeg * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
-        //setRecoVars("betaOut_2ndCorr", copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
-        //setRecoVars("dBeta_1st", betaInUpd - betaOutUpd);
+    //    const float pt_betaIn = drt_tl_axis * k2Rinv1GeVf / sin(betaIn);
+    //    const float betaInUpd  = betaIn + copysign(std::asin(std::min(rt_InSeg * k2Rinv1GeVf / std::abs(pt_betaIn), sinAlphaMax)), betaIn); //FIXME: need a faster version
+    //    const float betaOutUpd = betaOut + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_betaIn), sinAlphaMax)), betaIn); //FIXME: need a faster version
+    //    betaAv = (std::abs(betaOut) > 0.2f * std::abs(betaIn)) ? (0.5f * (betaInUpd + betaOutUpd)) : betaInUpd;
+    //    pt_beta = drt_tl_axis * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
+    //    betaIn  += copysign(std::asin(std::min(rt_InSeg * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
+    //    betaOut += copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
+    //    //update the av and pt
+    //    betaAv = 0.5f * (betaIn + betaOut);
+    //    pt_beta = drt_tl_axis * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
 
-        //betaIn  += copysign(std::asin(std::min(rt_InSeg * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
-        //betaOut += copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut); //FIXME: need a faster version
-        ////update the av and pt
-        //betaAv = 0.5f * (betaIn + betaOut);
-        //pt_beta = drt_tl_axis * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
+    //    setRecoVars("betaIn_1st", betaIn);
+    //    setRecoVars("betaOut_1st", betaOut);
+    //    setRecoVars("betaAv_1st", betaAv);
+    //    setRecoVars("betaPt_1st", pt_beta);
+    //    setRecoVars("dBeta_1st", betaIn - betaOut);
 
-        //setRecoVars("betaIn_2nd", betaIn);
-        //setRecoVars("betaOut_2nd", betaOut);
-        //setRecoVars("betaAv_2nd", betaAv);
-        //setRecoVars("betaPt_2nd", pt_beta);
-        //setRecoVars("betaIn_3rdCorr", copysign(std::asin(std::min(rt_InSeg * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
-        //setRecoVars("betaOut_3rdCorr", copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
-        //setRecoVars("dBeta_2nd", betaIn - betaOut);
+    //    setRecoVars("betaIn_2nd", betaIn);
+    //    setRecoVars("betaOut_2nd", betaOut);
+    //    setRecoVars("betaAv_2nd", betaAv);
+    //    setRecoVars("betaPt_2nd", pt_beta);
+    //    setRecoVars("dBeta_2nd", betaIn - betaOut);
 
-        //setRecoVars("betaIn_3rd", getRecoVar("betaIn_0th") + copysign(std::asin(std::min(rt_InSeg * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
-        //setRecoVars("betaOut_3rd", getRecoVar("betaOut_0th") + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
-        //setRecoVars("betaAv_3rd", 0.5f * (getRecoVar("betaIn_3rd") + getRecoVar("betaOut_3rd")));
-        //setRecoVars("betaPt_3rd", drt_tl_axis * k2Rinv1GeVf / sin(getRecoVar("betaAv_3rd")));
-        //setRecoVars("dBeta_3rd", getRecoVar("betaIn_3rd") - getRecoVar("betaOut_3rd"));
+    //    setRecoVars("betaIn_3rd", betaIn);
+    //    setRecoVars("betaOut_3rd", betaOut);
+    //    setRecoVars("betaAv_3rd", betaAv);
+    //    setRecoVars("betaPt_3rd", pt_beta);
+    //    setRecoVars("dBeta_3rd", betaIn - betaOut);
 
-        //setRecoVars("betaIn_4th", getRecoVar("betaIn_0th") + copysign(std::asin(std::min(rt_InSeg * k2Rinv1GeVf / std::abs(getRecoVar("betaPt_3rd")), sinAlphaMax)), getRecoVar("betaIn_3rd")));
-        //setRecoVars("betaOut_4th", getRecoVar("betaOut_0th") + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(getRecoVar("betaPt_3rd")), sinAlphaMax)), getRecoVar("betaOut_3rd")));
-        //setRecoVars("betaAv_4th", 0.5f * (getRecoVar("betaIn_4th") + getRecoVar("betaOut_4th")));
-        //setRecoVars("betaPt_4th", drt_tl_axis * k2Rinv1GeVf / sin(getRecoVar("betaAv_4th")));
-        //setRecoVars("dBeta_4th", getRecoVar("betaIn_4th") - getRecoVar("betaOut_4th"));
+    //    setRecoVars("betaIn_4th", betaIn);
+    //    setRecoVars("betaOut_4th", betaOut);
+    //    setRecoVars("betaAv_4th", betaAv);
+    //    setRecoVars("betaPt_4th", pt_beta);
+    //    setRecoVars("dBeta_4th", betaIn - betaOut);
 
-    }
-    else if (lIn < 11 && std::abs(betaOut) < 0.2 * std::abs(betaIn) && std::abs(pt_beta) < 12.f * pt_betaMax)   //use betaIn sign as ref
-    {
-        betacormode = 2;
-        const float pt_betaIn = drt_tl_axis * k2Rinv1GeVf / sin(betaIn);
-        const float betaInUpd  = betaIn + copysign(std::asin(std::min(rt_InSeg * k2Rinv1GeVf / std::abs(pt_betaIn), sinAlphaMax)), betaIn); //FIXME: need a faster version
-        const float betaOutUpd = betaOut + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_betaIn), sinAlphaMax)), betaIn); //FIXME: need a faster version
-        betaAv = (std::abs(betaOut) > 0.2f * std::abs(betaIn)) ? (0.5f * (betaInUpd + betaOutUpd)) : betaInUpd;
-        pt_beta = drt_tl_axis * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
-        betaIn  += copysign(std::asin(std::min(rt_InSeg * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
-        betaOut += copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
-        //update the av and pt
-        betaAv = 0.5f * (betaIn + betaOut);
-        pt_beta = drt_tl_axis * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
+    //}
+    //else
+    //{
+    //    betacormode = 3;
 
-    }
-    else
-    {
-        betacormode = 3;
-    }
+    //    setRecoVars("betaIn_0th", betaIn);
+    //    setRecoVars("betaOut_0th", betaOut);
+    //    setRecoVars("betaAv_0th", betaAv);
+    //    setRecoVars("betaPt_0th", pt_beta);
+    //    setRecoVars("dBeta_0th", betaIn - betaOut);
+
+    //    setRecoVars("betaIn_1st", betaIn);
+    //    setRecoVars("betaOut_1st", betaOut);
+    //    setRecoVars("betaAv_1st", betaAv);
+    //    setRecoVars("betaPt_1st", pt_beta);
+    //    setRecoVars("dBeta_1st", betaIn - betaOut);
+
+    //    setRecoVars("betaIn_2nd", betaIn);
+    //    setRecoVars("betaOut_2nd", betaOut);
+    //    setRecoVars("betaAv_2nd", betaAv);
+    //    setRecoVars("betaPt_2nd", pt_beta);
+    //    setRecoVars("dBeta_2nd", betaIn - betaOut);
+
+    //    setRecoVars("betaIn_3rd", betaIn);
+    //    setRecoVars("betaOut_3rd", betaOut);
+    //    setRecoVars("betaAv_3rd", betaAv);
+    //    setRecoVars("betaPt_3rd", pt_beta);
+    //    setRecoVars("dBeta_3rd", betaIn - betaOut);
+
+    //    setRecoVars("betaIn_4th", betaIn);
+    //    setRecoVars("betaOut_4th", betaOut);
+    //    setRecoVars("betaAv_4th", betaAv);
+    //    setRecoVars("betaPt_4th", pt_beta);
+    //    setRecoVars("dBeta_4th", betaIn - betaOut);
+
+    //}
 
     //rescale the ranges proportionally
     const float betaInMMSF = (std::abs(betaInRHmin + betaInRHmax) > 0) ? (2.f * betaIn / std::abs(betaInRHmin + betaInRHmax)) : 0.; //mean value of min,max is the old betaIn
@@ -1827,75 +1843,78 @@ void SDL::Tracklet::runTrackletDefaultAlgoBarrelBarrelEndcapEndcap(SDL::LogLevel
     const float sdOut_dr = (sdOut_mdOut_hit - sdOut_mdRef_hit).rt();
     const float sdOut_d = sdOut_mdOut_hit.rt() - sdOut_mdRef_hit.rt();
     const float diffDr = std::abs(sdIn_dr - sdOut_dr) / std::abs(sdIn_dr + sdOut_dr);
-    if (true //do it for all//diffDr > 0.05 //only if segment length is different significantly
-            && betaIn * betaOut > 0.f
-            && (std::abs(pt_beta) < 4.f * pt_betaMax
-                || (lIn >= 11 && std::abs(pt_beta) < 8.f * pt_betaMax)))   //and the pt_beta is well-defined; less strict for endcap-endcap
-    {
 
-        runDeltaBetaIterations(betaIn, betaOut, betaAv, pt_beta, sdIn_dr, sdOut_dr, dr);
+    runDeltaBetaIterations(betaIn, betaOut, betaAv, pt_beta, sdIn_dr, sdOut_dr, dr, lIn, pt_betaMax);
 
-        //setRecoVars("betaIn_0th", betaIn);
-        //setRecoVars("betaOut_0th", betaOut);
-        //setRecoVars("betaAv_0th", betaAv);
-        //setRecoVars("betaPt_0th", pt_beta);
-        //setRecoVars("betaIn_1stCorr", copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
-        //setRecoVars("betaOut_1stCorr", copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
-        //setRecoVars("dBeta_0th", betaIn - betaOut);
+    //if (true //do it for all//diffDr > 0.05 //only if segment length is different significantly
+    //        && betaIn * betaOut > 0.f
+    //        && (std::abs(pt_beta) < 4.f * pt_betaMax
+    //            || (lIn >= 11 && std::abs(pt_beta) < 8.f * pt_betaMax)))   //and the pt_beta is well-defined; less strict for endcap-endcap
+    //{
 
-        //const float betaInUpd  = betaIn + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
-        //const float betaOutUpd = betaOut + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut); //FIXME: need a faster version
-        //betaAv = 0.5f * (betaInUpd + betaOutUpd);
-        //pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
+    //    runDeltaBetaIterations(betaIn, betaOut, betaAv, pt_beta, sdIn_dr, sdOut_dr, dr);
 
-        //setRecoVars("betaIn_1st", betaInUpd);
-        //setRecoVars("betaOut_1st", betaOutUpd);
-        //setRecoVars("betaAv_1st", betaAv);
-        //setRecoVars("betaPt_1st", pt_beta);
-        //setRecoVars("betaIn_2ndCorr", copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
-        //setRecoVars("betaOut_2ndCorr", copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
-        //setRecoVars("dBeta_1st", betaInUpd - betaOutUpd);
+    //    //setRecoVars("betaIn_0th", betaIn);
+    //    //setRecoVars("betaOut_0th", betaOut);
+    //    //setRecoVars("betaAv_0th", betaAv);
+    //    //setRecoVars("betaPt_0th", pt_beta);
+    //    //setRecoVars("betaIn_1stCorr", copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
+    //    //setRecoVars("betaOut_1stCorr", copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
+    //    //setRecoVars("dBeta_0th", betaIn - betaOut);
 
-        //betaIn  += copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
-        //betaOut += copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut); //FIXME: need a faster version
-        ////update the av and pt
-        //betaAv = 0.5f * (betaIn + betaOut);
-        //pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
+    //    //const float betaInUpd  = betaIn + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
+    //    //const float betaOutUpd = betaOut + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut); //FIXME: need a faster version
+    //    //betaAv = 0.5f * (betaInUpd + betaOutUpd);
+    //    //pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
 
-        //setRecoVars("betaIn_2nd", betaIn);
-        //setRecoVars("betaOut_2nd", betaOut);
-        //setRecoVars("betaAv_2nd", betaAv);
-        //setRecoVars("betaPt_2nd", pt_beta);
-        //setRecoVars("betaIn_3rdCorr", copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
-        //setRecoVars("betaOut_3rdCorr", copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
-        //setRecoVars("dBeta_2nd", betaIn - betaOut);
+    //    //setRecoVars("betaIn_1st", betaInUpd);
+    //    //setRecoVars("betaOut_1st", betaOutUpd);
+    //    //setRecoVars("betaAv_1st", betaAv);
+    //    //setRecoVars("betaPt_1st", pt_beta);
+    //    //setRecoVars("betaIn_2ndCorr", copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
+    //    //setRecoVars("betaOut_2ndCorr", copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
+    //    //setRecoVars("dBeta_1st", betaInUpd - betaOutUpd);
 
-        //setRecoVars("betaIn_3rd", getRecoVar("betaIn_0th") + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
-        //setRecoVars("betaOut_3rd", getRecoVar("betaOut_0th") + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
-        //setRecoVars("betaAv_3rd", 0.5f * (getRecoVar("betaIn_3rd") + getRecoVar("betaOut_3rd")));
-        //setRecoVars("betaPt_3rd", dr * k2Rinv1GeVf / sin(getRecoVar("betaAv_3rd")));
-        //setRecoVars("dBeta_3rd", getRecoVar("betaIn_3rd") - getRecoVar("betaOut_3rd"));
+    //    //betaIn  += copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
+    //    //betaOut += copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut); //FIXME: need a faster version
+    //    ////update the av and pt
+    //    //betaAv = 0.5f * (betaIn + betaOut);
+    //    //pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
 
-        //setRecoVars("betaIn_4th", getRecoVar("betaIn_0th") + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(getRecoVar("betaPt_3rd")), sinAlphaMax)), getRecoVar("betaIn_3rd")));
-        //setRecoVars("betaOut_4th", getRecoVar("betaOut_0th") + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(getRecoVar("betaPt_3rd")), sinAlphaMax)), getRecoVar("betaOut_3rd")));
-        //setRecoVars("betaAv_4th", 0.5f * (getRecoVar("betaIn_4th") + getRecoVar("betaOut_4th")));
-        //setRecoVars("betaPt_4th", dr * k2Rinv1GeVf / sin(getRecoVar("betaAv_4th")));
-        //setRecoVars("dBeta_4th", getRecoVar("betaIn_4th") - getRecoVar("betaOut_4th"));
+    //    //setRecoVars("betaIn_2nd", betaIn);
+    //    //setRecoVars("betaOut_2nd", betaOut);
+    //    //setRecoVars("betaAv_2nd", betaAv);
+    //    //setRecoVars("betaPt_2nd", pt_beta);
+    //    //setRecoVars("betaIn_3rdCorr", copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
+    //    //setRecoVars("betaOut_3rdCorr", copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
+    //    //setRecoVars("dBeta_2nd", betaIn - betaOut);
 
-    }
-    else if (lIn < 11 && std::abs(betaOut) < 0.2 * std::abs(betaIn) && std::abs(pt_beta) < 12.f * pt_betaMax)   //use betaIn sign as ref
-    {
-        const float pt_betaIn = dr * k2Rinv1GeVf / sin(betaIn);
-        const float betaInUpd  = betaIn + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_betaIn), sinAlphaMax)), betaIn); //FIXME: need a faster version
-        const float betaOutUpd = betaOut + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_betaIn), sinAlphaMax)), betaIn); //FIXME: need a faster version
-        betaAv = (std::abs(betaOut) > 0.2f * std::abs(betaIn)) ? (0.5f * (betaInUpd + betaOutUpd)) : betaInUpd;
-        pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
-        betaIn  += copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
-        betaOut += copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
-        //update the av and pt
-        betaAv = 0.5f * (betaIn + betaOut);
-        pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
-    }
+    //    //setRecoVars("betaIn_3rd", getRecoVar("betaIn_0th") + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
+    //    //setRecoVars("betaOut_3rd", getRecoVar("betaOut_0th") + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
+    //    //setRecoVars("betaAv_3rd", 0.5f * (getRecoVar("betaIn_3rd") + getRecoVar("betaOut_3rd")));
+    //    //setRecoVars("betaPt_3rd", dr * k2Rinv1GeVf / sin(getRecoVar("betaAv_3rd")));
+    //    //setRecoVars("dBeta_3rd", getRecoVar("betaIn_3rd") - getRecoVar("betaOut_3rd"));
+
+    //    //setRecoVars("betaIn_4th", getRecoVar("betaIn_0th") + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(getRecoVar("betaPt_3rd")), sinAlphaMax)), getRecoVar("betaIn_3rd")));
+    //    //setRecoVars("betaOut_4th", getRecoVar("betaOut_0th") + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(getRecoVar("betaPt_3rd")), sinAlphaMax)), getRecoVar("betaOut_3rd")));
+    //    //setRecoVars("betaAv_4th", 0.5f * (getRecoVar("betaIn_4th") + getRecoVar("betaOut_4th")));
+    //    //setRecoVars("betaPt_4th", dr * k2Rinv1GeVf / sin(getRecoVar("betaAv_4th")));
+    //    //setRecoVars("dBeta_4th", getRecoVar("betaIn_4th") - getRecoVar("betaOut_4th"));
+
+    //}
+    //else if (lIn < 11 && std::abs(betaOut) < 0.2 * std::abs(betaIn) && std::abs(pt_beta) < 12.f * pt_betaMax)   //use betaIn sign as ref
+    //{
+    //    const float pt_betaIn = dr * k2Rinv1GeVf / sin(betaIn);
+    //    const float betaInUpd  = betaIn + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_betaIn), sinAlphaMax)), betaIn); //FIXME: need a faster version
+    //    const float betaOutUpd = betaOut + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_betaIn), sinAlphaMax)), betaIn); //FIXME: need a faster version
+    //    betaAv = (std::abs(betaOut) > 0.2f * std::abs(betaIn)) ? (0.5f * (betaInUpd + betaOutUpd)) : betaInUpd;
+    //    pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
+    //    betaIn  += copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
+    //    betaOut += copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
+    //    //update the av and pt
+    //    betaAv = 0.5f * (betaIn + betaOut);
+    //    pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
+    //}
 
     //rescale the ranges proportionally
     const float betaInMMSF = (std::abs(betaInRHmin + betaInRHmax) > 0) ? 2.f * betaIn / std::abs(betaInRHmin + betaInRHmax) : 0.; //TODO-RH: the terneary operator should no be necessary once RHmin/max is propagatedmean value of min,max is the old betaIn
@@ -2366,82 +2385,85 @@ void SDL::Tracklet::runTrackletDefaultAlgoEndcapEndcapEndcapEndcap(SDL::LogLevel
     const float sdOut_dr = (sdOut_mdOut_hit - sdOut_mdRef_hit).rt();
     const float sdOut_d = sdOut_mdOut_hit.rt() - sdOut_mdRef_hit.rt();
     const float diffDr = std::abs(sdIn_dr - sdOut_dr) / std::abs(sdIn_dr + sdOut_dr);
-    if (true //do it for all//diffDr > 0.05 //only if segment length is different significantly
-            && betaIn * betaOut > 0.f
-            && (std::abs(pt_beta) < 4.f * pt_betaMax
-                || (lIn >= 11 && std::abs(pt_beta) < 8.f * pt_betaMax)))   //and the pt_beta is well-defined; less strict for endcap-endcap
-    {
-        betacormode = 1;
 
-        // runDeltaBetaIterations(betaIn, betaOut, betaAv, pt_beta, sdIn_dr, sdOut_dr, dr);
+    runDeltaBetaIterations(betaIn, betaOut, betaAv, pt_beta, sdIn_dr, sdOut_dr, dr, lIn, pt_betaMax);
 
-        setRecoVars("betaIn_0th", betaIn);
-        setRecoVars("betaOut_0th", betaOut);
-        setRecoVars("betaAv_0th", betaAv);
-        setRecoVars("betaPt_0th", pt_beta);
-        setRecoVars("betaIn_1stCorr", copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
-        setRecoVars("betaOut_1stCorr", copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
-        setRecoVars("dBeta_0th", betaIn - betaOut);
+    //if (true //do it for all//diffDr > 0.05 //only if segment length is different significantly
+    //        && betaIn * betaOut > 0.f
+    //        && (std::abs(pt_beta) < 4.f * pt_betaMax
+    //            || (lIn >= 11 && std::abs(pt_beta) < 8.f * pt_betaMax)))   //and the pt_beta is well-defined; less strict for endcap-endcap
+    //{
+    //    betacormode = 1;
 
-        const float betaInUpd  = betaIn + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
-        const float betaOutUpd = betaOut + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut); //FIXME: need a faster version
-        betaAv = 0.5f * (betaInUpd + betaOutUpd);
-        pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
+    //    // runDeltaBetaIterations(betaIn, betaOut, betaAv, pt_beta, sdIn_dr, sdOut_dr, dr);
 
-        setRecoVars("betaIn_1st", betaInUpd);
-        setRecoVars("betaOut_1st", betaOutUpd);
-        setRecoVars("betaAv_1st", betaAv);
-        setRecoVars("betaPt_1st", pt_beta);
-        setRecoVars("betaIn_2ndCorr", copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
-        setRecoVars("betaOut_2ndCorr", copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
-        setRecoVars("dBeta_1st", betaInUpd - betaOutUpd);
+    //    setRecoVars("betaIn_0th", betaIn);
+    //    setRecoVars("betaOut_0th", betaOut);
+    //    setRecoVars("betaAv_0th", betaAv);
+    //    setRecoVars("betaPt_0th", pt_beta);
+    //    setRecoVars("betaIn_1stCorr", copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
+    //    setRecoVars("betaOut_1stCorr", copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
+    //    setRecoVars("dBeta_0th", betaIn - betaOut);
 
-        betaIn  += copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
-        betaOut += copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut); //FIXME: need a faster version
-        //update the av and pt
-        betaAv = 0.5f * (betaIn + betaOut);
-        pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
+    //    const float betaInUpd  = betaIn + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
+    //    const float betaOutUpd = betaOut + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut); //FIXME: need a faster version
+    //    betaAv = 0.5f * (betaInUpd + betaOutUpd);
+    //    pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
 
-        setRecoVars("betaIn_2nd", betaIn);
-        setRecoVars("betaOut_2nd", betaOut);
-        setRecoVars("betaAv_2nd", betaAv);
-        setRecoVars("betaPt_2nd", pt_beta);
-        setRecoVars("betaIn_3rdCorr", copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
-        setRecoVars("betaOut_3rdCorr", copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
-        setRecoVars("dBeta_2nd", betaIn - betaOut);
+    //    setRecoVars("betaIn_1st", betaInUpd);
+    //    setRecoVars("betaOut_1st", betaOutUpd);
+    //    setRecoVars("betaAv_1st", betaAv);
+    //    setRecoVars("betaPt_1st", pt_beta);
+    //    setRecoVars("betaIn_2ndCorr", copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
+    //    setRecoVars("betaOut_2ndCorr", copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
+    //    setRecoVars("dBeta_1st", betaInUpd - betaOutUpd);
 
-        setRecoVars("betaIn_3rd", getRecoVar("rawBetaIn") + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
-        setRecoVars("betaOut_3rd", getRecoVar("rawBetaOut") + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
-        setRecoVars("betaAv_3rd", 0.5f * (getRecoVar("betaIn_3rd") + getRecoVar("betaOut_3rd")));
-        setRecoVars("betaPt_3rd", dr * k2Rinv1GeVf / sin(getRecoVar("betaAv_3rd")));
-        setRecoVars("dBeta_3rd", getRecoVar("betaIn_3rd") - getRecoVar("betaOut_3rd"));
+    //    betaIn  += copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
+    //    betaOut += copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut); //FIXME: need a faster version
+    //    //update the av and pt
+    //    betaAv = 0.5f * (betaIn + betaOut);
+    //    pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
 
-        setRecoVars("betaIn_4th", getRecoVar("rawBetaIn") + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(getRecoVar("betaPt_3rd")), sinAlphaMax)), getRecoVar("betaIn_3rd")));
-        setRecoVars("betaOut_4th", getRecoVar("rawBetaOut") + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(getRecoVar("betaPt_3rd")), sinAlphaMax)), getRecoVar("betaOut_3rd")));
-        setRecoVars("betaAv_4th", 0.5f * (getRecoVar("betaIn_4th") + getRecoVar("betaOut_4th")));
-        setRecoVars("betaPt_4th", dr * k2Rinv1GeVf / sin(getRecoVar("betaAv_4th")));
-        setRecoVars("dBeta_4th", getRecoVar("betaIn_4th") - getRecoVar("betaOut_4th"));
+    //    setRecoVars("betaIn_2nd", betaIn);
+    //    setRecoVars("betaOut_2nd", betaOut);
+    //    setRecoVars("betaAv_2nd", betaAv);
+    //    setRecoVars("betaPt_2nd", pt_beta);
+    //    setRecoVars("betaIn_3rdCorr", copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
+    //    setRecoVars("betaOut_3rdCorr", copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
+    //    setRecoVars("dBeta_2nd", betaIn - betaOut);
 
-    }
-    else if (lIn < 11 && std::abs(betaOut) < 0.2 * std::abs(betaIn) && std::abs(pt_beta) < 12.f * pt_betaMax)   //use betaIn sign as ref
-    {
-        betacormode = 2;
-        const float pt_betaIn = dr * k2Rinv1GeVf / sin(betaIn);
-        const float betaInUpd  = betaIn + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_betaIn), sinAlphaMax)), betaIn); //FIXME: need a faster version
-        const float betaOutUpd = betaOut + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_betaIn), sinAlphaMax)), betaIn); //FIXME: need a faster version
-        betaAv = (std::abs(betaOut) > 0.2f * std::abs(betaIn)) ? (0.5f * (betaInUpd + betaOutUpd)) : betaInUpd;
-        pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
-        betaIn  += copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
-        betaOut += copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
-        //update the av and pt
-        betaAv = 0.5f * (betaIn + betaOut);
-        pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
+    //    setRecoVars("betaIn_3rd", getRecoVar("rawBetaIn") + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
+    //    setRecoVars("betaOut_3rd", getRecoVar("rawBetaOut") + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
+    //    setRecoVars("betaAv_3rd", 0.5f * (getRecoVar("betaIn_3rd") + getRecoVar("betaOut_3rd")));
+    //    setRecoVars("betaPt_3rd", dr * k2Rinv1GeVf / sin(getRecoVar("betaAv_3rd")));
+    //    setRecoVars("dBeta_3rd", getRecoVar("betaIn_3rd") - getRecoVar("betaOut_3rd"));
 
-    }
-    else
-    {
-        betacormode = 3;
-    }
+    //    setRecoVars("betaIn_4th", getRecoVar("rawBetaIn") + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(getRecoVar("betaPt_3rd")), sinAlphaMax)), getRecoVar("betaIn_3rd")));
+    //    setRecoVars("betaOut_4th", getRecoVar("rawBetaOut") + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(getRecoVar("betaPt_3rd")), sinAlphaMax)), getRecoVar("betaOut_3rd")));
+    //    setRecoVars("betaAv_4th", 0.5f * (getRecoVar("betaIn_4th") + getRecoVar("betaOut_4th")));
+    //    setRecoVars("betaPt_4th", dr * k2Rinv1GeVf / sin(getRecoVar("betaAv_4th")));
+    //    setRecoVars("dBeta_4th", getRecoVar("betaIn_4th") - getRecoVar("betaOut_4th"));
+
+    //}
+    //else if (lIn < 11 && std::abs(betaOut) < 0.2 * std::abs(betaIn) && std::abs(pt_beta) < 12.f * pt_betaMax)   //use betaIn sign as ref
+    //{
+    //    betacormode = 2;
+    //    const float pt_betaIn = dr * k2Rinv1GeVf / sin(betaIn);
+    //    const float betaInUpd  = betaIn + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_betaIn), sinAlphaMax)), betaIn); //FIXME: need a faster version
+    //    const float betaOutUpd = betaOut + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_betaIn), sinAlphaMax)), betaIn); //FIXME: need a faster version
+    //    betaAv = (std::abs(betaOut) > 0.2f * std::abs(betaIn)) ? (0.5f * (betaInUpd + betaOutUpd)) : betaInUpd;
+    //    pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
+    //    betaIn  += copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
+    //    betaOut += copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
+    //    //update the av and pt
+    //    betaAv = 0.5f * (betaIn + betaOut);
+    //    pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
+
+    //}
+    //else
+    //{
+    //    betacormode = 3;
+    //}
 
     //rescale the ranges proportionally
     const float betaInMMSF = (std::abs(betaInRHmin + betaInRHmax) > 0) ? (2.f * betaIn / std::abs(betaInRHmin + betaInRHmax)) : 0.; //mean value of min,max is the old betaIn
@@ -3156,59 +3178,148 @@ void SDL::Tracklet::runTrackletDefaultAlgoEndcapEndcap(SDL::LogLevel logLevel)
     return;
 }
 
-void SDL::Tracklet::runDeltaBetaIterations(float& betaIn, float& betaOut, float& betaAv, float& pt_beta, float sdIn_dr, float sdOut_dr, float dr)
+void SDL::Tracklet::runDeltaBetaIterations(float& betaIn, float& betaOut, float& betaAv, float& pt_beta, float sdIn_dr, float sdOut_dr, float dr, int lIn, float pt_betaMax)
 {
-
     const float kRinv1GeVf = (2.99792458e-3 * 3.8);
     const float k2Rinv1GeVf = kRinv1GeVf / 2.;
     const float sinAlphaMax = 0.95;
 
-    setRecoVars("betaIn_0th", betaIn);
-    setRecoVars("betaOut_0th", betaOut);
-    setRecoVars("betaAv_0th", betaAv);
-    setRecoVars("betaPt_0th", pt_beta);
-    setRecoVars("betaIn_1stCorr", copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
-    setRecoVars("betaOut_1stCorr", copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
-    setRecoVars("dBeta_0th", betaIn - betaOut);
+    if (true //do it for all//diffDr > 0.05 //only if segment length is different significantly
+            && betaIn * betaOut > 0.f
+            && (std::abs(pt_beta) < 4.f * pt_betaMax
+                || (lIn >= 11 && std::abs(pt_beta) < 8.f * pt_betaMax)))   //and the pt_beta is well-defined; less strict for endcap-endcap
+    {
+        setRecoVars("betacormode", 1);
 
-    const float betaInUpd  = betaIn + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
-    const float betaOutUpd = betaOut + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut); //FIXME: need a faster version
-    betaAv = 0.5f * (betaInUpd + betaOutUpd);
-    pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
+        setRecoVars("betaIn_0th", betaIn);
+        setRecoVars("betaOut_0th", betaOut);
+        setRecoVars("betaAv_0th", betaAv);
+        setRecoVars("betaPt_0th", pt_beta);
+        setRecoVars("betaIn_1stCorr", copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
+        setRecoVars("betaOut_1stCorr", copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
+        setRecoVars("dBeta_0th", betaIn - betaOut);
 
-    setRecoVars("betaIn_1st", betaInUpd);
-    setRecoVars("betaOut_1st", betaOutUpd);
-    setRecoVars("betaAv_1st", betaAv);
-    setRecoVars("betaPt_1st", pt_beta);
-    setRecoVars("betaIn_2ndCorr", copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
-    setRecoVars("betaOut_2ndCorr", copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
-    setRecoVars("dBeta_1st", betaInUpd - betaOutUpd);
+        const float betaInUpd  = betaIn + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
+        const float betaOutUpd = betaOut + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut); //FIXME: need a faster version
+        betaAv = 0.5f * (betaInUpd + betaOutUpd);
+        pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
 
-    betaIn  += copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
-    betaOut += copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut); //FIXME: need a faster version
-    //update the av and pt
-    betaAv = 0.5f * (betaIn + betaOut);
-    pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
+        setRecoVars("betaIn_1st", betaInUpd);
+        setRecoVars("betaOut_1st", betaOutUpd);
+        setRecoVars("betaAv_1st", betaAv);
+        setRecoVars("betaPt_1st", pt_beta);
+        setRecoVars("betaIn_2ndCorr", copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
+        setRecoVars("betaOut_2ndCorr", copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
+        setRecoVars("dBeta_1st", betaInUpd - betaOutUpd);
 
-    setRecoVars("betaIn_2nd", betaIn);
-    setRecoVars("betaOut_2nd", betaOut);
-    setRecoVars("betaAv_2nd", betaAv);
-    setRecoVars("betaPt_2nd", pt_beta);
-    setRecoVars("betaIn_3rdCorr", copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
-    setRecoVars("betaOut_3rdCorr", copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
-    setRecoVars("dBeta_2nd", betaIn - betaOut);
+        betaIn  += copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
+        betaOut += copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut); //FIXME: need a faster version
+        //update the av and pt
+        betaAv = 0.5f * (betaIn + betaOut);
+        pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
 
-    setRecoVars("betaIn_3rd", getRecoVar("betaIn_0th") + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
-    setRecoVars("betaOut_3rd", getRecoVar("betaOut_0th") + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
-    setRecoVars("betaAv_3rd", 0.5f * (getRecoVar("betaIn_3rd") + getRecoVar("betaOut_3rd")));
-    setRecoVars("betaPt_3rd", dr * k2Rinv1GeVf / sin(getRecoVar("betaAv_3rd")));
-    setRecoVars("dBeta_3rd", getRecoVar("betaIn_3rd") - getRecoVar("betaOut_3rd"));
+        setRecoVars("betaIn_2nd", betaIn);
+        setRecoVars("betaOut_2nd", betaOut);
+        setRecoVars("betaAv_2nd", betaAv);
+        setRecoVars("betaPt_2nd", pt_beta);
+        setRecoVars("betaIn_3rdCorr", copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
+        setRecoVars("betaOut_3rdCorr", copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
+        setRecoVars("dBeta_2nd", betaIn - betaOut);
 
-    setRecoVars("betaIn_4th", getRecoVar("betaIn_0th") + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(getRecoVar("betaPt_3rd")), sinAlphaMax)), getRecoVar("betaIn_3rd")));
-    setRecoVars("betaOut_4th", getRecoVar("betaOut_0th") + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(getRecoVar("betaPt_3rd")), sinAlphaMax)), getRecoVar("betaOut_3rd")));
-    setRecoVars("betaAv_4th", 0.5f * (getRecoVar("betaIn_4th") + getRecoVar("betaOut_4th")));
-    setRecoVars("betaPt_4th", dr * k2Rinv1GeVf / sin(getRecoVar("betaAv_4th")));
-    setRecoVars("dBeta_4th", getRecoVar("betaIn_4th") - getRecoVar("betaOut_4th"));
+        setRecoVars("betaIn_3rd", getRecoVar("betaIn_0th") + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn));
+        setRecoVars("betaOut_3rd", getRecoVar("betaOut_0th") + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaOut));
+        setRecoVars("betaAv_3rd", 0.5f * (getRecoVar("betaIn_3rd") + getRecoVar("betaOut_3rd")));
+        setRecoVars("betaPt_3rd", dr * k2Rinv1GeVf / sin(getRecoVar("betaAv_3rd")));
+        setRecoVars("dBeta_3rd", getRecoVar("betaIn_3rd") - getRecoVar("betaOut_3rd"));
+
+        setRecoVars("betaIn_4th", getRecoVar("betaIn_0th") + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(getRecoVar("betaPt_3rd")), sinAlphaMax)), getRecoVar("betaIn_3rd")));
+        setRecoVars("betaOut_4th", getRecoVar("betaOut_0th") + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(getRecoVar("betaPt_3rd")), sinAlphaMax)), getRecoVar("betaOut_3rd")));
+        setRecoVars("betaAv_4th", 0.5f * (getRecoVar("betaIn_4th") + getRecoVar("betaOut_4th")));
+        setRecoVars("betaPt_4th", dr * k2Rinv1GeVf / sin(getRecoVar("betaAv_4th")));
+        setRecoVars("dBeta_4th", getRecoVar("betaIn_4th") - getRecoVar("betaOut_4th"));
+
+
+    }
+    else if (lIn < 11 && std::abs(betaOut) < 0.2 * std::abs(betaIn) && std::abs(pt_beta) < 12.f * pt_betaMax)   //use betaIn sign as ref
+    {
+        setRecoVars("betacormode", 2);
+        setRecoVars("betaIn_0th", betaIn);
+        setRecoVars("betaOut_0th", betaOut);
+        setRecoVars("betaAv_0th", betaAv);
+        setRecoVars("betaPt_0th", pt_beta);
+        setRecoVars("dBeta_0th", betaIn - betaOut);
+
+        const float pt_betaIn = dr * k2Rinv1GeVf / sin(betaIn);
+        const float betaInUpd  = betaIn + copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_betaIn), sinAlphaMax)), betaIn); //FIXME: need a faster version
+        const float betaOutUpd = betaOut + copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_betaIn), sinAlphaMax)), betaIn); //FIXME: need a faster version
+        betaAv = (std::abs(betaOut) > 0.2f * std::abs(betaIn)) ? (0.5f * (betaInUpd + betaOutUpd)) : betaInUpd;
+        pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
+        betaIn  += copysign(std::asin(std::min(sdIn_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
+        betaOut += copysign(std::asin(std::min(sdOut_dr * k2Rinv1GeVf / std::abs(pt_beta), sinAlphaMax)), betaIn); //FIXME: need a faster version
+        //update the av and pt
+        betaAv = 0.5f * (betaIn + betaOut);
+        pt_beta = dr * k2Rinv1GeVf / sin(betaAv); //get a better pt estimate
+
+        setRecoVars("betaIn_1st", betaIn);
+        setRecoVars("betaOut_1st", betaOut);
+        setRecoVars("betaAv_1st", betaAv);
+        setRecoVars("betaPt_1st", pt_beta);
+        setRecoVars("dBeta_1st", betaIn - betaOut);
+
+        setRecoVars("betaIn_2nd", betaIn);
+        setRecoVars("betaOut_2nd", betaOut);
+        setRecoVars("betaAv_2nd", betaAv);
+        setRecoVars("betaPt_2nd", pt_beta);
+        setRecoVars("dBeta_2nd", betaIn - betaOut);
+
+        setRecoVars("betaIn_3rd", betaIn);
+        setRecoVars("betaOut_3rd", betaOut);
+        setRecoVars("betaAv_3rd", betaAv);
+        setRecoVars("betaPt_3rd", pt_beta);
+        setRecoVars("dBeta_3rd", betaIn - betaOut);
+
+        setRecoVars("betaIn_4th", betaIn);
+        setRecoVars("betaOut_4th", betaOut);
+        setRecoVars("betaAv_4th", betaAv);
+        setRecoVars("betaPt_4th", pt_beta);
+        setRecoVars("dBeta_4th", betaIn - betaOut);
+
+    }
+    else
+    {
+        setRecoVars("betacormode", 3);
+
+        setRecoVars("betaIn_0th", betaIn);
+        setRecoVars("betaOut_0th", betaOut);
+        setRecoVars("betaAv_0th", betaAv);
+        setRecoVars("betaPt_0th", pt_beta);
+        setRecoVars("dBeta_0th", betaIn - betaOut);
+
+        setRecoVars("betaIn_1st", betaIn);
+        setRecoVars("betaOut_1st", betaOut);
+        setRecoVars("betaAv_1st", betaAv);
+        setRecoVars("betaPt_1st", pt_beta);
+        setRecoVars("dBeta_1st", betaIn - betaOut);
+
+        setRecoVars("betaIn_2nd", betaIn);
+        setRecoVars("betaOut_2nd", betaOut);
+        setRecoVars("betaAv_2nd", betaAv);
+        setRecoVars("betaPt_2nd", pt_beta);
+        setRecoVars("dBeta_2nd", betaIn - betaOut);
+
+        setRecoVars("betaIn_3rd", betaIn);
+        setRecoVars("betaOut_3rd", betaOut);
+        setRecoVars("betaAv_3rd", betaAv);
+        setRecoVars("betaPt_3rd", pt_beta);
+        setRecoVars("dBeta_3rd", betaIn - betaOut);
+
+        setRecoVars("betaIn_4th", betaIn);
+        setRecoVars("betaOut_4th", betaOut);
+        setRecoVars("betaAv_4th", betaAv);
+        setRecoVars("betaPt_4th", pt_beta);
+        setRecoVars("dBeta_4th", betaIn - betaOut);
+
+    }
 
 }
 
