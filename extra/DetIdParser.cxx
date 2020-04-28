@@ -513,7 +513,10 @@ bool SDL::Module::parseIsInverted(unsigned int detId)
 
 unsigned int SDL::Module::parsePartnerDetId(unsigned int detId)
 {
-    return ((parseIsInverted(detId)) ? detId - 1 : detId + 1);
+    if (parseIsLower(detId))
+        return ((parseIsInverted(detId)) ? detId - 1 : detId + 1);
+    else
+        return ((parseIsInverted(detId)) ? detId + 1 : detId - 1);
 }
 
 SDL::Module::ModuleType SDL::Module::parseModuleType(unsigned int detId)
