@@ -1,21 +1,38 @@
-include Makefile.arch
 
 #
 # stuff to make
 #
-SOURCES=$(wildcard *.cc)
-OBJECTS=$(SOURCES:.cc=.o)
-HEADERS=$(SOURCES:.cc=.h)
-LIB=sdl.so
+CCSOURCES=$(wildcard *.cc)
+CCOBJECTS=$(CCSOURCES:.cc=.o)
+CCHEADERS=$(CCSOURCES:.cc=.h)
 
-#
+CUSOURCES=$(wildcard *.cu)
+CUOBJECTS=$(CUSOURCES:.cu=.o)
+CUHEADERS=$(CUSOURCES:.cu=.cuh)
+LIB=sdl.so
+# AMD Opteron and Intel EM64T (64 bit mode) Linux with gcc 3.x
+#CXX           = g++4 
+CXX           = nvcc
+CXXFLAGS      = -x cu -g -O2 --compiler-options -Wall --compiler-options -Wshadow --compiler-options -Woverloaded-virtual --compiler-options -fPIC -dc
+#LD            = g++4 
+LD            = nvcc 
+#LDFLAGS       = -g -O2
+SOFLAGS       = -g -shared --compiler-options -fPIC
 # how to make it 
 #
 
-$(LIB): $(SOURCES) $(HEADERS)
-	$(LD) $(CXXFLAGS) $(LDFLAGS) -fPIC -ITMultiDrawTreePlayer -Wunused-variable $(SOFLAGS) $(SOURCES) $(ROOTLIBS) -lTMVA -lEG -lGenVector -lXMLIO -lMLP -lTreePlayer -o $@
+%.o : %.cu %.cuh
+	$(LD) $(CXXFLAGS) $(LDFLAGS) $(ROOTLIBS) $< -o $@
 
-all: $(LIB) 
+%.o : %.cc %.h
+	$(LD) $(CXXFLAGS) $(LDFLAGS) $(ROOTLIBS) $< -o $@
+
+
+
+$(LIB):$(CCOBJECTS) $(CUOBJECTS)
+	$(LD)  $(SOFLAGS) $^ -o $@
+
+all: $(LIB)
 clean:
 	rm -f *.o \
 	rm -f *.d \
