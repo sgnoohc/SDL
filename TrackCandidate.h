@@ -4,12 +4,12 @@
 #include <iomanip>
 #include <stdexcept>
 
-#include "Module.h"
+#include "Module.cuh"
 #include "Algo.h"
 #include "TrackletBase.h"
 #include "Tracklet.h"
 #include "Triplet.h"
-#include "MathUtil.h"
+#include "MathUtil.cuh"
 #include "PrintUtil.h"
 
 namespace SDL
