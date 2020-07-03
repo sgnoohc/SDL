@@ -78,6 +78,13 @@ bool SDL::TrackletBase::isAnchorHitIdxMatched(const TrackletBase& md) const
     return true;
 }
 
+bool SDL::TrackletBase::hasCommonSegment(const TrackletBase& outer_tl) const
+{
+    if (outerSegmentPtr()->isIdxMatched(*(outer_tl.innerSegmentPtr())))
+        return true;
+    return false;
+}
+
 namespace SDL
 {
     std::ostream& operator<<(std::ostream& out, const TrackletBase& tl)

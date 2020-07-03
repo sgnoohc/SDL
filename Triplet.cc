@@ -33,6 +33,9 @@ void SDL::Triplet::runTripletAlgo(SDL::TPAlgo algo, SDL::LogLevel logLevel)
     }
     else if (algo == SDL::Default_TPAlgo)
     {
+
+        setRecoVars("betaPt_2nd", -999);
+
         runTripletDefaultAlgo(logLevel);
     }
     else

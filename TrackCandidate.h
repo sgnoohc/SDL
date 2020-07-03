@@ -113,6 +113,9 @@ namespace SDL
             // The default algorithms
             void runTrackCandidateDefaultAlgo(SDL::LogLevel logLevel);
 
+            // Connecting inner tracklet to outer triplet with share segment
+            void runTrackCandidateInnerTrackletToOuterTriplet(SDL::LogLevel logLevel);
+
             bool isIdxMatched(const TrackCandidate&) const;
             bool isAnchorHitIdxMatched(const TrackCandidate&) const;
 

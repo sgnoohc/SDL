@@ -225,6 +225,91 @@ void SDL::TrackCandidate::runTrackCandidateDefaultAlgo(SDL::LogLevel logLevel)
     passAlgo_ |= (1 << SDL::Default_TCAlgo);
 }
 
+void SDL::TrackCandidate::runTrackCandidateInnerTrackletToOuterTriplet(SDL::LogLevel logLevel)
+{
+
+    passAlgo_ &= (0 << SDL::Default_TCAlgo);
+
+    // SDL::Segment* innerOuterSegment = innerTrackletPtr()->outerSegmentPtr();
+    // SDL::Segment* outerInnerSegment = outerTrackletPtr()->innerSegmentPtr();
+
+    // std::cout <<  " innerOuterSegment: " << innerOuterSegment <<  std::endl;
+    // std::cout <<  " outerInnerSegment: " << outerInnerSegment <<  std::endl;
+    // std::cout <<  " innerTrackletPtr()->hasCommonSegment(*(outerTrackletPtr())): " << innerTrackletPtr()->hasCommonSegment(*(outerTrackletPtr())) <<  std::endl;
+
+    // passAlgo_ |= (1 << SDL::Default_TCAlgo);
+    // return;
+
+    const SDL::Tracklet& innerTracklet = (*innerTrackletPtr());
+    const SDL::Triplet& outerTriplet = (*outerTripletPtr());
+
+    if (not (innerTracklet.hasCommonSegment(outerTriplet)))
+    {
+        if (logLevel >= SDL::Log_Debug3)
+        {
+            SDL::cout << "Failed Cut #1 in " << __FUNCTION__ << std::endl;
+        }
+        passAlgo_ &= (0 << SDL::Default_TCAlgo);
+        // passAlgo_ |= (1 << SDL::Default_TCAlgo);
+        return;
+    }
+    // Flag the pass bit
+    passBitsDefaultAlgo_ |= (1 << TrackCandidateSelection::commonSegment);
+
+    // if (not (innerTrackletPtr()->getRecoVar("pt_beta") - ))
+    // {
+    //     if (logLevel >= SDL::Log_Debug3)
+    //     {
+    //         SDL::cout << "Failed Cut #2 in " << __FUNCTION__ << std::endl;
+    //     }
+    //     passAlgo_ &= (0 << SDL::Default_TCAlgo);
+    //     // passAlgo_ |= (1 << SDL::Default_TCAlgo);
+    //     return;
+    // }
+    // // Flag the pass bit
+    // passBitsDefaultAlgo_ |= (1 << TrackCandidateSelection::ptBetaConsistency);
+
+    // SDL::Segment* innerInnerSegment = innerTrackletPtr()->innerSegmentPtr();
+    // SDL::Segment* innerOuterSegment = innerTrackletPtr()->outerSegmentPtr();
+    // SDL::Segment* outerInnerSegment = outerTrackletPtr()->innerSegmentPtr();
+    // SDL::Segment* outerOuterSegment = outerTrackletPtr()->outerSegmentPtr();
+
+    // SDL::Hit& innerA = (*innerInnerSegment->innerMiniDoubletPtr()->anchorHitPtr());
+    // SDL::Hit& innerB = (*innerInnerSegment->outerMiniDoubletPtr()->anchorHitPtr());
+    // SDL::Hit& innerC = (*innerOuterSegment->innerMiniDoubletPtr()->anchorHitPtr());
+    // SDL::Hit& outerA = (*outerInnerSegment->outerMiniDoubletPtr()->anchorHitPtr());
+    // SDL::Hit& outerB = (*outerOuterSegment->innerMiniDoubletPtr()->anchorHitPtr());
+    // SDL::Hit& outerC = (*outerOuterSegment->outerMiniDoubletPtr()->anchorHitPtr());
+
+    // SDL::Hit innerPoint = SDL::MathUtil::getCenterFromThreePoints(innerA, innerB, innerC);
+    // SDL::Hit outerPoint = SDL::MathUtil::getCenterFromThreePoints(outerA, outerB, outerC);
+
+    // float innerRadius = sqrt(pow(innerA.x() - innerPoint.x(), 2) + pow(innerA.y() - innerPoint.y(), 2));
+    // float outerRadius = sqrt(pow(outerA.x() - outerPoint.x(), 2) + pow(outerA.y() - outerPoint.y(), 2));
+
+    // float dR = (innerRadius - outerRadius) / innerRadius;
+    // setRecoVars("dR", dR);
+    // setRecoVars("innerR", innerRadius);
+
+    // float upperthresh =  0.6 / 15000. * innerRadius + 0.2;
+    // float lowerthresh = -1.4 / 4000. * innerRadius - 0.1;
+
+    // if (not (dR > lowerthresh and dR < upperthresh))
+    // {
+    //     if (logLevel >= SDL::Log_Debug3)
+    //     {
+    //         SDL::cout << "Failed Cut #3 in " << __FUNCTION__ << std::endl;
+    //     }
+    //     // passAlgo_ &= (0 << SDL::Default_TCAlgo);
+    //     passAlgo_ |= (1 << SDL::Default_TCAlgo);
+    //     return;
+    // }
+    // // Flag the pass bit
+    // passBitsDefaultAlgo_ |= (1 << TrackCandidateSelection::ptConsistency);
+
+    passAlgo_ |= (1 << SDL::Default_TCAlgo);
+}
+
 bool SDL::TrackCandidate::isIdxMatched(const TrackCandidate& tc) const
 {
     if (not innerTrackletPtr()->isIdxMatched(*(tc.innerTrackletPtr())))
