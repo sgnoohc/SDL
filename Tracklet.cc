@@ -3323,13 +3323,6 @@ void SDL::Tracklet::runDeltaBetaIterations(float& betaIn, float& betaOut, float&
 
 }
 
-bool SDL::Tracklet::hasCommonSegment(const Tracklet& outer_tl) const
-{
-    if (outerSegmentPtr()->isIdxMatched(*(outer_tl.innerSegmentPtr())))
-        return true;
-    return false;
-}
-
 [[deprecated("SDL:: isSegmentPairATracklet() is deprecated")]]
 bool SDL::Tracklet::isSegmentPairATracklet(const Segment& innerSegment, const Segment& outerSegment, TLAlgo algo, SDL::LogLevel logLevel)
 {

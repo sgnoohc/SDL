@@ -272,6 +272,12 @@ namespace SDL
             // Create tracklets for a inner segment upper module
             void createTrackletsFromInnerLowerModule(unsigned int detId, TLAlgo algo=Default_TLAlgo);
 
+            // Create tracklets with a gap (single)
+            void createTrackletsWithAGapWithModuleMap(TLAlgo algo=Default_TLAlgo);
+
+            // Create tracklets for a inner segment upper module but with a gap (single)
+            void createTrackletsWithAGapFromInnerLowerModule(unsigned int detId, SDL::TLAlgo algo);
+
             // Create tracklets from two layers (inefficient way)
             void createTrackletsFromTwoLayers(int innerLayerIdx, SDL::Layer::SubDet innerLayerSubDet, int outerLayerIdx, SDL::Layer::SubDet outerLayerSubDet, TLAlgo algo=Default_TLAlgo);
 
@@ -293,11 +299,14 @@ namespace SDL
             // Create trackcandidates
             void createTrackCandidatesFromTracklets(TCAlgo algo=Default_TCAlgo);
 
-            // Create trackcandidates from two triplets (and check that the connecting mini-doublet passes segment requirement)
+            // Create trackcandidates from two triplets
             void createTrackCandidatesFromInnerModulesFromTriplets(unsigned int detId, SDL::TCAlgo algo);
 
-            // Create trackcandidates from two tracklets (and check that the connecting mini-doublet passes segment requirement)
+            // Create trackcandidates from two tracklets
             void createTrackCandidatesFromInnerModulesFromTracklets(unsigned int detId, SDL::TCAlgo algo);
+
+            // Create trackcandidates from inner tracklets to outer triplets
+            void createTrackCandidatesFromInnerModulesFromTrackletsToTriplets(unsigned int detId, SDL::TCAlgo algo);
 
             // Multiplicity of Hits
             unsigned int getNumberOfHits();
