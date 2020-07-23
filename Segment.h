@@ -1,9 +1,9 @@
 #ifndef Segment_h
 #define Segment_h
 
-#include "MiniDoublet.h"
+#include "MiniDoublet.cuh"
 #include "TiltedGeometry.h"
-#include "Module.h"
+#include "Module.cuh"
 #include "Algo.h"
 #include "ModuleConnectionMap.h"
 #include <unordered_map>

@@ -1,10 +1,10 @@
-#include "MathUtil.h"
+#include "MathUtil.cuh"
 
 float SDL::MathUtil::Phi_mpi_pi(float x)
 {
     if (isnan(x))
     {
-        std::cout << "SDL::MathUtil::Phi_mpi_pi() function called with NaN" << std::endl;
+       printf("SDL::MathUtil::Phi_mpi_pi() function called with NaN\n");
         return x;
     }
 
