@@ -4,7 +4,7 @@
 #include <iomanip>
 #include <functional>
 
-#include "Module.h"
+#include "Module.cuh"
 #include "Algo.h"
 #include "Segment.h"
 #include "PrintUtil.h"
