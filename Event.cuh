@@ -9,9 +9,9 @@
 #include <iostream>
 #include <cmath>
 
-#include "Module.h"
-#include "Hit.h"
-#include "MiniDoublet.h"
+#include "Module.cuh"
+#include "Hit.cuh"
+#include "MiniDoublet.cuh"
 #include "Segment.h"
 #include "Triplet.h"
 #include "Layer.h"
@@ -404,11 +404,14 @@ namespace SDL
             // Multiplicity of track candidate formed in this event
             unsigned int getNumberOfTrackCandidatesByLayerEndcap(unsigned int);
 
+            
             // cout printing
             friend std::ostream& operator<<(std::ostream& out, const Event& event);
             friend std::ostream& operator<<(std::ostream& out, const Event* event);
 
     };
 }
+//CUDA Kernels
+__global__ void createMiniDoubletsInGPU(SDL::MiniDoublet* mdCands, int n, SDL::MDAlgo algo);
 
 #endif

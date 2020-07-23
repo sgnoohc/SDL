@@ -5,8 +5,8 @@
 #include <cmath>
 
 #include "PrintUtil.h"
-#include "Hit.h"
-#include "Module.h"
+#include "Hit.cuh"
+#include "Module.cuh"
 
 namespace SDL
 {

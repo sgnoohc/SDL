@@ -4,7 +4,7 @@
 #include <iomanip>
 #include <functional>
 
-#include "Module.h"
+#include "Module.cuh"
 #include "Algo.h"
 #include "Segment.h"
 #include "PrintUtil.h"
@@ -124,8 +124,6 @@ namespace SDL
 
             // Function for delta beta
             void runDeltaBetaIterations(float& betaIn, float& betaOut, float& betaAv, float& pt_beta, float sdIn_dr, float sdOut_dr, float dr, int lIn, float pt_betaMax);
-
-            bool hasCommonSegment(const Tracklet&) const;
 
             // The function to actually determine whether a pair of mini-doublets is a reco-ed segment or not
             static bool isSegmentPairATracklet(const Segment& innerSegment, const Segment& outerSegment, TLAlgo algo, SDL::LogLevel logLevel=SDL::Log_Nothing);

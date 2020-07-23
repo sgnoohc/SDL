@@ -4,12 +4,12 @@
 #include <iomanip>
 #include <stdexcept>
 
-#include "Module.h"
+#include "Module.cuh"
 #include "Algo.h"
 #include "TrackletBase.h"
 #include "Tracklet.h"
 #include "Triplet.h"
-#include "MathUtil.h"
+#include "MathUtil.cuh"
 #include "PrintUtil.h"
 
 namespace SDL
@@ -112,6 +112,9 @@ namespace SDL
 
             // The default algorithms
             void runTrackCandidateDefaultAlgo(SDL::LogLevel logLevel);
+
+            // Connecting inner tracklet to outer triplet with share segment
+            void runTrackCandidateInnerTrackletToOuterTriplet(SDL::LogLevel logLevel);
 
             bool isIdxMatched(const TrackCandidate&) const;
             bool isAnchorHitIdxMatched(const TrackCandidate&) const;

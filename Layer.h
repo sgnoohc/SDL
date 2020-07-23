@@ -4,7 +4,7 @@
 #include <vector>
 #include <tuple>
 
-#include "MiniDoublet.h"
+#include "MiniDoublet.cuh"
 #include "Segment.h"
 #include "Triplet.h"
 #include "Tracklet.h"

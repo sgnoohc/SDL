@@ -4,11 +4,11 @@
 #include <iomanip>
 #include <functional>
 
-#include "Module.h"
+#include "Module.cuh"
 #include "Algo.h"
 #include "Segment.h"
 #include "Tracklet.h"
-#include "MathUtil.h"
+#include "MathUtil.cuh"
 #include "PrintUtil.h"
 #include "TrackletBase.h"
 

@@ -4,7 +4,7 @@
 #include <iomanip>
 #include <functional>
 
-#include "Module.h"
+#include "Module.cuh"
 #include "Algo.h"
 #include "Segment.h"
 #include "PrintUtil.h"
@@ -57,6 +57,7 @@ namespace SDL
 
             bool isIdxMatched(const TrackletBase&) const;
             bool isAnchorHitIdxMatched(const TrackletBase&) const;
+            bool hasCommonSegment(const TrackletBase&) const;
 
             // cout printing
             friend std::ostream& operator<<(std::ostream& out, const TrackletBase& tl);
