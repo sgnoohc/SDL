@@ -740,8 +740,8 @@ void SDL::Segment::runSegmentDefaultAlgoEndcap(SDL::LogLevel logLevel)
     const float sdCut = sdSlope;	
     const float dPhiPos_high = innerMiniDoubletAnchorHit.deltaPhi(outerMiniDoubletAnchorHitHighEdge);
     const float dPhiPos_low = innerMiniDoubletAnchorHit.deltaPhi(outerMiniDoubletAnchorHitLowEdge);
-    const float dPhiPos_max = abs(dPhiPos_high) > abs(dPhiPos_low) ? dPhiPos_high : dPhiPos_low;
-    const float dPhiPos_min = abs(dPhiPos_high) > abs(dPhiPos_low) ? dPhiPos_low : dPhiPos_high;
+    const float dPhiPos_max = fabs(dPhiPos_high) > fabs(dPhiPos_low) ? dPhiPos_high : dPhiPos_low;
+    const float dPhiPos_min = fabs(dPhiPos_high) > fabs(dPhiPos_low) ? dPhiPos_low : dPhiPos_high;
 
     setRecoVars("sdCut",sdCut);
     setRecoVars("sdSlope",sdSlope);

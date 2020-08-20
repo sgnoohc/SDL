@@ -71,13 +71,12 @@ void SDL::Triplet::runTripletDefaultAlgo(SDL::LogLevel logLevel)
     //
     // Running Tracklet algo within triplet
     //
-    if (false)
+    // if (false)
     {
         // Check tracklet algo on triplet
         tlCand = SDL::Tracklet(innerSegmentPtr(), outerSegmentPtr());
 
-        // Run tracklet algo
-        tlCand.runTrackletDefaultAlgoDeltaBetaOnlyBarrelBarrelBarrelBarrel(SDL::Log_Nothing);
+        tlCand.runTrackletDefaultAlgo(logLevel);
 
         if (not (tlCand.passesTrackletAlgo(SDL::Default_TLAlgo)))
         {

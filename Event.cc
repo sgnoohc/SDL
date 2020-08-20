@@ -610,15 +610,37 @@ void SDL::Event::createTracklets(TLAlgo algo)
 
 void SDL::Event::createTrackletsWithModuleMap(TLAlgo algo)
 {
+    if (logLevel_ == SDL::Log_Debug)
+        SDL::cout << "SDL::Event::createTrackletsWithModuleMap()" << std::endl;
+
     // Loop over lower modules
+    int nModuleProcessed = 0;
+    int nTotalLowerModule = getLowerModulePtrs().size();
+
+    if (logLevel_ == SDL::Log_Debug)
+        SDL::cout <<  " nTotalLowerModule: " << nTotalLowerModule <<  std::endl;
+
     for (auto& lowerModulePtr : getLowerModulePtrs())
     {
+
+        if (logLevel_ == SDL::Log_Debug)
+            if (nModuleProcessed % 1000 == 0)
+                SDL::cout <<  "    nModuleProcessed: " << nModuleProcessed <<  std::endl;
+
+        if (logLevel_ == SDL::Log_Debug)
+        {
+            std::cout <<  " lowerModulePtr->subdet(): " << lowerModulePtr->subdet() <<  std::endl;
+            std::cout <<  " lowerModulePtr->layer(): " << lowerModulePtr->layer() <<  std::endl;
+            std::cout <<  " lowerModulePtr->getSegmentPtrs().size(): " << lowerModulePtr->getSegmentPtrs().size() <<  std::endl;
+        }
 
         // if (lowerModulePtr->layer() != 1)
         //     continue;
 
         // Create mini doublets
         createTrackletsFromInnerLowerModule(lowerModulePtr->detId(), algo);
+
+        nModuleProcessed++;
 
     }
 }
@@ -695,15 +717,38 @@ void SDL::Event::createTrackletsFromInnerLowerModule(unsigned int detId, SDL::TL
 // Create tracklets
 void SDL::Event::createTrackletsWithAGapWithModuleMap(TLAlgo algo)
 {
+    if (logLevel_ == SDL::Log_Debug)
+        SDL::cout << "SDL::Event::createTrackletsWithAGapWithModuleMap()" << std::endl;
+
+    // Loop over lower modules
+    int nModuleProcessed = 0;
+    int nTotalLowerModule = getLowerModulePtrs().size();
+
+    if (logLevel_ == SDL::Log_Debug)
+        SDL::cout <<  " nTotalLowerModule: " << nTotalLowerModule <<  std::endl;
+
     // Loop over lower modules
     for (auto& lowerModulePtr : getLowerModulePtrs())
     {
+
+        if (logLevel_ == SDL::Log_Debug)
+            if (nModuleProcessed % 1000 == 0)
+                SDL::cout <<  "    nModuleProcessed: " << nModuleProcessed <<  std::endl;
+
+        if (logLevel_ == SDL::Log_Debug)
+        {
+            std::cout <<  " lowerModulePtr->subdet(): " << lowerModulePtr->subdet() <<  std::endl;
+            std::cout <<  " lowerModulePtr->layer(): " << lowerModulePtr->layer() <<  std::endl;
+            std::cout <<  " lowerModulePtr->getSegmentPtrs().size(): " << lowerModulePtr->getSegmentPtrs().size() <<  std::endl;
+        }
 
         // if (lowerModulePtr->layer() != 1)
         //     continue;
 
         // Create mini doublets
         createTrackletsWithAGapFromInnerLowerModule(lowerModulePtr->detId(), algo);
+
+        nModuleProcessed++;
 
     }
 }

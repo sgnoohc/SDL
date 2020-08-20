@@ -784,7 +784,8 @@ float SDL::MiniDoublet::dPhiThreshold(const SDL::Hit& lowerHit, const SDL::Modul
 
     // Compute luminous region requirement for endcap
     const float deltaZLum = 15.f;
-    const float miniLum = abs(dPhi * deltaZLum/dz); // Balaji's new error
+    // const float miniLum = abs(dPhi * deltaZLum/dz); // Balaji's new error
+    const float miniLum = fabs(dPhi * deltaZLum/dz); // Balaji's new error
     // const float miniLum = abs(deltaZLum / lowerHit.z()); // Old error
 
 
