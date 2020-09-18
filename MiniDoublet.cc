@@ -211,6 +211,13 @@ void SDL::MiniDoublet::runMiniDoubletAlgo(SDL::MDAlgo algo, SDL::LogLevel logLev
     }
     else if (algo == SDL::Default_MDAlgo)
     {
+
+        // Set relevant variables
+        setRecoVars("miniCut", -999);
+        setRecoVars("dzCut", -999);
+        setRecoVars("drt", -999);
+        setRecoVars("drtCut", -999);
+
         runMiniDoubletDefaultAlgo(logLevel);
     }
     else
@@ -232,10 +239,12 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgo(SDL::LogLevel logLevel)
 
     if (lowerModule.subdet() == SDL::Module::Barrel)
     {
+        setRecoVars("type", 0);
         runMiniDoubletDefaultAlgoBarrel(logLevel);
     }
     else
     {
+        setRecoVars("type", 1);
         runMiniDoubletDefaultAlgoEndcap(logLevel);
     }
 }
@@ -271,6 +280,7 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoBarrel(SDL::LogLevel logLevel)
     // const bool isNotInvertedCrosser = lowerModule.moduleType() == SDL::Module::PS ? true : (lowerHit.z() * dz > 0); // Not used as this saves very little on combinatorics. but could be something we can add back later
     const float sign = ((dz > 0) - (dz < 0)) * ((lowerHit.z() > 0) - (lowerHit.z() < 0));
     const float invertedcrossercut = (abs(dz) > 2) * sign;
+    setRecoVars("dzCut", dzCut);
     if (not (std::abs(dz) < dzCut and invertedcrossercut <= 0)) // Adding inverted crosser rejection
     //*
 
@@ -501,6 +511,8 @@ void SDL::MiniDoublet::runMiniDoubletDefaultAlgoEndcap(SDL::LogLevel logLevel)
     // Ref to original code: https://github.com/slava77/cms-tkph2-ntuple/blob/184d2325147e6930030d3d1f780136bc2dd29ce6/doubletAnalysis.C#L3100
     const float drtCut = lowerModule.moduleType() == SDL::Module::PS ? 2.f : 10.f;
     float drt = std::abs(lowerHit.rt() - upperHit.rt());
+    setRecoVars("drt", drt);
+    setRecoVars("drtCut", drtCut);
     if (not (drt < drtCut)) // If cut fails continue
     {
         if (logLevel >= SDL::Log_Debug2)

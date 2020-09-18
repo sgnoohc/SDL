@@ -50,6 +50,8 @@ namespace SDL
             enum TripletSelection
             {
                 commonSegment = 0,
+                deltaZ,
+                deltaZPointed,
                 tracklet,
                 nCut
             };
@@ -73,6 +75,13 @@ namespace SDL
 
             // The default algorithms
             void runTripletDefaultAlgo(SDL::LogLevel logLevel);
+
+            // Pointing constraints in r-z space
+            bool passPointingConstraint(SDL::LogLevel logLevel);
+            bool passPointingConstraintBarrelBarrelBarrel(SDL::LogLevel logLevel);
+            bool passPointingConstraintBarrelBarrelEndcap(SDL::LogLevel logLevel);
+            bool passPointingConstraintBarrelEndcapEndcap(SDL::LogLevel logLevel);
+            bool passPointingConstraintEndcapEndcapEndcap(SDL::LogLevel logLevel);
 
     };
 

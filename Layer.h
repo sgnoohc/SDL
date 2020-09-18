@@ -51,7 +51,7 @@ namespace SDL
         private:
 
             // which layer this is
-            int layer_idx_;
+            int layer_idx_; // 1 2 3 4 5 6 for barrel, 1 2 3 4 5 for endcap
 
         public:
             enum SubDet

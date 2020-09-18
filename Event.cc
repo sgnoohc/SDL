@@ -830,6 +830,130 @@ void SDL::Event::createTrackletsWithAGapFromInnerLowerModule(unsigned int detId,
 
 }
 
+// Create tracklets
+void SDL::Event::createTrackletsWithTwoGapsWithModuleMap(TLAlgo algo)
+{
+    if (logLevel_ == SDL::Log_Debug)
+        SDL::cout << "SDL::Event::createTrackletsWithTwoGapsWithModuleMap()" << std::endl;
+
+    // Loop over lower modules
+    int nModuleProcessed = 0;
+    int nTotalLowerModule = getLowerModulePtrs().size();
+
+    if (logLevel_ == SDL::Log_Debug)
+        SDL::cout <<  " nTotalLowerModule: " << nTotalLowerModule <<  std::endl;
+
+    // Loop over lower modules
+    for (auto& lowerModulePtr : getLowerModulePtrs())
+    {
+
+        if (logLevel_ == SDL::Log_Debug)
+            if (nModuleProcessed % 1000 == 0)
+                SDL::cout <<  "    nModuleProcessed: " << nModuleProcessed <<  std::endl;
+
+        if (logLevel_ == SDL::Log_Debug)
+        {
+            std::cout <<  " lowerModulePtr->subdet(): " << lowerModulePtr->subdet() <<  std::endl;
+            std::cout <<  " lowerModulePtr->layer(): " << lowerModulePtr->layer() <<  std::endl;
+            std::cout <<  " lowerModulePtr->getSegmentPtrs().size(): " << lowerModulePtr->getSegmentPtrs().size() <<  std::endl;
+        }
+
+        // if (lowerModulePtr->layer() != 1)
+        //     continue;
+
+        // Create mini doublets
+        createTrackletsWithTwoGapsFromInnerLowerModule(lowerModulePtr->detId(), algo);
+
+        nModuleProcessed++;
+
+    }
+}
+
+// Create tracklets from inner modules
+void SDL::Event::createTrackletsWithTwoGapsFromInnerLowerModule(unsigned int detId, SDL::TLAlgo algo)
+{
+
+    // Get reference to the inner lower Module
+    Module& innerLowerModule = getModule(detId);
+
+    // Triple nested loops
+    // Loop over inner lower module for segments
+    for (auto& innerSegmentPtr : innerLowerModule.getSegmentPtrs())
+    {
+
+        // Get reference to segment in inner lower module
+        SDL::Segment& innerSegment = *innerSegmentPtr;
+
+        // Get the outer mini-doublet module detId
+        const SDL::Module& innerSegmentOuterModule = innerSegment.outerMiniDoubletPtr()->lowerHitPtr()->getModule();
+
+        unsigned int innerSegmentOuterModuleDetId = innerSegmentOuterModule.detId();
+
+        // Get connected middle module detids
+        const std::vector<unsigned int>& connectedMiddleModuleDetIds = moduleConnectionMap.getConnectedModuleDetIds(innerSegmentOuterModuleDetId);
+
+        for (auto& middleLowerModuleDetId : connectedMiddleModuleDetIds)
+        {
+
+            // Get connected second middle module detids
+            const std::vector<unsigned int>& connectedMiddle2ModuleDetIds = moduleConnectionMap.getConnectedModuleDetIds(middleLowerModuleDetId);
+
+            for (auto& middle2LowerModuleDetId : connectedMiddle2ModuleDetIds)
+            {
+
+                // Get connected outer lower module detids
+                const std::vector<unsigned int>& connectedModuleDetIds = moduleConnectionMap.getConnectedModuleDetIds(middle2LowerModuleDetId);
+
+                // Loop over connected outer lower modules
+                for (auto& outerLowerModuleDetId : connectedModuleDetIds)
+                {
+
+                    if (not hasModule(outerLowerModuleDetId))
+                        continue;
+
+                    // Get reference to the outer lower module
+                    Module& outerLowerModule = getModule(outerLowerModuleDetId);
+
+                    // Loop over outer lower module mini-doublets
+                    for (auto& outerSegmentPtr : outerLowerModule.getSegmentPtrs())
+                    {
+
+                        // Count the # of tlCands considered by layer
+                        incrementNumberOfTrackletCandidates(innerLowerModule);
+
+                        // Get reference to mini-doublet in outer lower module
+                        SDL::Segment& outerSegment = *outerSegmentPtr;
+
+                        // Create a tracklet candidate
+                        SDL::Tracklet tlCand(innerSegmentPtr, outerSegmentPtr);
+
+                        // Run segment algorithm on tlCand (tracklet candidate)
+                        tlCand.runTrackletAlgo(algo, logLevel_);
+
+                        if (tlCand.passesTrackletAlgo(algo))
+                        {
+
+                            // Count the # of sg formed by layer
+                            incrementNumberOfTracklets(innerLowerModule);
+
+                            if (innerLowerModule.subdet() == SDL::Module::Barrel)
+                                addTrackletToEvent(tlCand, innerLowerModule.detId(), innerLowerModule.layer(), SDL::Layer::Barrel);
+                            else
+                                addTrackletToEvent(tlCand, innerLowerModule.detId(), innerLowerModule.layer(), SDL::Layer::Endcap);
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    }
+
+}
+
 // Create tracklets via navigation
 void SDL::Event::createTrackletsViaNavigation(SDL::TLAlgo algo)
 {
@@ -1176,6 +1300,581 @@ void SDL::Event::createTrackCandidatesFromInnerModulesFromTracklets(unsigned int
                 SDL::TrackCandidate tcCand(innerTrackletPtr, outerTrackletPtr);
 
                 tcCand.runTrackCandidateAlgo(algo, logLevel_);
+
+                // Count the # of track candidates considered
+                incrementNumberOfTrackCandidateCandidates(innerLowerModule);
+
+                if (tcCand.passesTrackCandidateAlgo(algo))
+                {
+
+                    // Count the # of track candidates considered
+                    incrementNumberOfTrackCandidates(innerLowerModule);
+
+                    if (innerLowerModule.subdet() == SDL::Module::Barrel)
+                        addTrackCandidateToLowerLayer(tcCand, innerLowerModule.layer(), SDL::Layer::Barrel);
+                    else
+                        addTrackCandidateToLowerLayer(tcCand, innerLowerModule.layer(), SDL::Layer::Endcap);
+                }
+
+            }
+
+        }
+
+    }
+
+}
+
+void SDL::Event::createTrackCandidatesTest_v1(SDL::TCAlgo algo)
+{
+
+    // August 31, 2020 Considering only the following kinds of track candidates in barrel
+    // - 1 2 3 4 + 3 4 5 6  : 0 missing
+    // - 1 2 3 4 + 3 4 5    : 6 missing
+    // - 1 2 4 5 + 4 5 6    : 3 missing
+    // - 2 3 4 5 + 4 5 6    : 1 missing
+    // - 1 2 3 + 2 3 5 6    : 4 missing
+    // 2 and 5 missing not done at this point
+
+    const SDL::Layer& barrelLayer1 = getLayer(1, SDL::Layer::Barrel);
+    const SDL::Layer& barrelLayer2 = getLayer(2, SDL::Layer::Barrel);
+    const SDL::Layer& barrelLayer3 = getLayer(3, SDL::Layer::Barrel);
+    const SDL::Layer& barrelLayer4 = getLayer(4, SDL::Layer::Barrel);
+    const SDL::Layer& barrelLayer5 = getLayer(5, SDL::Layer::Barrel);
+    const SDL::Layer& barrelLayer6 = getLayer(6, SDL::Layer::Barrel);
+
+    for (auto& innerTrackletPtr : barrelLayer1.getTrackletPtrs())
+    {
+
+        // Check if it is a barrel only tracklet
+        bool isBBBB =
+        ((innerTrackletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel) and
+        ((innerTrackletPtr->innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel) and
+        ((innerTrackletPtr->outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel) and
+        ((innerTrackletPtr->outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel);
+
+        bool is1234 = 
+        ((innerTrackletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 1) and
+        ((innerTrackletPtr->innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 2) and
+        ((innerTrackletPtr->outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 3) and
+        ((innerTrackletPtr->outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 4);
+
+        bool is1245 = 
+        ((innerTrackletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 1) and
+        ((innerTrackletPtr->innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 2) and
+        ((innerTrackletPtr->outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 4) and
+        ((innerTrackletPtr->outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 5);
+
+        if (isBBBB and is1234)
+        {
+
+            // Get reference to the inner lower Module
+            Module& innerLowerModule = getModule((innerTrackletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->lowerHitPtr()->getModule()).detId());
+
+            unsigned int innerTrackletModule2 = (innerTrackletPtr->innerSegmentPtr()->outerMiniDoubletPtr()->lowerHitPtr()->getModule()).detId();
+            unsigned int innerTrackletModule3 = (innerTrackletPtr->outerSegmentPtr()->innerMiniDoubletPtr()->lowerHitPtr()->getModule()).detId();
+
+            // Get reference to the outer lower module
+            Module& outerLowerModule = getModule(innerTrackletModule3);
+
+            // Loop over outer lower module Tracklets
+            for (auto& outerTrackletPtr : outerLowerModule.getTrackletPtrs())
+            {
+
+                // Check if it is a barrel only tracklet
+                bool isOuterBBBB =
+                    ((outerTrackletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel) and
+                    ((outerTrackletPtr->innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel) and
+                    ((outerTrackletPtr->outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel) and
+                    ((outerTrackletPtr->outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel);
+
+                // Check if it is a barrel only tracklet
+                bool isOuter3456 =
+                    ((outerTrackletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 3) and
+                    ((outerTrackletPtr->innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 4) and
+                    ((outerTrackletPtr->outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 5) and
+                    ((outerTrackletPtr->outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 6);
+
+                if (not (isOuterBBBB and isOuter3456))
+                {
+                    continue;
+                }
+
+                SDL::Tracklet& outerTracklet = *outerTrackletPtr;
+
+                //============================================================
+                //
+                //
+                // Type 1: 1 2 3 4 + 3 4 5 6 : no layer missing
+                //
+                //
+                //============================================================
+                SDL::TrackCandidate tcCand(innerTrackletPtr, outerTrackletPtr);
+
+                tcCand.runTrackCandidateAlgo(algo, logLevel_);
+
+                // Count the # of track candidates considered
+                incrementNumberOfTrackCandidateCandidates(innerLowerModule);
+
+                if (tcCand.passesTrackCandidateAlgo(algo))
+                {
+
+                    // Count the # of track candidates considered
+                    incrementNumberOfTrackCandidates(innerLowerModule);
+
+                    if (innerLowerModule.subdet() == SDL::Module::Barrel)
+                        addTrackCandidateToLowerLayer(tcCand, innerLowerModule.layer(), SDL::Layer::Barrel);
+                    else
+                        addTrackCandidateToLowerLayer(tcCand, innerLowerModule.layer(), SDL::Layer::Endcap);
+                }
+
+            }
+
+            // Loop over outer lower triplets
+            for (auto& outerTripletPtr : outerLowerModule.getTripletPtrs())
+            {
+
+                // Check if it is a barrel only triplet
+                bool isOuterBBB =
+                    ((outerTripletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel) and
+                    ((outerTripletPtr->innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel) and
+                    ((outerTripletPtr->outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel);
+
+                // Check if it is a barrel only triplet
+                bool isOuter345 =
+                    ((outerTripletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 3) and
+                    ((outerTripletPtr->innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 4) and
+                    ((outerTripletPtr->outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 5);
+
+                if (not (isOuterBBB and isOuter345))
+                {
+                    continue;
+                }
+
+                SDL::Triplet& outerTriplet = *outerTripletPtr;
+
+                //============================================================
+                //
+                //
+                // Type 1: 1 2 3 4 + 3 4 5   : layer 6 is missing
+                //
+                //
+                //============================================================
+                SDL::TrackCandidate tcCand(innerTrackletPtr, outerTripletPtr);
+
+                tcCand.runTrackCandidateInnerTrackletToOuterTriplet(logLevel_);
+
+                // Count the # of track candidates considered
+                incrementNumberOfTrackCandidateCandidates(innerLowerModule);
+
+                if (tcCand.passesTrackCandidateAlgo(algo))
+                {
+
+                    // Count the # of track candidates considered
+                    incrementNumberOfTrackCandidates(innerLowerModule);
+
+                    if (innerLowerModule.subdet() == SDL::Module::Barrel)
+                        addTrackCandidateToLowerLayer(tcCand, innerLowerModule.layer(), SDL::Layer::Barrel);
+                    else
+                        addTrackCandidateToLowerLayer(tcCand, innerLowerModule.layer(), SDL::Layer::Endcap);
+                }
+
+            }
+
+
+        }
+        else if (isBBBB and is1245)
+        {
+
+            // Get reference to the inner lower Module
+            Module& innerLowerModule = getModule((innerTrackletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->lowerHitPtr()->getModule()).detId());
+
+            unsigned int innerTrackletModule2 = (innerTrackletPtr->innerSegmentPtr()->outerMiniDoubletPtr()->lowerHitPtr()->getModule()).detId();
+            unsigned int innerTrackletModule3 = (innerTrackletPtr->outerSegmentPtr()->innerMiniDoubletPtr()->lowerHitPtr()->getModule()).detId();
+
+            // Get reference to the outer lower module
+            Module& outerLowerModule = getModule(innerTrackletModule3);
+
+            // Loop over outer lower triplets
+            for (auto& outerTripletPtr : outerLowerModule.getTripletPtrs())
+            {
+
+                // Check if it is a barrel only triplet
+                bool isOuterBBB =
+                    ((outerTripletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel) and
+                    ((outerTripletPtr->innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel) and
+                    ((outerTripletPtr->outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel);
+
+                // Check if it is a barrel only triplet
+                bool isOuter456 =
+                    ((outerTripletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 4) and
+                    ((outerTripletPtr->innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 5) and
+                    ((outerTripletPtr->outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 6);
+
+                if (not (isOuterBBB and isOuter456))
+                {
+                    continue;
+                }
+
+                SDL::Triplet& outerTriplet = *outerTripletPtr;
+
+                //============================================================
+                //
+                //
+                // Type 1: 1 2 4 5 + 4 5 6   : layer 3 is missing
+                //
+                //
+                //============================================================
+                SDL::TrackCandidate tcCand(innerTrackletPtr, outerTripletPtr);
+
+                tcCand.runTrackCandidateInnerTrackletToOuterTriplet(logLevel_);
+
+                // Count the # of track candidates considered
+                incrementNumberOfTrackCandidateCandidates(innerLowerModule);
+
+                if (tcCand.passesTrackCandidateAlgo(algo))
+                {
+
+                    // Count the # of track candidates considered
+                    incrementNumberOfTrackCandidates(innerLowerModule);
+
+                    if (innerLowerModule.subdet() == SDL::Module::Barrel)
+                        addTrackCandidateToLowerLayer(tcCand, innerLowerModule.layer(), SDL::Layer::Barrel);
+                    else
+                        addTrackCandidateToLowerLayer(tcCand, innerLowerModule.layer(), SDL::Layer::Endcap);
+                }
+
+            }
+
+        }
+
+    }
+
+    for (auto& innerTrackletPtr : barrelLayer2.getTrackletPtrs())
+    {
+
+        // Check if it is a barrel only tracklet
+        bool isBBBB =
+        ((innerTrackletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel) and
+        ((innerTrackletPtr->innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel) and
+        ((innerTrackletPtr->outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel) and
+        ((innerTrackletPtr->outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel);
+
+        bool is2345 = 
+        ((innerTrackletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 2) and
+        ((innerTrackletPtr->innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 3) and
+        ((innerTrackletPtr->outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 4) and
+        ((innerTrackletPtr->outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 5);
+
+        if (isBBBB and is2345)
+        {
+
+            // Get reference to the inner lower Module
+            Module& innerLowerModule = getModule((innerTrackletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->lowerHitPtr()->getModule()).detId());
+
+            unsigned int innerTrackletModule2 = (innerTrackletPtr->innerSegmentPtr()->outerMiniDoubletPtr()->lowerHitPtr()->getModule()).detId();
+            unsigned int innerTrackletModule3 = (innerTrackletPtr->outerSegmentPtr()->innerMiniDoubletPtr()->lowerHitPtr()->getModule()).detId();
+
+            // Get reference to the outer lower module
+            Module& outerLowerModule = getModule(innerTrackletModule3);
+
+            // Loop over outer lower triplets
+            for (auto& outerTripletPtr : outerLowerModule.getTripletPtrs())
+            {
+
+                // Check if it is a barrel only triplet
+                bool isOuterBBB =
+                    ((outerTripletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel) and
+                    ((outerTripletPtr->innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel) and
+                    ((outerTripletPtr->outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel);
+
+                // Check if it is a barrel only triplet
+                bool isOuter456 =
+                    ((outerTripletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 4) and
+                    ((outerTripletPtr->innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 5) and
+                    ((outerTripletPtr->outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 6);
+
+                if (not (isOuterBBB and isOuter456))
+                {
+                    continue;
+                }
+
+                SDL::Triplet& outerTriplet = *outerTripletPtr;
+
+                //============================================================
+                //
+                //
+                // Type 1: 2 3 4 5 + 4 5 6   : layer 1 is missing
+                //
+                //
+                //============================================================
+                SDL::TrackCandidate tcCand(innerTrackletPtr, outerTripletPtr);
+
+                tcCand.runTrackCandidateInnerTrackletToOuterTriplet(logLevel_);
+
+                // Count the # of track candidates considered
+                incrementNumberOfTrackCandidateCandidates(innerLowerModule);
+
+                if (tcCand.passesTrackCandidateAlgo(algo))
+                {
+
+                    // Count the # of track candidates considered
+                    incrementNumberOfTrackCandidates(innerLowerModule);
+
+                    if (innerLowerModule.subdet() == SDL::Module::Barrel)
+                        addTrackCandidateToLowerLayer(tcCand, innerLowerModule.layer(), SDL::Layer::Barrel);
+                    else
+                        addTrackCandidateToLowerLayer(tcCand, innerLowerModule.layer(), SDL::Layer::Endcap);
+                }
+
+            }
+
+        }
+
+    }
+
+    for (auto& innerTripletPtr : barrelLayer1.getTripletPtrs())
+    {
+
+        // Check if it is a barrel only tracklet
+        bool isBBB =
+        ((innerTripletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel) and
+        ((innerTripletPtr->innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel) and
+        ((innerTripletPtr->outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel);
+
+        bool is123 = 
+        ((innerTripletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 1) and
+        ((innerTripletPtr->innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 2) and
+        ((innerTripletPtr->outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 3);
+
+        if (isBBB and is123)
+        {
+
+            // Get reference to the inner lower Module
+            Module& innerLowerModule = getModule((innerTripletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->lowerHitPtr()->getModule()).detId());
+
+            // unsigned int innerTripletModule2 = (innerTripletPtr->innerSegmentPtr()->outerMiniDoubletPtr()->lowerHitPtr()->getModule()).detId();
+            unsigned int innerTripletModule2 = (innerTripletPtr->outerSegmentPtr()->innerMiniDoubletPtr()->lowerHitPtr()->getModule()).detId();
+
+            // Get reference to the outer lower module
+            Module& outerLowerModule = getModule(innerTripletModule2);
+
+            // Loop over outer lower triplets
+            for (auto& outerTrackletPtr : outerLowerModule.getTrackletPtrs())
+            {
+
+                // Check if it is a barrel only triplet
+                bool isOuterBBBB =
+                    ((outerTrackletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel) and
+                    ((outerTrackletPtr->innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel) and
+                    ((outerTrackletPtr->outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel) and
+                    ((outerTrackletPtr->outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel);
+
+                // Check if it is a barrel only triplet
+                bool isOuter2356 =
+                    ((outerTrackletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 2) and
+                    ((outerTrackletPtr->innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 3) and
+                    ((outerTrackletPtr->outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 5) and
+                    ((outerTrackletPtr->outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 6);
+
+                if (not (isOuterBBBB and isOuter2356))
+                {
+                    continue;
+                }
+
+                SDL::Tracklet& outerTracklet = *outerTrackletPtr;
+
+                //============================================================
+                //
+                //
+                // Type 1: 2 3 4 5 + 4 5 6   : layer 1 is missing
+                //
+                //
+                //============================================================
+                SDL::TrackCandidate tcCand(innerTripletPtr, outerTrackletPtr);
+
+                tcCand.runTrackCandidateInnerTripletToOuterTracklet(logLevel_);
+
+                // Count the # of track candidates considered
+                incrementNumberOfTrackCandidateCandidates(innerLowerModule);
+
+                if (tcCand.passesTrackCandidateAlgo(algo))
+                {
+
+                    // Count the # of track candidates considered
+                    incrementNumberOfTrackCandidates(innerLowerModule);
+
+                    if (innerLowerModule.subdet() == SDL::Module::Barrel)
+                        addTrackCandidateToLowerLayer(tcCand, innerLowerModule.layer(), SDL::Layer::Barrel);
+                    else
+                        addTrackCandidateToLowerLayer(tcCand, innerLowerModule.layer(), SDL::Layer::Endcap);
+                }
+
+            }
+
+        }
+
+    }
+
+    for (auto& innerTripletPtr : barrelLayer2.getTripletPtrs())
+    {
+
+        // Check if it is a barrel only tracklet
+        bool isBBB =
+        ((innerTripletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel) and
+        ((innerTripletPtr->innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel) and
+        ((innerTripletPtr->outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel);
+
+        bool is234 = 
+        ((innerTripletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 2) and
+        ((innerTripletPtr->innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 3) and
+        ((innerTripletPtr->outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 4);
+
+        if (isBBB and is234)
+        {
+
+            // Get reference to the inner lower Module
+            Module& innerLowerModule = getModule((innerTripletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->lowerHitPtr()->getModule()).detId());
+
+            // unsigned int innerTripletModule2 = (innerTripletPtr->innerSegmentPtr()->outerMiniDoubletPtr()->lowerHitPtr()->getModule()).detId();
+            unsigned int innerTripletModule2 = (innerTripletPtr->outerSegmentPtr()->innerMiniDoubletPtr()->lowerHitPtr()->getModule()).detId();
+
+            // Get reference to the outer lower module
+            Module& outerLowerModule = getModule(innerTripletModule2);
+
+            // Loop over outer lower triplets
+            for (auto& outerTrackletPtr : outerLowerModule.getTrackletPtrs())
+            {
+
+                // Check if it is a barrel only triplet
+                bool isOuterBBBB =
+                    ((outerTrackletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel) and
+                    ((outerTrackletPtr->innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel) and
+                    ((outerTrackletPtr->outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel) and
+                    ((outerTrackletPtr->outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).subdet() == SDL::Module::Barrel);
+
+                // Check if it is a barrel only triplet
+                bool isOuter3456 =
+                    ((outerTrackletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 3) and
+                    ((outerTrackletPtr->innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 4) and
+                    ((outerTrackletPtr->outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 5) and
+                    ((outerTrackletPtr->outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule()).layer() == 6);
+
+                if (not (isOuterBBBB and isOuter3456))
+                {
+                    continue;
+                }
+
+                SDL::Tracklet& outerTracklet = *outerTrackletPtr;
+
+                //============================================================
+                //
+                //
+                // Type 1: 2 3 4 5 + 4 5 6   : layer 1 is missing
+                //
+                //
+                //============================================================
+                SDL::TrackCandidate tcCand(innerTripletPtr, outerTrackletPtr);
+
+                tcCand.runTrackCandidateInnerTripletToOuterTracklet(logLevel_);
+
+                // Count the # of track candidates considered
+                incrementNumberOfTrackCandidateCandidates(innerLowerModule);
+
+                if (tcCand.passesTrackCandidateAlgo(algo))
+                {
+
+                    // Count the # of track candidates considered
+                    incrementNumberOfTrackCandidates(innerLowerModule);
+
+                    if (innerLowerModule.subdet() == SDL::Module::Barrel)
+                        addTrackCandidateToLowerLayer(tcCand, innerLowerModule.layer(), SDL::Layer::Barrel);
+                    else
+                        addTrackCandidateToLowerLayer(tcCand, innerLowerModule.layer(), SDL::Layer::Endcap);
+                }
+
+            }
+
+        }
+
+    }
+
+}
+
+void SDL::Event::createTrackCandidatesTest_v2(SDL::TCAlgo algo)
+{
+
+    // September 10, 2020 Consider ALL cases
+    // Loop over all tracklets, a-b-c-d go to c then get tracklets or triplets and ask whether segment is shared
+    // Ditto for Triplet -> Tracklet
+    for (auto& layerPtr : getLayerPtrs())
+    {
+
+        for (auto& innerTrackletPtr : layerPtr->getTrackletPtrs())
+        {
+            SDL::Module& innerLowerModule = getModule(innerTrackletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->lowerHitPtr()->getModule().detId());
+            const SDL::Module& commonModule = innerTrackletPtr->outerSegmentPtr()->innerMiniDoubletPtr()->lowerHitPtr()->getModule();
+
+            for (auto& outerTrackletPtr : commonModule.getTrackletPtrs())
+            {
+
+                SDL::TrackCandidate tcCand(innerTrackletPtr, outerTrackletPtr);
+
+                tcCand.runTrackCandidateAlgo(algo, logLevel_);
+
+                // Count the # of track candidates considered
+                incrementNumberOfTrackCandidateCandidates(innerLowerModule);
+
+                if (tcCand.passesTrackCandidateAlgo(algo))
+                {
+
+                    // Count the # of track candidates considered
+                    incrementNumberOfTrackCandidates(innerLowerModule);
+
+                    if (innerLowerModule.subdet() == SDL::Module::Barrel)
+                        addTrackCandidateToLowerLayer(tcCand, innerLowerModule.layer(), SDL::Layer::Barrel);
+                    else
+                        addTrackCandidateToLowerLayer(tcCand, innerLowerModule.layer(), SDL::Layer::Endcap);
+                }
+
+            }
+
+            for (auto& outerTripletPtr : commonModule.getTripletPtrs())
+            {
+
+                SDL::TrackCandidate tcCand(innerTrackletPtr, outerTripletPtr);
+
+                tcCand.runTrackCandidateInnerTrackletToOuterTriplet(logLevel_);
+
+                // Count the # of track candidates considered
+                incrementNumberOfTrackCandidateCandidates(innerLowerModule);
+
+                if (tcCand.passesTrackCandidateAlgo(algo))
+                {
+
+                    // Count the # of track candidates considered
+                    incrementNumberOfTrackCandidates(innerLowerModule);
+
+                    if (innerLowerModule.subdet() == SDL::Module::Barrel)
+                        addTrackCandidateToLowerLayer(tcCand, innerLowerModule.layer(), SDL::Layer::Barrel);
+                    else
+                        addTrackCandidateToLowerLayer(tcCand, innerLowerModule.layer(), SDL::Layer::Endcap);
+                }
+
+            }
+
+        }
+
+        for (auto& innerTripletPtr : layerPtr->getTripletPtrs())
+        {
+            SDL::Module& innerLowerModule = getModule(innerTripletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->lowerHitPtr()->getModule().detId());
+            const SDL::Module& commonModule = innerTripletPtr->outerSegmentPtr()->innerMiniDoubletPtr()->lowerHitPtr()->getModule();
+
+            for (auto& outerTrackletPtr : commonModule.getTrackletPtrs())
+            {
+
+                SDL::TrackCandidate tcCand(innerTripletPtr, outerTrackletPtr);
+
+                tcCand.runTrackCandidateInnerTripletToOuterTracklet(logLevel_);
 
                 // Count the # of track candidates considered
                 incrementNumberOfTrackCandidateCandidates(innerLowerModule);

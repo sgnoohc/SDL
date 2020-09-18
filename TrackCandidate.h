@@ -116,6 +116,9 @@ namespace SDL
             // Connecting inner tracklet to outer triplet with share segment
             void runTrackCandidateInnerTrackletToOuterTriplet(SDL::LogLevel logLevel);
 
+            // Connecting inner triplet to outer tracklet with share segment
+            void runTrackCandidateInnerTripletToOuterTracklet(SDL::LogLevel logLevel);
+
             bool isIdxMatched(const TrackCandidate&) const;
             bool isAnchorHitIdxMatched(const TrackCandidate&) const;
 
