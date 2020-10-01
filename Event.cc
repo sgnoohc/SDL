@@ -1,6 +1,6 @@
 #include "Event.h"
 
-SDL::Event::Event() : logLevel_(SDL::Log_Nothing)
+SDL::Event::Event() : logLevel_(SDL::Log_Nothing), pixelLayer_(0, 0)
 {
     createLayers();
     n_hits_by_layer_barrel_.fill(0);

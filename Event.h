@@ -28,6 +28,8 @@ namespace SDL
             // map of modules (this holds the actual instances)
             std::map<unsigned int, Module> modulesMapByDetId_;
 
+            Layer pixelLayer_;
+
             // map of barrel layers (this holds the actual instances)
             std::map<int, Layer> barrelLayers_;
 
@@ -208,6 +210,9 @@ namespace SDL
 
             // Hit related functions
             void addHitToModule(Hit hit, unsigned int detId);
+
+            // Hit related functions
+            void addPixelSegment(Segment sg);
 
             // MiniDoublet related functions
             void addMiniDoubletToEvent(SDL::MiniDoublet md, unsigned int detId, int layerIdx, SDL::Layer::SubDet subdet);

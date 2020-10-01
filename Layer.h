@@ -57,7 +57,8 @@ namespace SDL
             enum SubDet
             {
                 Barrel = 5,
-                Endcap = 4
+                Endcap = 4,
+                Pixel = 0
             };
 
         private:
