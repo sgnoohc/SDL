@@ -448,6 +448,8 @@ unsigned short SDL::Module::parseIsLower(unsigned int detId)
 
 bool SDL::Module::parseIsInverted(unsigned int detId)
 {
+    if (detId == 1) // "1" detId means "pixel module" where we store all pixel hits/mini/segments into one bucket
+        return 0;
     if (parseSubdet(detId) == SDL::Module::Endcap)
     {
         if (parseSide(detId) == SDL::Module::NegZ)

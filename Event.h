@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <cmath>
+#include <cassert>
 
 #include "Module.h"
 #include "Hit.h"
@@ -42,8 +43,14 @@ namespace SDL
             // list of hit_boundaries (this holds the actual instances) this is only used for the 2S in the endcap
             std::list<Hit> hits_2s_edges_;
 
+            // list of pixel hits (this holds the actual instances)
+            std::list<Hit> pixel_hits_;
+
             // list of MiniDoublets (this holds the actual instances)
             std::list<MiniDoublet> miniDoublets_;
+
+            // list of pixel "MiniDoublets" two layers together (this holds the actual instances)
+            std::list<MiniDoublet> pixel_miniDoublets_;
 
             // list of Segments (this holds the actual instances)
             std::list<Segment> segments_;
@@ -203,31 +210,29 @@ namespace SDL
             // Layer related functions
             void createLayers();
             Layer& getLayer(int layer, SDL::Layer::SubDet subdet);
+            Layer& getPixelLayer();
             const std::vector<Layer*> getLayerPtrs() const;
 
             // Set debug
             void setLogLevel(SDL::LogLevel logLevel=SDL::Log_Nothing);
 
             // Hit related functions
-            void addHitToModule(Hit hit, unsigned int detId);
-
-            // Hit related functions
-            void addPixelSegment(Segment sg);
+            void addHitToModule(SDL::Hit hit, unsigned int detId);
 
             // MiniDoublet related functions
             void addMiniDoubletToEvent(SDL::MiniDoublet md, unsigned int detId, int layerIdx, SDL::Layer::SubDet subdet);
 
             // MiniDoublet related functions
-            void addMiniDoubletToLowerModule(MiniDoublet md, unsigned int detId);
+            void addMiniDoubletToLowerModule(SDL::MiniDoublet md, unsigned int detId);
 
             // Segment related functions
             void addSegmentToEvent(SDL::Segment sg, unsigned int detId, int layerIdx, SDL::Layer::SubDet subdet);
 
             // Segment related functions
-            void addSegmentToLowerModule(Segment md, unsigned int detId);
+            void addSegmentToLowerModule(SDL::Segment sg, unsigned int detId);
 
             // Segment related functions
-            void addSegmentToLowerLayer(Segment md, int layerIdx, SDL::Layer::SubDet subdet);
+            void addSegmentToLowerLayer(SDL::Segment sg, int layerIdx, SDL::Layer::SubDet subdet);
 
             // Triplet related functions
             void addTripletToEvent(SDL::Triplet tp, unsigned int detId, int layerIdx, SDL::Layer::SubDet subdet);
@@ -236,10 +241,13 @@ namespace SDL
             void addTrackletToEvent(SDL::Tracklet tp, unsigned int detId, int layerIdx, SDL::Layer::SubDet subdet);
 
             // Tracklet related functions
-            void addTrackletToLowerLayer(Tracklet tl, int layerIdx, SDL::Layer::SubDet subdet);
+            void addTrackletToLowerLayer(SDL::Tracklet tl, int layerIdx, SDL::Layer::SubDet subdet);
 
             // TrackCandidate related functions
-            void addTrackCandidateToLowerLayer(TrackCandidate tc, int layerIdx, SDL::Layer::SubDet subdet);
+            void addTrackCandidateToLowerLayer(SDL::TrackCandidate tc, int layerIdx, SDL::Layer::SubDet subdet);
+
+            // Pixel Segments related functions
+            void addPixelSegmentsToEvent(std::vector<SDL::Hit> hits, float dPhiChange, float ptIn, float ptErr, float px, float py, float pz, float etaErr);
 
             // Create mini doublets
             void createMiniDoublets(MDAlgo algo=Default_MDAlgo);
@@ -294,6 +302,9 @@ namespace SDL
 
             // Create tracklets
             void createTrackletsViaNavigation(TLAlgo algo=Default_TLAlgo);
+
+            // Create tracklets with pixel to barrel
+            void createTrackletsWithPixelAndBarrel(TLAlgo algo=Default_TLAlgo);
 
             // Create trackcandidates
             void createTrackCandidates(TCAlgo algo=Default_TCAlgo);

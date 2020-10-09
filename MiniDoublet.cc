@@ -61,23 +61,30 @@ void SDL::MiniDoublet::setAnchorHit()
 {
     const SDL::Module& lowerModule = lowerHitPtr()->getModule();
 
-    // Assign anchor hit pointers based on their hit type
-    if (lowerModule.moduleType() == SDL::Module::PS)
+    if (lowerModule.isPixelLayerModule())
     {
-        if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
-        {
-            anchorHitPtr_ = lowerHitPtr();
-        }
-        else
-        {
-            anchorHitPtr_ = upperHitPtr();
-        }
+        anchorHitPtr_ = upperHitPtr();
     }
     else
     {
-        anchorHitPtr_ = lowerHitPtr();
-    }
 
+        // Assign anchor hit pointers based on their hit type
+        if (lowerModule.moduleType() == SDL::Module::PS)
+        {
+            if (lowerModule.moduleLayerType() == SDL::Module::Pixel)
+            {
+                anchorHitPtr_ = lowerHitPtr();
+            }
+            else
+            {
+                anchorHitPtr_ = upperHitPtr();
+            }
+        }
+        else
+        {
+            anchorHitPtr_ = lowerHitPtr();
+        }
+    }
 }
 
 SDL::Hit* SDL::MiniDoublet::lowerHitPtr() const

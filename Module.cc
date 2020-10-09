@@ -69,6 +69,11 @@ const bool& SDL::Module::isInverted() const
     return isInverted_;
 }
 
+const bool SDL::Module::isPixelLayerModule() const
+{
+    return (detId_ == 1);
+}
+
 const SDL::Module::ModuleType& SDL::Module::moduleType() const
 {
     return moduleType_;
@@ -238,6 +243,8 @@ unsigned short SDL::Module::parseIsLower(unsigned int detId)
 
 bool SDL::Module::parseIsInverted(unsigned int detId)
 {
+    if (detId == 1 or detId == 2) // "1" or "2" detId means "pixel module" where we store all pixel hits/mini/segments into one bucket
+        return 0;
     if (parseSubdet(detId) == SDL::Module::Endcap)
     {
         if (parseSide(detId) == SDL::Module::NegZ)
@@ -250,7 +257,7 @@ bool SDL::Module::parseIsInverted(unsigned int detId)
         }
         else
         {
-            SDL::cout << "Warning: parseIsInverted() categorization failed" << std::endl;
+            SDL::cout << "Warning: parseIsInverted() categorization failed: detId = " << detId << std::endl;
             return 0;
         }
     }
@@ -268,7 +275,7 @@ bool SDL::Module::parseIsInverted(unsigned int detId)
             }
             else
             {
-                SDL::cout << "Warning: parseIsInverted() categorization failed" << std::endl;
+                SDL::cout << "Warning: parseIsInverted() categorization failed: detId = " << detId << std::endl;
                 return 0;
             }
         }
@@ -284,19 +291,19 @@ bool SDL::Module::parseIsInverted(unsigned int detId)
             }
             else
             {
-                SDL::cout << "Warning: parseIsInverted() categorization failed" << std::endl;
+                SDL::cout << "Warning: parseIsInverted() categorization failed: detId = " << detId << std::endl;
                 return 0;
             }
         }
         else
         {
-            SDL::cout << "Warning: parseIsInverted() categorization failed" << std::endl;
+            SDL::cout << "Warning: parseIsInverted() categorization failed: detId = " << detId << std::endl;
             return 0;
         }
     }
     else
     {
-        SDL::cout << "Warning: parseIsInverted() categorization failed" << std::endl;
+        SDL::cout << "Warning: parseIsInverted() categorization failed: detId = " << detId << std::endl;
         return 0;
     }
 }

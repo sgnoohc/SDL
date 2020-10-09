@@ -112,6 +112,11 @@ SDL::Layer& SDL::Event::getLayer(int ilayer, SDL::Layer::SubDet subdet)
         return endcapLayers_[ilayer];
 }
 
+SDL::Layer& SDL::Event::getPixelLayer()
+{
+    return pixelLayer_;
+}
+
 const std::vector<SDL::Layer*> SDL::Event::getLayerPtrs() const
 {
     return layerPtrs_;
@@ -185,7 +190,10 @@ void SDL::Event::addTrackletToEvent(SDL::Tracklet tl, unsigned int detId, int la
     getModule(detId).addTracklet(&(tracklets_.back()));
 
     // And get the layer andd the segment to it
-    getLayer(layerIdx, subdet).addTracklet(&(tracklets_.back()));
+    if (layerIdx == 0)
+        getPixelLayer().addTracklet(&(tracklets_.back()));
+    else
+        getLayer(layerIdx, subdet).addTracklet(&(tracklets_.back()));
 
     // Link segments to mini-doublets
     tracklets_.back().addSelfPtrToSegments();
@@ -240,6 +248,56 @@ void SDL::Event::addTrackCandidateToLowerLayer(SDL::TrackCandidate tc, int layer
 
     // And get the layer
     getLayer(layerIdx, subdet).addTrackCandidate(&(trackcandidates_.back()));
+}
+
+void SDL::Event::addPixelSegmentsToEvent(std::vector<SDL::Hit> hits, float dPhiChange, float ptIn, float ptErr, float px, float py, float pz, float etaErr)
+{
+    // detId = 1 module means grand "pixel module" where everything related to pixel hits/md/segments will be stored to
+    Module& pixelModule = getModule(1);
+
+    // Assert that we provided a quadruplet pixel segment
+    assert(hits.size() == 4);
+    pixel_hits_.push_back(hits[0]);
+    SDL::Hit* hit0_ptr = &pixel_hits_.back();
+    pixel_hits_.push_back(hits[1]);
+    SDL::Hit* hit1_ptr = &pixel_hits_.back();
+    pixel_hits_.push_back(hits[2]);
+    SDL::Hit* hit2_ptr = &pixel_hits_.back();
+    pixel_hits_.push_back(hits[3]);
+    SDL::Hit* hit3_ptr = &pixel_hits_.back();
+
+    // Add hits to the pixel module
+    pixelModule.addHit(hit0_ptr);
+    pixelModule.addHit(hit1_ptr);
+    pixelModule.addHit(hit2_ptr);
+    pixelModule.addHit(hit3_ptr);
+
+    // Create MiniDoublets
+    SDL::MiniDoublet innerMiniDoublet(hit0_ptr, hit1_ptr);
+    SDL::MiniDoublet outerMiniDoublet(hit2_ptr, hit3_ptr);
+    // innerMiniDoublet.runMiniDoubletAllCombAlgo(); // Setting "all combination" pass in order to flag the pass bool flag
+    // outerMiniDoublet.runMiniDoubletAllCombAlgo(); // Setting "all combination" pass in order to flag the pass bool flag
+
+    pixel_miniDoublets_.push_back(innerMiniDoublet);
+    SDL::MiniDoublet* innerMiniDoubletPtr = &pixel_miniDoublets_.back();
+    pixel_miniDoublets_.push_back(outerMiniDoublet);
+    SDL::MiniDoublet* outerMiniDoubletPtr = &pixel_miniDoublets_.back();
+
+    // Create Segments
+    segments_.push_back(SDL::Segment(innerMiniDoubletPtr, outerMiniDoubletPtr));
+    SDL::Segment* pixelSegmentPtr = &segments_.back();
+
+    // Set the deltaPhiChange
+    pixelSegmentPtr->setDeltaPhiChange(dPhiChange);
+    pixelSegmentPtr->setRecoVars("ptIn", ptIn);
+    pixelSegmentPtr->setRecoVars("ptErr", ptErr);
+    pixelSegmentPtr->setRecoVars("px", px);
+    pixelSegmentPtr->setRecoVars("py", py);
+    pixelSegmentPtr->setRecoVars("pz", pz);
+    pixelSegmentPtr->setRecoVars("etaErr", etaErr);
+
+    getPixelLayer().addSegment(pixelSegmentPtr);
+
 }
 
 void SDL::Event::createMiniDoublets(MDAlgo algo)
@@ -1010,6 +1068,83 @@ void SDL::Event::createTrackletsViaNavigation(SDL::TLAlgo algo)
         }
     }
 
+}
+
+
+// Create tracklets with pixel to barrel
+void SDL::Event::createTrackletsWithPixelAndBarrel(TLAlgo algo)
+{
+    if (logLevel_ == SDL::Log_Debug)
+        SDL::cout << "SDL::Event::createTrackletsWithPixelAndBarrel()" << std::endl;
+
+    // Loop over lower modules
+    int nModuleProcessed = 0;
+    int nTotalLowerModule = getLowerModulePtrs().size();
+
+    if (logLevel_ == SDL::Log_Debug)
+        SDL::cout <<  " nTotalLowerModule: " << nTotalLowerModule <<  std::endl;
+
+    for (auto& lowerModulePtr : getLowerModulePtrs())
+    {
+
+        if (logLevel_ == SDL::Log_Debug)
+            if (nModuleProcessed % 1000 == 0)
+                SDL::cout <<  "    nModuleProcessed: " << nModuleProcessed <<  std::endl;
+
+        if (logLevel_ == SDL::Log_Debug)
+        {
+            std::cout <<  " lowerModulePtr->subdet(): " << lowerModulePtr->subdet() <<  std::endl;
+            std::cout <<  " lowerModulePtr->layer(): " << lowerModulePtr->layer() <<  std::endl;
+            std::cout <<  " lowerModulePtr->getSegmentPtrs().size(): " << lowerModulePtr->getSegmentPtrs().size() <<  std::endl;
+        }
+
+        // Get reference to the inner lower Module
+        Module& pixelModule = getModule(1);
+        Module& innerLowerModule = pixelModule;
+
+        // Triple nested loops
+        // Loop over inner lower module for segments
+        for (auto& innerSegmentPtr : getPixelLayer().getSegmentPtrs())
+        {
+
+            // Get reference to segment in inner lower module
+            SDL::Segment& innerSegment = *innerSegmentPtr;
+
+            // Get reference to the outer lower module
+            Module& outerLowerModule = *lowerModulePtr;
+
+            // Loop over outer lower module mini-doublets
+            for (auto& outerSegmentPtr : outerLowerModule.getSegmentPtrs())
+            {
+
+                // // Count the # of tlCands considered by layer
+                // incrementNumberOfTrackletCandidates(innerLowerModule);
+
+                // Get reference to mini-doublet in outer lower module
+                SDL::Segment& outerSegment = *outerSegmentPtr;
+
+                // Create a tracklet candidate
+                SDL::Tracklet tlCand(innerSegmentPtr, outerSegmentPtr);
+
+                // Run segment algorithm on tlCand (tracklet candidate)
+                tlCand.runTrackletAlgo(algo, logLevel_);
+
+                if (tlCand.passesTrackletAlgo(algo))
+                {
+
+                    // Count the # of sg formed by layer
+                    incrementNumberOfTracklets(innerLowerModule);
+
+                    addTrackletToEvent(tlCand, 1/*pixel module=1*/, 0/*pixel is layer=0*/, SDL::Layer::Barrel);
+                }
+
+            }
+
+        }
+
+        nModuleProcessed++;
+
+    }
 }
 
 

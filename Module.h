@@ -268,6 +268,7 @@ namespace SDL
             const unsigned short& module() const;
             const unsigned short& isLower() const;
             const bool& isInverted() const;
+            const bool isPixelLayerModule() const;
             const ModuleType& moduleType() const;
             const ModuleLayerType& moduleLayerType() const;
             const std::vector<Hit*>& getHitPtrs() const;
