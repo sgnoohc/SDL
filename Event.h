@@ -247,7 +247,7 @@ namespace SDL
             void addTrackCandidateToLowerLayer(SDL::TrackCandidate tc, int layerIdx, SDL::Layer::SubDet subdet);
 
             // Pixel Segments related functions
-            void addPixelSegmentsToEvent(std::vector<SDL::Hit> hits, float dPhiChange, float ptIn, float ptErr, float px, float py, float pz, float etaErr);
+            void addPixelSegmentsToEvent(std::vector<SDL::Hit> hits, float dPhiChange, float ptIn, float ptErr, float px, float py, float pz, float etaErr, int iSeed);
 
             // Create mini doublets
             void createMiniDoublets(MDAlgo algo=Default_MDAlgo);

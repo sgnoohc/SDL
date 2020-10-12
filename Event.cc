@@ -250,7 +250,7 @@ void SDL::Event::addTrackCandidateToLowerLayer(SDL::TrackCandidate tc, int layer
     getLayer(layerIdx, subdet).addTrackCandidate(&(trackcandidates_.back()));
 }
 
-void SDL::Event::addPixelSegmentsToEvent(std::vector<SDL::Hit> hits, float dPhiChange, float ptIn, float ptErr, float px, float py, float pz, float etaErr)
+void SDL::Event::addPixelSegmentsToEvent(std::vector<SDL::Hit> hits, float dPhiChange, float ptIn, float ptErr, float px, float py, float pz, float etaErr, int iSeed)
 {
     // detId = 1 module means grand "pixel module" where everything related to pixel hits/md/segments will be stored to
     Module& pixelModule = getModule(1);
@@ -295,6 +295,7 @@ void SDL::Event::addPixelSegmentsToEvent(std::vector<SDL::Hit> hits, float dPhiC
     pixelSegmentPtr->setRecoVars("py", py);
     pixelSegmentPtr->setRecoVars("pz", pz);
     pixelSegmentPtr->setRecoVars("etaErr", etaErr);
+    pixelSegmentPtr->setRecoVars("iSeed", iSeed);
 
     getPixelLayer().addSegment(pixelSegmentPtr);
 
