@@ -1085,31 +1085,36 @@ void SDL::Event::createTrackletsWithPixelAndBarrel(TLAlgo algo)
     if (logLevel_ == SDL::Log_Debug)
         SDL::cout <<  " nTotalLowerModule: " << nTotalLowerModule <<  std::endl;
 
-    for (auto& lowerModulePtr : getLowerModulePtrs())
+    int nCombinations = 0;
+
+
+    // Loop over inner lower module for segments
+    for (auto& innerSegmentPtr : getPixelLayer().getSegmentPtrs())
     {
 
-        if (logLevel_ == SDL::Log_Debug)
-            if (nModuleProcessed % 1000 == 0)
-                SDL::cout <<  "    nModuleProcessed: " << nModuleProcessed <<  std::endl;
-
-        if (logLevel_ == SDL::Log_Debug)
-        {
-            std::cout <<  " lowerModulePtr->subdet(): " << lowerModulePtr->subdet() <<  std::endl;
-            std::cout <<  " lowerModulePtr->layer(): " << lowerModulePtr->layer() <<  std::endl;
-            std::cout <<  " lowerModulePtr->getSegmentPtrs().size(): " << lowerModulePtr->getSegmentPtrs().size() <<  std::endl;
-        }
+        // Get reference to segment in inner lower module
+        SDL::Segment& innerSegment = *innerSegmentPtr;
 
         // Get reference to the inner lower Module
         Module& pixelModule = getModule(1);
         Module& innerLowerModule = pixelModule;
 
-        // Triple nested loops
-        // Loop over inner lower module for segments
-        for (auto& innerSegmentPtr : getPixelLayer().getSegmentPtrs())
+        for (auto& lowerModulePtr : getLowerModulePtrs())
         {
 
-            // Get reference to segment in inner lower module
-            SDL::Segment& innerSegment = *innerSegmentPtr;
+            if (lowerModulePtr->getSegmentPtrs().size() == 0)
+                continue;
+
+            // if (logLevel_ == SDL::Log_Debug)
+            //     if (nModuleProcessed % 1000 == 0)
+            //         SDL::cout <<  "    nModuleProcessed: " << nModuleProcessed <<  std::endl;
+
+            // if (logLevel_ == SDL::Log_Debug)
+            // {
+            //     std::cout <<  " lowerModulePtr->subdet(): " << lowerModulePtr->subdet() <<  std::endl;
+            //     std::cout <<  " lowerModulePtr->layer(): " << lowerModulePtr->layer() <<  std::endl;
+            //     std::cout <<  " lowerModulePtr->getSegmentPtrs().size(): " << lowerModulePtr->getSegmentPtrs().size() <<  std::endl;
+            // }
 
             // Get reference to the outer lower module
             Module& outerLowerModule = *lowerModulePtr;
@@ -1130,6 +1135,15 @@ void SDL::Event::createTrackletsWithPixelAndBarrel(TLAlgo algo)
                 // Run segment algorithm on tlCand (tracklet candidate)
                 tlCand.runTrackletAlgo(algo, logLevel_);
 
+                if (logLevel_ == SDL::Log_Debug)
+                {
+                    // int passbit = tlCand.getPassBitsDefaultAlgo();
+                    // std::bitset<8> x(passbit);
+                    // std::cout <<  " passbit: " << x <<  std::endl;
+                }
+
+                nCombinations++;
+
                 if (tlCand.passesTrackletAlgo(algo))
                 {
 
@@ -1141,11 +1155,85 @@ void SDL::Event::createTrackletsWithPixelAndBarrel(TLAlgo algo)
 
             }
 
+            nModuleProcessed++;
+
         }
 
-        nModuleProcessed++;
-
     }
+
+    if (logLevel_ == SDL::Log_Debug)
+        std::cout << "SDL::Event::createTrackletsWithPixelAndBarrel(): nCombinations = " << nCombinations << std::endl;
+
+
+    // for (auto& lowerModulePtr : getLowerModulePtrs())
+    // {
+
+    //     if (lowerModulePtr->getSegmentPtrs().size() == 0)
+    //         continue;
+
+    //     if (logLevel_ == SDL::Log_Debug)
+    //         if (nModuleProcessed % 1000 == 0)
+    //             SDL::cout <<  "    nModuleProcessed: " << nModuleProcessed <<  std::endl;
+
+    //     if (logLevel_ == SDL::Log_Debug)
+    //     {
+    //         std::cout <<  " lowerModulePtr->subdet(): " << lowerModulePtr->subdet() <<  std::endl;
+    //         std::cout <<  " lowerModulePtr->layer(): " << lowerModulePtr->layer() <<  std::endl;
+    //         std::cout <<  " lowerModulePtr->getSegmentPtrs().size(): " << lowerModulePtr->getSegmentPtrs().size() <<  std::endl;
+    //     }
+
+    //     // Get reference to the inner lower Module
+    //     Module& pixelModule = getModule(1);
+    //     Module& innerLowerModule = pixelModule;
+
+    //     // Triple nested loops
+    //     // Loop over inner lower module for segments
+    //     for (auto& innerSegmentPtr : getPixelLayer().getSegmentPtrs())
+    //     {
+
+    //         // Get reference to segment in inner lower module
+    //         SDL::Segment& innerSegment = *innerSegmentPtr;
+
+    //         // Get reference to the outer lower module
+    //         Module& outerLowerModule = *lowerModulePtr;
+
+    //         // Loop over outer lower module mini-doublets
+    //         for (auto& outerSegmentPtr : outerLowerModule.getSegmentPtrs())
+    //         {
+
+    //             // // Count the # of tlCands considered by layer
+    //             // incrementNumberOfTrackletCandidates(innerLowerModule);
+
+    //             // Get reference to mini-doublet in outer lower module
+    //             SDL::Segment& outerSegment = *outerSegmentPtr;
+
+    //             // Create a tracklet candidate
+    //             SDL::Tracklet tlCand(innerSegmentPtr, outerSegmentPtr);
+
+    //             // Run segment algorithm on tlCand (tracklet candidate)
+    //             tlCand.runTrackletAlgo(algo, logLevel_);
+
+    //             nCombinations++;
+
+    //             if (tlCand.passesTrackletAlgo(algo))
+    //             {
+
+    //                 // Count the # of sg formed by layer
+    //                 incrementNumberOfTracklets(innerLowerModule);
+
+    //                 addTrackletToEvent(tlCand, 1/*pixel module=1*/, 0/*pixel is layer=0*/, SDL::Layer::Barrel);
+    //             }
+
+    //         }
+
+    //     }
+
+    //     nModuleProcessed++;
+
+    // }
+
+    // if (logLevel_ == SDL::Log_Debug)
+    //     std::cout << "SDL::Event::createTrackletsWithPixelAndBarrel(): nCombinations = " << nCombinations << std::endl;
 }
 
 

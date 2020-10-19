@@ -141,14 +141,8 @@ void SDL::Tracklet::runTrackletAllCombAlgo()
     passAlgo_ |= (1 << SDL::AllComb_TLAlgo);
 }
 
-void SDL::Tracklet::runTrackletDefaultAlgo(SDL::LogLevel logLevel)
+void SDL::Tracklet::clearRecoVars()
 {
-    // Retreived the lower module object
-    const Module& innerSgInnerMDLowerHitModule = innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule();
-    const Module& outerSgInnerMDLowerHitModule = outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule();
-    const Module& innerSgOuterMDLowerHitModule = innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule();
-    const Module& outerSgOuterMDLowerHitModule = outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule();
-
     setRecoVars("betaAv", -999);
     setRecoVars("betaAv_0th", -999);
     setRecoVars("betaAv_1st", -999);
@@ -246,6 +240,15 @@ void SDL::Tracklet::runTrackletDefaultAlgo(SDL::LogLevel logLevel)
     setRecoVars("deltaPhiPos", -999);
     setRecoVars("dPhi", -999);
     setRecoVars("sdlCut", -999);
+}
+
+void SDL::Tracklet::runTrackletDefaultAlgo(SDL::LogLevel logLevel)
+{
+    // Retreived the lower module object
+    const Module& innerSgInnerMDLowerHitModule = innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule();
+    const Module& outerSgInnerMDLowerHitModule = outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->getModule();
+    const Module& innerSgOuterMDLowerHitModule = innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule();
+    const Module& outerSgOuterMDLowerHitModule = outerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->getModule();
 
     if (innerSgInnerMDLowerHitModule.isPixelLayerModule())
     {
@@ -259,6 +262,9 @@ void SDL::Tracklet::runTrackletDefaultAlgo(SDL::LogLevel logLevel)
     }
     else
     {
+
+        clearRecoVars();
+
         if (innerSgInnerMDLowerHitModule.subdet() == SDL::Module::Barrel
                 and innerSgOuterMDLowerHitModule.subdet() == SDL::Module::Barrel
                 and outerSgInnerMDLowerHitModule.subdet() == SDL::Module::Barrel
@@ -3194,6 +3200,33 @@ void SDL::Tracklet::runTrackletDefaultAlgoEndcapEndcap(SDL::LogLevel logLevel)
 void SDL::Tracklet::runTrackletDefaultAlgoPixelBarrelBarrel(SDL::LogLevel logLevel)
 {
 
+    ////==========================================================================
+    ////
+    //// Cut #0: eta phi compatibility
+    ////
+    ////==========================================================================
+    //const float z_InUp = innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->z();
+    //const float z_OutLo = outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->z();
+    //if (not (z_OutLo >= zLo and z_OutLo <= zHi))
+    //{
+    //    if (logLevel >= SDL::Log_Debug3)
+    //    {
+    //        SDL::cout << "Failed Cut #2 in " << __FUNCTION__ << std::endl;
+    //        SDL::cout <<  " zLo: " << zLo <<  " z_OutLo: " << z_OutLo <<  " zHi: " << zHi <<  std::endl;
+    //    }
+    //    passAlgo_ &= (0 << SDL::Default_TLAlgo);
+    //    return;
+    //}
+    //// Flag the pass bit
+    //passBitsDefaultAlgo_ |= (1 << TrackletSelection::deltaZ);
+    ////--------------------------------------------------------------------------
+
+    if (fabs(innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->deltaPhi(*outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr())) > M_PI / 2.)
+    {
+       passAlgo_ &= (0 << SDL::Default_TLAlgo);
+       return;
+    }
+
     float ptIn = innerSegmentPtr()->getRecoVar("ptIn");
     float ptSLo = ptIn;
     float px = innerSegmentPtr()->getRecoVar("px");
@@ -3228,7 +3261,7 @@ void SDL::Tracklet::runTrackletDefaultAlgoPixelBarrelBarrel(SDL::LogLevel logLev
     const float rt_InUp = innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->rt();
     const float rt_OutLo = outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->rt();
     const float z_InLo = innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->z();
-    const float z_InUp = innerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->z();
+    const float z_InUp = innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->z();
     const float z_OutLo = outerSegmentPtr()->innerMiniDoubletPtr()->anchorHitPtr()->z();
 
     const float rt_InOut = innerSegmentPtr()->outerMiniDoubletPtr()->anchorHitPtr()->rt();
@@ -3347,7 +3380,8 @@ void SDL::Tracklet::runTrackletDefaultAlgoPixelBarrelBarrel(SDL::LogLevel logLev
     // We point it via the inner segment
 
     const float coshEta = std::hypot(ptIn, pz) / ptIn;
-    const float drt_OutLo_InLo = (rt_OutLo - rt_InLo);
+    // const float drt_OutLo_InLo = (rt_OutLo - rt_InLo);
+    const float drt_OutLo_InUp = (rt_OutLo - rt_InUp);
     const float invRt_InLo = 1. / rt_InLo;
     const float r3_InLo = sqrt(z_InLo * z_InLo + rt_InLo * rt_InLo);
     const float r3_InUp = sqrt(z_InUp * z_InUp + rt_InUp * rt_InUp);
@@ -3359,22 +3393,22 @@ void SDL::Tracklet::runTrackletDefaultAlgoPixelBarrelBarrel(SDL::LogLevel logLev
     const float sdlThetaMulsF = 0.015f * sqrt(0.1f + 0.2 * (rt_OutLo - rt_InUp) / 50.f) * sqrt(r3_InUp / rt_InUp);
     const float sdlMuls = sdlThetaMulsF * 3.f / ptCut * 4.f; // will need a better guess than x4?
 
-    float dzErr = drt_OutLo_InLo*etaErr*coshEta; //FIXME: check with the calc in the endcap
+    float dzErr = drt_OutLo_InUp*etaErr*coshEta; //FIXME: check with the calc in the endcap
     dzErr *= dzErr;
     dzErr += 0.03f*0.03f; // pixel size x2. ... random for now
     dzErr *= 9.f; //3 sigma
-    dzErr += sdlMuls*sdlMuls*drt_OutLo_InLo*drt_OutLo_InLo/3.f*coshEta*coshEta;//sloppy
+    dzErr += sdlMuls*sdlMuls*drt_OutLo_InUp*drt_OutLo_InUp/3.f*coshEta*coshEta;//sloppy
     dzErr += zGeom*zGeom;
     dzErr = sqrt(dzErr);
 
     const float dzDrIn = pz / ptIn;
-    const float zWindow = dzErr / drt_InSeg * drt_OutLo_InLo + zGeom;
-    const float dzMean = dzDrIn * drt_OutLo_InLo *
-        (1.f + drt_OutLo_InLo * drt_OutLo_InLo * kRinv1GeVf * kRinv1GeVf / ptIn /
+    const float zWindow = dzErr / drt_InSeg * drt_OutLo_InUp + zGeom;
+    const float dzMean = dzDrIn * drt_OutLo_InUp *
+        (1.f + drt_OutLo_InUp * drt_OutLo_InUp * kRinv1GeVf * kRinv1GeVf / ptIn /
          ptIn / 24.f); // with curved path correction
     // Constructing upper and lower bound
-    const float zLoPointed = z_InLo + dzMean - zWindow;
-    const float zHiPointed = z_InLo + dzMean + zWindow;
+    const float zLoPointed = z_InUp + dzMean - zWindow;
+    const float zHiPointed = z_InUp + dzMean + zWindow;
 
     //==========================================================================
     //
@@ -3396,6 +3430,8 @@ void SDL::Tracklet::runTrackletDefaultAlgoPixelBarrelBarrel(SDL::LogLevel logLev
     // Flag the pass bit
     passBitsDefaultAlgo_ |= (1 << TrackletSelection::deltaZPointed);
     //--------------------------------------------------------------------------
+
+    clearRecoVars();
 
     // phi angle cut
     const float sdlPVoff = 0.1f / rt_OutLo;

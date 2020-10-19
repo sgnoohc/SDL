@@ -9,6 +9,7 @@
 #include <iostream>
 #include <cmath>
 #include <cassert>
+#include <bitset>
 
 #include "Module.h"
 #include "Hit.h"

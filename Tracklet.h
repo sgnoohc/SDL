@@ -110,6 +110,9 @@ namespace SDL
             // The following algorithm does nothing and accept everything
             void runTrackletAllCombAlgo();
 
+            //
+            void clearRecoVars();
+
             // The default algorithms
             void runTrackletDefaultAlgo(SDL::LogLevel logLevel);
             void runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel logLevel);
