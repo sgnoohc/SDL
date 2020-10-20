@@ -118,6 +118,7 @@ namespace SDL
             void runTrackletDefaultAlgoBarrelBarrelBarrelBarrel(SDL::LogLevel logLevel);
             void runTrackletDefaultAlgoBarrelBarrelBarrelBarrel_v1(SDL::LogLevel logLevel);
             void runTrackletDefaultAlgoBarrelBarrelBarrelBarrel_v2(SDL::LogLevel logLevel);
+            void runTrackletDefaultAlgoBarrelBarrelBarrelBarrel_v3(SDL::LogLevel logLevel);
             void runTrackletDefaultAlgoBarrelBarrelEndcapEndcap(SDL::LogLevel logLevel);
             void runTrackletDefaultAlgoEndcapEndcapEndcapEndcap(SDL::LogLevel logLevel);
             void runTrackletDefaultAlgoDeltaBetaOnlyBarrelBarrelBarrelBarrel(SDL::LogLevel logLevel);
@@ -125,6 +126,7 @@ namespace SDL
             void runTrackletDefaultAlgoBarrelEndcap(SDL::LogLevel logLevel);
             void runTrackletDefaultAlgoEndcapEndcap(SDL::LogLevel logLevel);
             void runTrackletDefaultAlgoPixelBarrelBarrel(SDL::LogLevel logLevel);
+            void runTrackletDefaultAlgoPixelEndcapEndcap(SDL::LogLevel logLevel);
 
             // Function for delta beta
             void runDeltaBetaIterations(float& betaIn, float& betaOut, float& betaAv, float& pt_beta, float sdIn_dr, float sdOut_dr, float dr, int lIn, float pt_betaMax);
