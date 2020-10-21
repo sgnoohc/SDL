@@ -334,6 +334,7 @@ namespace SDL
             // Demonstration for create trackcandidates with multiple different types
             void createTrackCandidatesTest_v1(TCAlgo algo=Default_TCAlgo);
             void createTrackCandidatesTest_v2(TCAlgo algo=Default_TCAlgo);
+            void createTrackCandidatesTest_v3(TCAlgo algo=Default_TCAlgo);
 
             // Multiplicity of Hits
             unsigned int getNumberOfHits();

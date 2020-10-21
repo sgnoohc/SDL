@@ -247,7 +247,10 @@ void SDL::Event::addTrackCandidateToLowerLayer(SDL::TrackCandidate tc, int layer
     trackcandidates_.push_back(tc);
 
     // And get the layer
-    getLayer(layerIdx, subdet).addTrackCandidate(&(trackcandidates_.back()));
+    if (layerIdx == 0)
+        getPixelLayer().addTrackCandidate(&(trackcandidates_.back()));
+    else
+        getLayer(layerIdx, subdet).addTrackCandidate(&(trackcandidates_.back()));
 }
 
 void SDL::Event::addPixelSegmentsToEvent(std::vector<SDL::Hit> hits, float dPhiChange, float ptIn, float ptErr, float px, float py, float pz, float etaErr, int iSeed)
@@ -2115,6 +2118,140 @@ void SDL::Event::createTrackCandidatesTest_v2(SDL::TCAlgo algo)
                         addTrackCandidateToLowerLayer(tcCand, innerLowerModule.layer(), SDL::Layer::Endcap);
                 }
 
+            }
+
+        }
+
+    }
+
+}
+
+void SDL::Event::createTrackCandidatesTest_v3(SDL::TCAlgo algo)
+{
+
+    // September 10, 2020 Consider ALL cases
+    // Loop over all tracklets, a-b-c-d go to c then get tracklets or triplets and ask whether segment is shared
+    // Ditto for Triplet -> Tracklet
+    for (auto& layerPtr : getLayerPtrs())
+    {
+
+        for (auto& innerTrackletPtr : layerPtr->getTrackletPtrs())
+        {
+            SDL::Module& innerLowerModule = getModule(innerTrackletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->lowerHitPtr()->getModule().detId());
+            const SDL::Module& commonModule = innerTrackletPtr->outerSegmentPtr()->innerMiniDoubletPtr()->lowerHitPtr()->getModule();
+
+            for (auto& outerTrackletPtr : commonModule.getTrackletPtrs())
+            {
+
+                SDL::TrackCandidate tcCand(innerTrackletPtr, outerTrackletPtr);
+
+                tcCand.runTrackCandidateAlgo(algo, logLevel_);
+
+                // Count the # of track candidates considered
+                incrementNumberOfTrackCandidateCandidates(innerLowerModule);
+
+                if (tcCand.passesTrackCandidateAlgo(algo))
+                {
+
+                    // Count the # of track candidates considered
+                    incrementNumberOfTrackCandidates(innerLowerModule);
+
+                    if (innerLowerModule.subdet() == SDL::Module::Barrel)
+                        addTrackCandidateToLowerLayer(tcCand, innerLowerModule.layer(), SDL::Layer::Barrel);
+                    else
+                        addTrackCandidateToLowerLayer(tcCand, innerLowerModule.layer(), SDL::Layer::Endcap);
+                }
+
+            }
+
+            for (auto& outerTripletPtr : commonModule.getTripletPtrs())
+            {
+
+                SDL::TrackCandidate tcCand(innerTrackletPtr, outerTripletPtr);
+
+                tcCand.runTrackCandidateInnerTrackletToOuterTriplet(logLevel_);
+
+                // Count the # of track candidates considered
+                incrementNumberOfTrackCandidateCandidates(innerLowerModule);
+
+                if (tcCand.passesTrackCandidateAlgo(algo))
+                {
+
+                    // Count the # of track candidates considered
+                    incrementNumberOfTrackCandidates(innerLowerModule);
+
+                    if (innerLowerModule.subdet() == SDL::Module::Barrel)
+                        addTrackCandidateToLowerLayer(tcCand, innerLowerModule.layer(), SDL::Layer::Barrel);
+                    else
+                        addTrackCandidateToLowerLayer(tcCand, innerLowerModule.layer(), SDL::Layer::Endcap);
+                }
+
+            }
+
+        }
+
+        for (auto& innerTripletPtr : layerPtr->getTripletPtrs())
+        {
+            SDL::Module& innerLowerModule = getModule(innerTripletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->lowerHitPtr()->getModule().detId());
+            const SDL::Module& commonModule = innerTripletPtr->outerSegmentPtr()->innerMiniDoubletPtr()->lowerHitPtr()->getModule();
+
+            for (auto& outerTrackletPtr : commonModule.getTrackletPtrs())
+            {
+
+                SDL::TrackCandidate tcCand(innerTripletPtr, outerTrackletPtr);
+
+                tcCand.runTrackCandidateInnerTripletToOuterTracklet(logLevel_);
+
+                // Count the # of track candidates considered
+                incrementNumberOfTrackCandidateCandidates(innerLowerModule);
+
+                if (tcCand.passesTrackCandidateAlgo(algo))
+                {
+
+                    // Count the # of track candidates considered
+                    incrementNumberOfTrackCandidates(innerLowerModule);
+
+                    if (innerLowerModule.subdet() == SDL::Module::Barrel)
+                        addTrackCandidateToLowerLayer(tcCand, innerLowerModule.layer(), SDL::Layer::Barrel);
+                    else
+                        addTrackCandidateToLowerLayer(tcCand, innerLowerModule.layer(), SDL::Layer::Endcap);
+                }
+
+            }
+
+        }
+
+    }
+
+    for (auto& innerTrackletPtr : getPixelLayer().getTrackletPtrs())
+    {
+        SDL::Module& innerLowerModule = getModule(innerTrackletPtr->innerSegmentPtr()->innerMiniDoubletPtr()->lowerHitPtr()->getModule().detId());
+        const SDL::Module& commonModule = innerTrackletPtr->outerSegmentPtr()->innerMiniDoubletPtr()->lowerHitPtr()->getModule();
+
+        for (auto& outerTrackletPtr : commonModule.getTrackletPtrs())
+        {
+
+            SDL::TrackCandidate tcCand(innerTrackletPtr, outerTrackletPtr);
+
+            tcCand.runTrackCandidateAlgo(algo, logLevel_);
+
+            if (tcCand.passesTrackCandidateAlgo(algo))
+            {
+                addTrackCandidateToLowerLayer(tcCand, 0, SDL::Layer::Barrel);
+            }
+
+        }
+
+        for (auto& outerTripletPtr : commonModule.getTripletPtrs())
+        {
+
+            SDL::TrackCandidate tcCand(innerTrackletPtr, outerTripletPtr);
+
+            tcCand.runTrackCandidateInnerTrackletToOuterTriplet(logLevel_);
+
+            if (tcCand.passesTrackCandidateAlgo(algo))
+            {
+                addTrackCandidateToLowerLayer(tcCand, 0, SDL::Layer::Barrel);
             }
 
         }
