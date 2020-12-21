@@ -1108,6 +1108,9 @@ void SDL::Event::createTrackletsWithPixelAndBarrel(TLAlgo algo)
             if (lowerModulePtr->getSegmentPtrs().size() == 0)
                 continue;
 
+            // if (lowerModulePtr->moduleType() != SDL::Module::PS)
+            //     continue;
+
             // if (logLevel_ == SDL::Log_Debug)
             //     if (nModuleProcessed % 1000 == 0)
             //         SDL::cout <<  "    nModuleProcessed: " << nModuleProcessed <<  std::endl;
